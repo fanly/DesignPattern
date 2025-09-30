@@ -21,6 +21,9 @@ Route::middleware(['auth'])->group(function () {
     
     Volt::route('/admin/categories/create', 'admin.categories.create')->name('admin.categories.create');
     Volt::route('/admin/categories/{category}/edit', 'admin.categories.edit')->name('admin.categories.edit');
+    
+    // 管理员密码修改
+    Volt::route('/admin/password', 'admin.password')->name('admin.password');
 });
 
 // Laravel自带的路由

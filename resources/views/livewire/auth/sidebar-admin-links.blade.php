@@ -8,5 +8,9 @@
        class="flex items-center px-3 py-2 text-sm font-medium rounded-md group hover:bg-gray-700 @if(str_starts_with($this->currentRoute, 'admin.categories')) bg-gray-700 @endif">
         <span class="truncate">分类管理</span>
     </a>
+    <a href="{{ route('admin.password') }}" 
+       class="flex items-center px-3 py-2 text-sm font-medium rounded-md group hover:bg-gray-700 @if(str_starts_with($this->currentRoute, 'admin.password')) bg-gray-700 @endif">
+        <span class="truncate">修改密码</span>
+    </a>
 </div>
 @endauth
