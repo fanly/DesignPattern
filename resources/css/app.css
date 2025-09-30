@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+/* 基础样式 */
+body {
+    background-color: #f3f4f6;
+}
+
+/* 确保Tailwind类正常工作 */
+.bg-gray-100 { background-color: #f3f4f6; }
+.bg-white { background-color: #ffffff; }
+.shadow-md { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+.border-gray-200 { border-color: #e5e7eb; }
+.rounded-lg { border-radius: 0.5rem; }
