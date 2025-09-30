@@ -29,14 +29,14 @@
 ">
     <div class="mb-4 text-sm text-gray-500">
         <a href="{{ route('home') }}" class="hover:text-gray-700">首页</a> / 
-        <a href="{{ route('categories.show', $pattern->category->slug) }}" class="hover:text-gray-700">{{ $pattern->category->name }}</a> / 
-        <span class="text-gray-900 font-medium">{{ $pattern->name }}</span>
+        <a href="{{ route('categories.show', $pattern->category->slug) }}" class="hover:text-gray-700">{{ $pattern->category->getNameAttribute() }}</a> / 
+        <span class="text-gray-900 font-medium">{{ $pattern->getNameAttribute() }}</span>
     </div>
 
     <div class="flex gap-8">
         <aside class="w-64 flex-shrink-0">
             <div class="sticky top-8">
-                <h3 class="font-semibold text-gray-900 mb-3">目录</h3>
+                <h3 class="font-semibold text-gray-900 mb-3">{{ __('patterns.table_of_contents') }}</h3>
                 <nav class="space-y-1">
                     @if(count($tableOfContents) > 0)
                         @foreach($tableOfContents as $item)
@@ -49,7 +49,7 @@
                             </a>
                         @endforeach
                     @else
-                        <p class="text-sm text-gray-500">暂无目录</p>
+                        <p class="text-sm text-gray-500">{{ __('patterns.no_table_of_contents') }}</p>
                     @endif
                 </nav>
             </div>
@@ -57,9 +57,9 @@
 
         <main style="flex: 1; min-width: 0;">
             <div style="background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; padding: 2rem;">
-                <h1 style="font-size: 1.875rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">{{ $pattern->name }}</h1>
+                <h1 style="font-size: 1.875rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">{{ $pattern->getNameAttribute() }}</h1>
                 <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #6b7280;">
-                    <span style="background-color: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 9999px;">{{ $pattern->category->name }}</span>
+                    <span style="background-color: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 9999px;">{{ $pattern->category->getNameAttribute() }}</span>
                     <span>更新: {{ $pattern->updated_at->diffForHumans() }}</span>
                 </div>
                 

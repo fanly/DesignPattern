@@ -42,9 +42,11 @@ class DesignPatternSeeder extends Seeder
             }
             
             $category = PatternCategory::create([
-                'name' => $categoryData['name'],
+                'name_zh' => $categoryData['name'],
+                'name_en' => $this->getCategoryEnglishName($categoryData['name']),
                 'slug' => $categorySlug,
-                'description' => $categoryData['description'],
+                'description_zh' => $categoryData['description'],
+                'description_en' => $this->getCategoryEnglishDescription($categoryData['description']),
                 'sort_order' => $categoryData['sort_order']
             ]);
 
@@ -55,18 +57,27 @@ class DesignPatternSeeder extends Seeder
                 // 为中文名称生成唯一的slug
                 $slug = Str::slug($patternData['name']) ?: Str::slug($patternData['name'] . '-' . uniqid());
                 
+                // 获取英文翻译
+                $englishData = $this->getEnglishTranslation($patternData['name'], $patternData['description']);
+                
                 $pattern = DesignPattern::create([
                     'category_id' => $category->id,
-                    'name' => $patternData['name'],
+                    'name_zh' => $patternData['name'],
+                    'name_en' => $englishData['name'],
                     'slug' => $slug,
-                    'description' => $patternData['description'],
+                    'description_zh' => $patternData['description'],
+                    'description_en' => $englishData['description'],
                     'sort_order' => $patternData['sort_order'],
                     'is_published' => true
                 ]);
 
-                // 创建初始Markdown内容
-                $content = "# {$pattern->name}\n\n## 概述\n\n{$pattern->description}\n\n## Laravel中的实现\n\n待补充...";
-                $pattern->saveContent($content);
+                // 创建中文Markdown内容
+                $chineseContent = "# {$patternData['name']}\n\n## 概述\n\n{$patternData['description']}\n\n## Laravel中的实现\n\n待补充...";
+                $pattern->saveContent($chineseContent, 'zh');
+                
+                // 创建英文Markdown内容
+                $englishContent = "# {$englishData['name']}\n\n## Overview\n\n{$englishData['description']}\n\n## Implementation in Laravel\n\nTo be added...";
+                $pattern->saveContent($englishContent, 'en');
             }
         }
     }
@@ -127,5 +138,74 @@ class DesignPatternSeeder extends Seeder
             ],
             default => []
         };
+    }
+    
+    protected function getEnglishTranslation(string $chineseName, string $chineseDescription): array
+    {
+        $translations = [
+            '工厂方法模式' => [
+                'name' => 'Factory Method Pattern',
+                'description' => 'Define an interface for creating an object, but let subclasses decide which class to instantiate'
+            ],
+            '抽象工厂模式' => [
+                'name' => 'Abstract Factory Pattern',
+                'description' => 'Provide an interface for creating families of related or dependent objects without specifying their concrete classes'
+            ],
+            '单例模式' => [
+                'name' => 'Singleton Pattern',
+                'description' => 'Ensure a class has only one instance and provide a global point of access to it'
+            ],
+            '适配器模式' => [
+                'name' => 'Adapter Pattern',
+                'description' => 'Convert the interface of a class into another interface clients expect'
+            ],
+            '装饰器模式' => [
+                'name' => 'Decorator Pattern',
+                'description' => 'Attach additional responsibilities to an object dynamically'
+            ],
+            '外观模式' => [
+                'name' => 'Facade Pattern',
+                'description' => 'Provide a unified interface to a set of interfaces in a subsystem'
+            ],
+            '策略模式' => [
+                'name' => 'Strategy Pattern',
+                'description' => 'Define a family of algorithms, encapsulate each one, and make them interchangeable'
+            ],
+            '观察者模式' => [
+                'name' => 'Observer Pattern',
+                'description' => 'Define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically'
+            ],
+            '命令模式' => [
+                'name' => 'Command Pattern',
+                'description' => 'Encapsulate a request as an object, thereby letting you parameterize clients with different requests'
+            ]
+        ];
+        
+        return $translations[$chineseName] ?? [
+            'name' => $chineseName . ' (English)',
+            'description' => $chineseDescription . ' (English translation needed)'
+        ];
+    }
+    
+    protected function getCategoryEnglishName(string $chineseName): string
+    {
+        $translations = [
+            '创建型模式' => 'Creational Patterns',
+            '结构型模式' => 'Structural Patterns',
+            '行为型模式' => 'Behavioral Patterns'
+        ];
+        
+        return $translations[$chineseName] ?? $chineseName . ' (English)';
+    }
+    
+    protected function getCategoryEnglishDescription(string $chineseDescription): string
+    {
+        $translations = [
+            '关注对象的创建机制，试图以适合当前情况的方式创建对象' => 'Focus on object creation mechanisms, trying to create objects in a manner suitable to the situation',
+            '关注类和对象的组合，形成更大的结构' => 'Focus on class and object composition, forming larger structures',
+            '关注对象之间的通信和职责分配' => 'Focus on communication between objects and responsibility assignment'
+        ];
+        
+        return $translations[$chineseDescription] ?? $chineseDescription . ' (English translation needed)';
     }
 }

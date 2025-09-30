@@ -13,7 +13,7 @@ class Home extends Component
     {
         return view('livewire.pages.home', [
             'categories' => PatternCategory::with('designPatterns')
-                ->orderBy('name')
+                ->orderBy(app()->getLocale() === 'zh' ? 'name_zh' : 'name_en')
                 ->get()
         ]);
     }

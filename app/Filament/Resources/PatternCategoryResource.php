@@ -27,7 +27,7 @@ class PatternCategoryResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('name')
+                Forms\Components\TextInput::make('name_zh')
                     ->required()
                     ->maxLength(255)
                     ->live(onBlur: true)
@@ -53,7 +53,7 @@ class PatternCategoryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('name_zh')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('slug')
                     ->searchable(),

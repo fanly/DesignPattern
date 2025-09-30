@@ -14,10 +14,13 @@ class DesignPattern extends Model
     
     protected $fillable = [
         'category_id',
-        'name',
+        'name_zh',
+        'name_en',
         'slug',
-        'description',
-        'file_path',
+        'description_zh',
+        'description_en',
+        'file_path_zh',
+        'file_path_en',
         'is_published',
         'sort_order',
     ];
@@ -35,15 +38,56 @@ class DesignPattern extends Model
     }
     
     /**
+     * 获取设计模式的名称（根据当前语言）
+     */
+    public function getNameAttribute(): string
+    {
+        $locale = app()->getLocale();
+        $nameField = $locale === 'en' ? 'name_en' : 'name_zh';
+        
+        if (isset($this->attributes[$nameField]) && !empty($this->attributes[$nameField])) {
+            return $this->attributes[$nameField];
+        }
+        
+        // 如果当前语言的内容不存在，回退到中文
+        return $this->attributes['name_zh'] ?? '未命名';
+    }
+    
+    /**
+     * 获取设计模式的描述（根据当前语言）
+     */
+    public function getDescriptionAttribute(): ?string
+    {
+        $locale = app()->getLocale();
+        $descriptionField = $locale === 'en' ? 'description_en' : 'description_zh';
+        
+        if (isset($this->attributes[$descriptionField]) && !empty($this->attributes[$descriptionField])) {
+            return $this->attributes[$descriptionField];
+        }
+        
+        // 如果当前语言的内容不存在，回退到中文
+        return $this->attributes['description_zh'] ?? null;
+    }
+    
+    /**
      * 获取设计模式的Markdown内容
      */
     public function getContent(): string
     {
-        if (!$this->file_path || !Storage::exists($this->file_path)) {
-            return "# {$this->name}\n\n内容正在编写中...";
+        $locale = app()->getLocale();
+        $filePathField = $locale === 'en' ? 'file_path_en' : 'file_path_zh';
+        $filePath = $this->attributes[$filePathField] ?? null;
+        
+        if (!$filePath || !Storage::exists($filePath)) {
+            // 如果当前语言的文件不存在，回退到中文文件
+            $filePath = $this->attributes['file_path_zh'] ?? null;
+            
+            if (!$filePath || !Storage::exists($filePath)) {
+                return "# {$this->name}\n\n" . __('Content is being written...');
+            }
         }
         
-        return Storage::get($this->file_path);
+        return Storage::get($filePath);
     }
     
     /**
@@ -108,13 +152,33 @@ class DesignPattern extends Model
     /**
      * 保存Markdown内容
      */
-    public function saveContent(string $content): bool
+    public function saveContent(string $content, string $locale = 'zh'): bool
     {
-        if (!$this->file_path) {
-            $this->file_path = "patterns/{$this->slug}.md";
+        $filePathField = $locale === 'zh' ? 'file_path_zh' : 'file_path_en';
+        
+        if (!$this->$filePathField) {
+            $this->$filePathField = "patterns/{$this->slug}_{$locale}.md";
             $this->save();
         }
         
-        return Storage::put($this->file_path, $content);
+        return Storage::put($this->$filePathField, $content);
+    }
+    
+    /**
+     * 获取所有支持的语言
+     */
+    public function getSupportedLocales(): array
+    {
+        $locales = [];
+        
+        if (!empty($this->name_zh) || !empty($this->file_path_zh)) {
+            $locales[] = 'zh';
+        }
+        
+        if (!empty($this->name_en) || !empty($this->file_path_en)) {
+            $locales[] = 'en';
+        }
+        
+        return $locales;
     }
 }

@@ -31,12 +31,12 @@ class PatternCategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name_zh' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sort_order' => 'integer',
         ]);
         
-        $validated['slug'] = Str::slug($validated['name']);
+        $validated['slug'] = Str::slug($validated['name_zh']);
         
         $category = PatternCategory::create($validated);
         
@@ -72,14 +72,14 @@ class PatternCategoryController extends Controller
     public function update(Request $request, PatternCategory $category)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name_zh' => 'required|string|max:255',
             'description' => 'nullable|string',
             'sort_order' => 'integer',
         ]);
         
         // 如果名称改变，更新slug
-        if ($category->name !== $validated['name']) {
-            $validated['slug'] = Str::slug($validated['name']);
+        if ($category->name_zh !== $validated['name_zh']) {
+            $validated['slug'] = Str::slug($validated['name_zh']);
         }
         
         $category->update($validated);

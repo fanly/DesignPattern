@@ -10,8 +10,8 @@ Volt::route('/', \App\Livewire\Pages\Home::class)->name('home');
 Volt::route('/patterns', \App\Livewire\Pages\PatternIndex::class)->name('patterns.index');
 Volt::route('/patterns/{slug}', \App\Livewire\Pages\PatternShow::class)->name('patterns.show');
 
-// 分类路由
-Volt::route('/categories', 'categories.index')->name('categories.index'); 
+// 分类路由 - 使用Volt组件
+Volt::route('/categories', \App\Livewire\Pages\CategoryIndex::class)->name('categories.index');
 Volt::route('/categories/{slug}', \App\Livewire\Pages\CategoryShow::class)->name('categories.show');
 
 // 后台管理路由 (需要认证)
@@ -25,6 +25,15 @@ Route::middleware(['auth'])->group(function () {
     // 管理员密码修改
     Volt::route('/admin/password', 'admin.password')->name('admin.password');
 });
+
+// 语言切换路由
+Route::get('/change-locale/{locale}', function ($locale) {
+    if (in_array($locale, ['zh', 'en'])) {
+        session(['locale' => $locale]);
+        app()->setLocale($locale);
+    }
+    return redirect()->back();
+})->name('change-locale');
 
 // Laravel自带的路由
 require __DIR__.'/auth.php';

@@ -13,10 +13,10 @@
                         @csrf
 
                         <div class="mb-4">
-                            <label for="name" class="block text-sm font-medium text-gray-700">{{ __('名称') }}</label>
-                            <input type="text" name="name" id="name" value="{{ old('name') }}" required
+                            <label for="name_zh" class="block text-sm font-medium text-gray-700">{{ __('中文名称') }}</label>
+                            <input type="text" name="name_zh" id="name_zh" value="{{ old('name_zh') }}" required
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
-                            @error('name')
+                            @error('name_zh')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>

@@ -11,15 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('design_patterns', function (Blueprint $table) {
+        Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('category_id');
             $table->string('name');
             $table->string('slug')->unique();
             $table->text('description')->nullable();
-            $table->string('file_path')->nullable(); // 存储Markdown文件的路径
-            $table->boolean('is_published')->default(false);
-            $table->integer('sort_order')->default(0);
+            $table->integer('order')->default(0);
             $table->timestamps();
         });
     }
@@ -29,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('design_patterns');
+        Schema::dropIfExists('categories');
     }
 };
