@@ -25,17 +25,17 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        
+
         // 创建或更新管理员用户
         User::updateOrCreate(
-            ['email' => 'admin@example.com'],
+            ['email' => 'yemeishu@126.com'],
             [
                 'name' => '管理员',
                 'password' => Hash::make('admin123456'),
                 'email_verified_at' => now(),
             ]
         );
-        
+
         // 运行设计模式种子
         $this->call([
             DesignPatternSeeder::class,
