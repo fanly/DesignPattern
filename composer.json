@@ -14,7 +14,8 @@
         "livewire-ui/modal": "^3.0",
         "livewire/flux": "^2.1.1",
         "livewire/volt": "^1.7.0",
-        "spatie/laravel-markdown": "^2.7"
+        "spatie/laravel-markdown": "^2.7",
+        "usamamuneerchaudhary/commentify": "^1.5"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

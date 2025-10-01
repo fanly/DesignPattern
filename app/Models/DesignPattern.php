@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\LaravelMarkdown\MarkdownRenderer;
 use Illuminate\Support\Facades\Storage;
+use Usamamuneerchaudhary\Commentify\Traits\Commentable;
 
 class DesignPattern extends Model
 {
-    use HasFactory;
+    use HasFactory, Commentable;
     
     protected $fillable = [
         'category_id',

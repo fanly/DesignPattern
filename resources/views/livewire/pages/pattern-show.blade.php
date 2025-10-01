@@ -105,4 +105,10 @@
             </div>
         </main>
     </div>
+    
+    <!-- 评论区域 -->
+    <div class="mt-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ __('commentify.discussion') }}</h2>
+        @livewire('custom-comments', ['model' => $pattern])
+    </div>
 </div>

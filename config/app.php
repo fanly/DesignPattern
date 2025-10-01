@@ -128,4 +128,20 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Service Providers
+    |--------------------------------------------------------------------------
+    |
+    | The service providers listed here will be loaded on the request.
+    | Add your own providers to add more functionality to your app.
+    |
+    */
+
+    'providers' => [
+        // ... existing providers
+        Usamamuneerchaudhary\Commentify\Providers\CommentifyServiceProvider::class,
+        App\Providers\CommentifyLangServiceProvider::class,
+    ],
+
 ];

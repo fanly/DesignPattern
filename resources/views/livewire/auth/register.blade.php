@@ -34,12 +34,18 @@ new #[Layout('components.layouts.auth')] class extends Component {
 
         Session::regenerate();
 
-        $this->redirectIntended(route('dashboard', absolute: false), navigate: true);
+        // 设置重定向意图
+        $intendedUrl = request()->input('intended') ?: Session::pull('url.intended');
+        if ($intendedUrl) {
+            Session::put('url.intended', $intendedUrl);
+        }
+
+        $this->redirectIntended(default: route('home', absolute: false), navigate: true);
     }
 }; ?>
 
 <div class="flex flex-col gap-6">
-    <x-auth-header :title="__('Create an account')" :description="__('Enter your details below to create your account')" />
+    <x-auth-header :title="__('创建账户')" :description="__('请输入您的详细信息来创建账户')" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
@@ -48,18 +54,18 @@ new #[Layout('components.layouts.auth')] class extends Component {
         <!-- Name -->
         <flux:input
             wire:model="name"
-            :label="__('Name')"
+            :label="__('姓名')"
             type="text"
             required
             autofocus
             autocomplete="name"
-            :placeholder="__('Full name')"
+            :placeholder="__('姓名')"
         />
 
         <!-- Email Address -->
         <flux:input
             wire:model="email"
-            :label="__('Email address')"
+            :label="__('邮箱地址')"
             type="email"
             required
             autocomplete="email"
@@ -69,34 +75,34 @@ new #[Layout('components.layouts.auth')] class extends Component {
         <!-- Password -->
         <flux:input
             wire:model="password"
-            :label="__('Password')"
+            :label="__('密码')"
             type="password"
             required
             autocomplete="new-password"
-            :placeholder="__('Password')"
+            :placeholder="__('密码')"
             viewable
         />
 
         <!-- Confirm Password -->
         <flux:input
             wire:model="password_confirmation"
-            :label="__('Confirm password')"
+            :label="__('确认密码')"
             type="password"
             required
             autocomplete="new-password"
-            :placeholder="__('Confirm password')"
+            :placeholder="__('确认密码')"
             viewable
         />
 
         <div class="flex items-center justify-end">
             <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                {{ __('Create account') }}
+                {{ __('创建账户') }}
             </flux:button>
         </div>
     </form>
 
     <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
-        <span>{{ __('Already have an account?') }}</span>
-        <flux:link :href="route('login')" wire:navigate>{{ __('Log in') }}</flux:link>
+        <span>{{ __('已有账户？') }}</span>
+        <flux:link :href="route('login')" wire:navigate>{{ __('登录') }}</flux:link>
     </div>
 </div>
