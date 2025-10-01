@@ -76,18 +76,14 @@
                         <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all duration-300">
                             <h3 class="text-xl font-bold text-gray-800 mb-6">{{ __('footer.join_community') }}</h3>
                             <a href="https://image.coding01.cn/blog/48885581888558T2.JPG" target="_blank" class="inline-block">
-                                <picture>
-                                    <!-- WebP格式，更小的文件大小 -->
-                                    <source srcset="https://image.coding01.cn/blog/48885581888558T2.webp" type="image/webp">
-                                    <!-- 优化后的JPEG版本 -->
-                                    <img src="https://image.coding01.cn/blog/48885581888558T2_optimized.jpg" 
-                                         alt="{{ __('footer.join_community') }}" 
-                                         class="rounded-lg shadow-md hover:shadow-lg transition-all duration-300 w-full max-w-xs mx-auto"
-                                         loading="lazy"
-                                         width="316"
-                                         height="350"
-                                         decoding="async">
-                                </picture>
+                                <img src="https://image.coding01.cn/blog/48885581888558T2.JPG" 
+                                     alt="{{ __('footer.join_community') }}" 
+                                     class="rounded-lg shadow-md hover:shadow-lg transition-all duration-300 w-full max-w-xs mx-auto"
+                                     loading="lazy"
+                                     width="316"
+                                     height="350"
+                                     decoding="async"
+                                     style="object-fit: cover;">
                             </a>
                             <p class="text-gray-600 mt-6 text-sm">{{ __('footer.join_community_description') }}</p>
                         </div>
