@@ -6,20 +6,40 @@
                     {{ trans('commentify.discussion') }} ({{ $comments->count() }})
                 </h2>
             </div>
-            
+
             @if (session()->has('error'))
                 <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
                     {{ session('error') }}
                 </div>
             @endif
-            
+
             @if (session()->has('message'))
                 <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
                     {{ session('message') }}
                 </div>
             @endif
-            
+
             @auth
+                <!-- 用户信息区域 -->
+                <div class="flex justify-between items-center mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div class="flex items-center">
+                        <img class="w-8 h-8 rounded-full mr-3" 
+                             src="{{ auth()->user()->avatar_url ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed=' . urlencode(auth()->user()->name) }}" 
+                             alt="{{ auth()->user()->name }}">
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">
+                            {{ auth()->user()->name }}
+                        </span>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <input type="hidden" name="redirect_to" value="{{ url()->current() }}">
+                        <button type="submit" 
+                                class="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300">
+                            退出登录
+                        </button>
+                    </form>
+                </div>
+
                 <form wire:submit.prevent="postComment" class="mb-6">
                     <div class="py-2 px-4 mb-4 bg-white rounded-lg rounded-t-lg border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
                         <label for="comment" class="sr-only">{{ trans('commentify::commentify.your_comment') }}</label>
@@ -45,7 +65,7 @@
                     </div>
                 </div>
             @endauth
-            
+
             @if($comments->count())
                 @foreach($comments as $comment)
                     <article class="p-6 text-base bg-white rounded-lg dark:bg-gray-900 mb-4">
@@ -60,6 +80,18 @@
                                         {{ $comment->created_at->diffForHumans() }}
                                     </time>
                                 </p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button wire:click="toggleLike({{ $comment->id }})" 
+                                        class="flex items-center space-x-1 text-sm text-gray-500 hover:text-red-500 transition-colors"
+                                        title="{{ $this->isLikedByUser($comment->id) ? '取消点赞' : '点赞' }}">
+                                    <svg class="w-4 h-4 {{ $this->isLikedByUser($comment->id) ? 'text-red-500 fill-current' : 'text-gray-400' }}" 
+                                         fill="{{ $this->isLikedByUser($comment->id) ? 'currentColor' : 'none' }}" 
+                                         stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                    </svg>
+                                    <span>{{ $comment->likes_count ?? 0 }}</span>
+                                </button>
                             </div>
                         </footer>
                         <p class="text-gray-500 dark:text-gray-400">{{ $comment->body }}</p>

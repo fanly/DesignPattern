@@ -16,4 +16,11 @@ return [
     'login' => '登录',
     'register' => '注册',
     'your_comment' => '您的评论',
+    'like' => '点赞',
+    'unlike' => '取消点赞',
+    'likes' => '点赞数',
+    'liked_by' => '被点赞',
+    'like_success' => '点赞成功！',
+    'unlike_success' => '取消点赞成功！',
+    'login_to_like' => '请先登录后再点赞！',
 ];

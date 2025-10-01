@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Usamamuneerchaudhary\Commentify\Models\Comment;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class CustomComments extends Component
 {
@@ -23,7 +24,8 @@ class CustomComments extends Component
     {
         $comments = Comment::where('commentable_type', get_class($this->model))
             ->where('commentable_id', $this->model->id)
-            ->with('user')
+            ->with(['user', 'likes'])
+            ->withCount('likes')
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -61,5 +63,51 @@ class CustomComments extends Component
         } catch (\Exception $e) {
             session()->flash('error', '评论发布失败：' . $e->getMessage());
         }
+    }
+
+    public function toggleLike($commentId)
+    {
+        if (!auth()->check()) {
+            session()->flash('error', trans('commentify::commentify.login_to_like'));
+            return;
+        }
+
+        try {
+            $comment = Comment::findOrFail($commentId);
+            
+            // 检查用户是否已经点赞
+            $isLiked = $this->isLikedByUser($commentId);
+            
+            if ($isLiked) {
+                // 取消点赞
+                $comment->likes()->where('user_id', auth()->id())->delete();
+                session()->flash('message', trans('commentify::commentify.unlike_success'));
+            } else {
+                // 创建点赞
+                $comment->likes()->create([
+                    'user_id' => auth()->id(),
+                    'ip' => request()->ip(),
+                    'user_agent' => request()->userAgent(),
+                ]);
+                session()->flash('message', trans('commentify::commentify.like_success'));
+            }
+        } catch (\Exception $e) {
+            session()->flash('error', '操作失败：' . $e->getMessage());
+        }
+    }
+
+    public function isLikedByUser($commentId)
+    {
+        if (!auth()->check()) {
+            return false;
+        }
+
+        $comment = Comment::find($commentId);
+        if (!$comment) {
+            return false;
+        }
+        
+        // 检查当前用户是否点赞过这条评论
+        return $comment->likes()->where('user_id', auth()->id())->exists();
     }
 }
