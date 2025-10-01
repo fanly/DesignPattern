@@ -16,6 +16,9 @@ Volt::route('/categories/{slug}', \App\Livewire\Pages\CategoryShow::class)->name
 
 // 后台管理路由 (需要认证)
 Route::middleware(['auth'])->group(function () {
+    // 管理员仪表板
+    Volt::route('/admin', 'admin.dashboard')->name('admin.dashboard');
+    
     Volt::route('/admin/patterns/create', 'admin.patterns.create')->name('admin.patterns.create');
     Volt::route('/admin/patterns/{pattern}/edit', 'admin.patterns.edit')->name('admin.patterns.edit');
     
