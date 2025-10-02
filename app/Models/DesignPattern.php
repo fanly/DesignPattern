@@ -82,16 +82,23 @@ class DesignPattern extends Model
         $filePathField = $locale === 'en' ? 'file_path_en' : 'file_path_zh';
         $filePath = $this->attributes[$filePathField] ?? null;
         
-        if (!$filePath || !Storage::exists($filePath)) {
+        if (!$filePath) {
             // 如果当前语言的文件不存在，回退到中文文件
             $filePath = $this->attributes['file_path_zh'] ?? null;
             
-            if (!$filePath || !Storage::exists($filePath)) {
+            if (!$filePath) {
                 return "# {$this->name}\n\n" . __('Content is being written...');
             }
         }
         
-        return Storage::get($filePath);
+        // 使用新的文件路径：resources/patterns/
+        $fullPath = base_path("resources/patterns/{$filePath}");
+        
+        if (!file_exists($fullPath)) {
+            return "# {$this->name}\n\n" . __('Content is being written...');
+        }
+        
+        return file_get_contents($fullPath);
     }
     
     /**
@@ -146,11 +153,19 @@ class DesignPattern extends Model
         $filePathField = $locale === 'zh' ? 'file_path_zh' : 'file_path_en';
         
         if (!$this->$filePathField) {
-            $this->$filePathField = "patterns/{$this->slug}_{$locale}.md";
+            $this->$filePathField = "{$this->slug}_{$locale}.md";
             $this->save();
         }
         
-        return Storage::put($this->$filePathField, $content);
+        // 使用新的文件路径：resources/patterns/
+        $fullPath = base_path("resources/patterns/{$this->$filePathField}");
+        
+        // 确保目录存在
+        if (!is_dir(dirname($fullPath))) {
+            mkdir(dirname($fullPath), 0755, true);
+        }
+        
+        return file_put_contents($fullPath, $content) !== false;
     }
     
     /**
