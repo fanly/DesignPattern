@@ -26,6 +26,32 @@
     }, { rootMargin: '-20% 0px -80% 0px' });
 
     sections.forEach(section => observer.observe(section));
+
+    // 处理移动端目录点击事件
+    setTimeout(() => {
+        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+        mobileNavLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                // 阻止默认行为，使用自定义滚动
+                e.preventDefault();
+                const targetId = link.getAttribute('href');
+                const target = document.querySelector(targetId);
+                if (target) {
+                    // 关闭移动端目录（如果打开）
+                    const details = link.closest('details');
+                    if (details) {
+                        details.removeAttribute('open');
+                    }
+                    // 滚动到目标位置
+                    setTimeout(() => {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        window.history.pushState(null, null, targetId);
+                        activeSection = targetId;
+                    }, 100);
+                }
+            });
+        });
+    }, 100);
 ">
     <div class="mb-4 text-sm text-gray-500">
         <a href="{{ route('home') }}" class="hover:text-gray-700">首页</a> /
@@ -33,8 +59,36 @@
         <span class="text-gray-900 font-medium">{{ $pattern->getNameAttribute() }}</span>
     </div>
 
-    <div class="flex gap-8">
-        <aside class="w-64 flex-shrink-0">
+    <div class="flex flex-col lg:flex-row gap-4 lg:gap-8">
+        <!-- 移动端目录 - 显示在内容上方 -->
+        <aside class="lg:hidden bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
+            <details class="group" open>
+                <summary class="flex items-center justify-between cursor-pointer font-semibold text-gray-900">
+                    <span>{{ __('patterns.table_of_contents') }}</span>
+                    <svg class="w-4 h-4 transform group-open:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </summary>
+                <nav class="mt-3 space-y-1 max-h-60 overflow-y-auto">
+                    @if(count($tableOfContents) > 0)
+                        @foreach($tableOfContents as $item)
+                            <a href="#{{ $item['slug'] }}"
+                               class="mobile-nav-link block py-2 px-3 text-sm rounded transition-colors border-l-2 border-transparent"
+                               :class="activeSection === '#{{ $item['slug'] }}' ?
+                                       'text-blue-600 bg-blue-50 font-medium border-blue-600' :
+                                       'text-gray-600 hover:text-blue-600 hover:bg-blue-50'">
+                                {{ $item['title'] }}
+                            </a>
+                        @endforeach
+                    @else
+                        <p class="text-sm text-gray-500 px-3">{{ __('patterns.no_table_of_contents') }}</p>
+                    @endif
+                </nav>
+            </details>
+        </aside>
+
+        <!-- 桌面端目录 - 侧边栏固定 -->
+        <aside class="hidden lg:block w-64 flex-shrink-0">
             <div class="sticky top-8">
                 <h3 class="font-semibold text-gray-900 mb-3">{{ __('patterns.table_of_contents') }}</h3>
                 <nav class="space-y-1">
@@ -55,19 +109,19 @@
             </div>
         </aside>
 
-        <main style="flex: 1; min-width: 0;">
-            <div style="background-color: white; border-radius: 0.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; padding: 2rem;">
-                <h1 style="font-size: 1.875rem; font-weight: 700; color: #111827; margin-bottom: 0.5rem;">{{ $pattern->getNameAttribute() }}</h1>
-                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; font-size: 0.875rem; color: #6b7280;">
-                    <span style="background-color: #f3f4f6; padding: 0.25rem 0.75rem; border-radius: 9999px;">{{ $pattern->category->getNameAttribute() }}</span>
-                    <span>更新: {{ $pattern->updated_at->diffForHumans() }}</span>
+        <main class="flex-1 min-w-0">
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
+                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{{ $pattern->getNameAttribute() }}</h1>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 text-sm text-gray-600">
+                    <span class="bg-gray-100 px-3 py-1 rounded-full text-gray-700 font-medium">{{ $pattern->category->getNameAttribute() }}</span>
+                    <span class="text-gray-500">更新: {{ $pattern->updated_at->diffForHumans() }}</span>
                 </div>
 
                 @if($pattern->description)
-                <p class="text-lg text-gray-700 mb-8">{{ $pattern->description }}</p>
+                <p class="text-lg text-gray-700 mb-6 sm:mb-8">{{ $pattern->description }}</p>
                 @endif
 
-                <x-markdown class="markdown-content">
+                <x-markdown class="markdown-content prose prose-gray max-w-none">
                     {!! $pattern->getContent() !!}
                 </x-markdown>
             </div>
@@ -75,8 +129,8 @@
     </div>
 
     <!-- 评论区域 -->
-    <div class="mt-12">
-        <h2 class="text-2xl font-bold text-gray-900 mb-6">{{ __('commentify.discussion') }}</h2>
+    <div class="mt-8 sm:mt-12">
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">{{ __('commentify.discussion') }}</h2>
         @livewire('custom-comments', ['model' => $pattern])
     </div>
 </div>
