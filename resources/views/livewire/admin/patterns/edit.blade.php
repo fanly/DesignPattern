@@ -15,29 +15,38 @@
             <div class="grid grid-cols-1 gap-6">
                 <!-- 中文标题 -->
                 <div>
-                    <label for="title" class="block text-sm font-medium text-gray-700 mb-2">中文标题</label>
-                    <input type="text" id="title" wire:model="title" 
+                    <label for="name_zh" class="block text-sm font-medium text-gray-700 mb-2">中文标题</label>
+                    <input type="text" id="name_zh" wire:model="name_zh" 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                            placeholder="输入设计模式的中文标题">
-                    @error('title') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    @error('name_zh') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- 英文标题 -->
                 <div>
-                    <label for="title_en" class="block text-sm font-medium text-gray-700 mb-2">英文标题</label>
-                    <input type="text" id="title_en" wire:model="title_en" 
+                    <label for="name_en" class="block text-sm font-medium text-gray-700 mb-2">英文标题</label>
+                    <input type="text" id="name_en" wire:model="name_en" 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                            placeholder="输入设计模式的英文标题">
-                    @error('title_en') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    @error('name_en') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- 描述 -->
+                <!-- 中文描述 -->
                 <div>
-                    <label for="description" class="block text-sm font-medium text-gray-700 mb-2">描述</label>
-                    <textarea id="description" wire:model="description" rows="3"
+                    <label for="description_zh" class="block text-sm font-medium text-gray-700 mb-2">中文描述</label>
+                    <textarea id="description_zh" wire:model="description_zh" rows="3"
                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                              placeholder="输入设计模式的描述（可选）"></textarea>
-                    @error('description') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                              placeholder="输入设计模式的中文描述（可选）"></textarea>
+                    @error('description_zh') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                </div>
+
+                <!-- 英文描述 -->
+                <div>
+                    <label for="description_en" class="block text-sm font-medium text-gray-700 mb-2">英文描述</label>
+                    <textarea id="description_en" wire:model="description_en" rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="输入设计模式的英文描述（可选）"></textarea>
+                    @error('description_en') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                 </div>
 
                 <!-- 分类 -->
@@ -63,13 +72,23 @@
                     <p class="text-sm text-gray-500 mt-1">别名将用于URL中，建议使用英文小写字母和连字符</p>
                 </div>
 
-                <!-- 内容 -->
+                <!-- 中文内容 -->
                 <div>
-                    <label for="content" class="block text-sm font-medium text-gray-700 mb-2">内容</label>
-                    <textarea id="content" wire:model="content" rows="15"
+                    <label for="content_zh" class="block text-sm font-medium text-gray-700 mb-2">中文内容</label>
+                    <textarea id="content_zh" wire:model="content_zh" rows="15"
                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
-                              placeholder="输入设计模式的Markdown内容"></textarea>
-                    @error('content') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                              placeholder="输入设计模式的中文Markdown内容"></textarea>
+                    @error('content_zh') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
+                    <p class="text-sm text-gray-500 mt-1">支持Markdown语法</p>
+                </div>
+
+                <!-- 英文内容 -->
+                <div>
+                    <label for="content_en" class="block text-sm font-medium text-gray-700 mb-2">英文内容</label>
+                    <textarea id="content_en" wire:model="content_en" rows="15"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 font-mono text-sm"
+                              placeholder="输入设计模式的英文Markdown内容"></textarea>
+                    @error('content_en') <span class="text-red-500 text-sm">{{ $message }}</span> @enderror
                     <p class="text-sm text-gray-500 mt-1">支持Markdown语法</p>
                 </div>
             </div>

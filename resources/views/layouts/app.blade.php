@@ -27,7 +27,7 @@
         gtag('config', 'G-SH7CH70BE3');
     </script>
 
-    @vite(['resources/css/app.css'])
+    @vite(['resources/js/app.js', 'resources/css/app.css'])
     @livewireStyles
 </head>
 <body class="font-sans antialiased text-gray-900">

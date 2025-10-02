@@ -73,9 +73,12 @@ class DesignPattern extends Model
     /**
      * 获取设计模式的Markdown内容
      */
-    public function getContent(): string
+    public function getContent(?string $locale = null): string
     {
-        $locale = app()->getLocale();
+        if (!$locale) {
+            $locale = app()->getLocale();
+        }
+        
         $filePathField = $locale === 'en' ? 'file_path_en' : 'file_path_zh';
         $filePath = $this->attributes[$filePathField] ?? null;
         
@@ -96,22 +99,7 @@ class DesignPattern extends Model
      */
     public function getHtmlContent(): string
     {
-        $markdown = $this->getContent();
-        
-        // 为标题添加ID属性
-        $markdown = preg_replace_callback('/^(#{1,6})\s+(.+)$/m', function($matches) {
-            $level = strlen($matches[1]);
-            $title = $matches[2];
-            $slug = strtolower(preg_replace('/[^a-zA-Z0-9\x{4e00}-\x{9fa5}]/u', '-', $title));
-            $slug = preg_replace('/-+/', '-', $slug);
-            $slug = trim($slug, '-');
-            return str_repeat('#', $level) . ' ' . $title . "\n\n" . '<span id="' . $slug . '"></span>';
-        }, $markdown);
-        
-        $html = app(MarkdownRenderer::class)->toHtml($markdown);
-        
-        // 返回原始HTML，样式由外层容器控制
-        return $html;
+        return $this->getContent();
     }
     
     /**
