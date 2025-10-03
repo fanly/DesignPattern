@@ -11,6 +11,19 @@
             }
         });
     }, 100);
+
+    // 页面加载时处理哈希
+    setTimeout(() => {
+        if (window.location.hash) {
+            activeSection = window.location.hash;
+            const element = document.getElementById(window.location.hash.substring(1));
+            if (element) {
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 200);
+            }
+        }
+    }, 200);
 ">
     <div class="mb-4 text-sm text-gray-500">
         <a href="{{ route('home') }}" class="hover:text-gray-700">首页</a> /
@@ -44,14 +57,14 @@
                                    // 滚动到目标位置
                                    const element = document.getElementById('{{ $item['slug'] }}');
                                    if (element) {
-                                       element.scrollIntoView({ behavior: 'smooth' });
+                                       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                        window.location.hash = '#{{ $item['slug'] }}';
                                    } else {
                                        // 备用方案：查找包含标题文本的元素
                                        const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
                                        for (let heading of headings) {
                                            if (heading.textContent.trim() === '{{ $item['title'] }}') {
-                                               heading.scrollIntoView({ behavior: 'smooth' });
+                                               heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                window.location.hash = '#' + (heading.id || '{{ $item['slug'] }}');
                                                break;
                                            }
@@ -84,14 +97,14 @@
                                    activeSection = '#{{ $item['slug'] }}';
                                    const element = document.getElementById('{{ $item['slug'] }}');
                                    if (element) {
-                                       element.scrollIntoView({ behavior: 'smooth' });
+                                       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                        window.location.hash = '#{{ $item['slug'] }}';
                                    } else {
                                        // 备用方案：查找包含标题文本的元素
                                        const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
                                        for (let heading of headings) {
                                            if (heading.textContent.trim() === '{{ $item['title'] }}') {
-                                               heading.scrollIntoView({ behavior: 'smooth' });
+                                               heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                window.location.hash = '#' + (heading.id || '{{ $item['slug'] }}');
                                                break;
                                            }
@@ -109,21 +122,31 @@
         </aside>
 
         <main class="flex-1 min-w-0">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6 lg:p-8">
-                <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{{ $pattern->getNameAttribute() }}</h1>
-                <div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-6 text-sm text-gray-600">
-                    <span class="bg-gray-100 px-3 py-1 rounded-full text-gray-700 font-medium">{{ $pattern->category->getNameAttribute() }}</span>
-                    <span class="text-gray-500">更新: {{ $pattern->updated_at->diffForHumans() }}</span>
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                <!-- 顶部信息栏 - 弱化设计 -->
+                <div class="bg-gray-50 border-b border-gray-200 px-4 py-3 sm:px-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <h1 class="text-lg sm:text-xl font-semibold text-gray-800 truncate">{{ $pattern->getNameAttribute() }}</h1>
+                            <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                                <span class="bg-white px-2 py-1 rounded border border-gray-300">{{ $pattern->category->getNameAttribute() }}</span>
+                                <span>{{ __('patterns.updated') }}: {{ $pattern->updated_at->diffForHumans() }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if($pattern->description)
+                    <p class="text-gray-600 mt-2 text-sm leading-relaxed line-clamp-2">{{ $pattern->description }}</p>
+                    @endif
                 </div>
 
-                @if($pattern->description)
-                <p class="text-lg text-gray-700 mb-6 sm:mb-8">{{ $pattern->description }}</p>
-                @endif
-
-                <x-markdown class="markdown-content prose prose-gray max-w-none"
-                    :options="['html_input' => 'strip', 'allow_unsafe_links' => false, 'heading_permalink' => true]">
-                    {!! $pattern->getContent() !!}
-                </x-markdown>
+                <!-- Markdown内容区域 -->
+                <div class="p-4 sm:p-6 lg:p-8">
+                    <x-markdown class="markdown-content prose prose-gray max-w-none"
+                        :options="['html_input' => 'strip', 'allow_unsafe_links' => false, 'heading_permalink' => true]">
+                        {!! $pattern->getContent() !!}
+                    </x-markdown>
+                </div>
             </div>
         </main>
     </div>

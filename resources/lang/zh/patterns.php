@@ -10,4 +10,5 @@ return [
     'no_comments_yet' => '暂无评论',
     'login' => '登录',
     'register' => '注册',
+    'updated' => '更新',
 ];
