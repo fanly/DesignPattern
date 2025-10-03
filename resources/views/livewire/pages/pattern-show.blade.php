@@ -1,55 +1,14 @@
 <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8" x-data="{ activeSection: window.location.hash || '' }" x-init="
-    // 监听hash变化
-    window.addEventListener('hashchange', () => {
-        activeSection = window.location.hash;
-        // 滚动到对应标题
-        const target = document.querySelector(window.location.hash);
-        if (target) {
-            setTimeout(() => {
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 100);
-        }
-    });
-
-    // 监听滚动，更新激活状态
-    const sections = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const id = '#' + entry.target.id;
-                if (id !== activeSection) {
-                    activeSection = id;
-                    window.history.replaceState(null, null, id);
-                }
-            }
-        });
-    }, { rootMargin: '-20% 0px -80% 0px' });
-
-    sections.forEach(section => observer.observe(section));
-
-    // 处理移动端目录点击事件
+    // 为所有标题元素添加ID
     setTimeout(() => {
-        const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
-        mobileNavLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                // 阻止默认行为，使用自定义滚动
-                e.preventDefault();
-                const targetId = link.getAttribute('href');
-                const target = document.querySelector(targetId);
-                if (target) {
-                    // 关闭移动端目录（如果打开）
-                    const details = link.closest('details');
-                    if (details) {
-                        details.removeAttribute('open');
-                    }
-                    // 滚动到目标位置
-                    setTimeout(() => {
-                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        window.history.pushState(null, null, targetId);
-                        activeSection = targetId;
-                    }, 100);
-                }
-            });
+        const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
+        headings.forEach((heading, index) => {
+            if (!heading.id) {
+                // 使用标题文本创建slug作为ID
+                const text = heading.textContent.trim().toLowerCase();
+                const slug = text.replace(/[^a-z0-9\u4e00-\u9fa5]/g, '-').replace(/-+/g, '-');
+                heading.id = slug || 'heading-' + index;
+            }
         });
     }, 100);
 ">
@@ -72,13 +31,35 @@
                 <nav class="mt-3 space-y-1 max-h-60 overflow-y-auto">
                     @if(count($tableOfContents) > 0)
                         @foreach($tableOfContents as $item)
-                            <a href="#{{ $item['slug'] }}"
-                               class="mobile-nav-link block py-2 px-3 text-sm rounded transition-colors border-l-2 border-transparent"
+                            <button type="button"
+                               class="block w-full text-left py-2 px-3 text-sm rounded transition-colors border-l-2 border-transparent"
                                :class="activeSection === '#{{ $item['slug'] }}' ?
                                        'text-blue-600 bg-blue-50 font-medium border-blue-600' :
-                                       'text-gray-600 hover:text-blue-600 hover:bg-blue-50'">
+                                       'text-gray-600 hover:text-blue-600 hover:bg-blue-50'"
+                               x-on:click="
+                                   // 关闭移动端目录
+                                   $el.closest('details')?.removeAttribute('open');
+                                   // 更新激活状态
+                                   activeSection = '#{{ $item['slug'] }}';
+                                   // 滚动到目标位置
+                                   const element = document.getElementById('{{ $item['slug'] }}');
+                                   if (element) {
+                                       element.scrollIntoView({ behavior: 'smooth' });
+                                       window.location.hash = '#{{ $item['slug'] }}';
+                                   } else {
+                                       // 备用方案：查找包含标题文本的元素
+                                       const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
+                                       for (let heading of headings) {
+                                           if (heading.textContent.trim() === '{{ $item['title'] }}') {
+                                               heading.scrollIntoView({ behavior: 'smooth' });
+                                               window.location.hash = '#' + (heading.id || '{{ $item['slug'] }}');
+                                               break;
+                                           }
+                                       }
+                                   }
+                               ">
                                 {{ $item['title'] }}
-                            </a>
+                            </button>
                         @endforeach
                     @else
                         <p class="text-sm text-gray-500 px-3">{{ __('patterns.no_table_of_contents') }}</p>
@@ -94,13 +75,31 @@
                 <nav class="space-y-1">
                     @if(count($tableOfContents) > 0)
                         @foreach($tableOfContents as $item)
-                            <a href="#{{ $item['slug'] }}"
-                               class="block py-1 px-2 text-sm rounded transition-colors"
+                            <button type="button"
+                               class="block w-full text-left py-1 px-2 text-sm rounded transition-colors"
                                :class="activeSection === '#{{ $item['slug'] }}' ?
                                        'text-blue-600 bg-blue-50 font-medium border-l-2 border-blue-600' :
-                                       'text-gray-600 hover:text-blue-600 hover:bg-blue-50'">
+                                       'text-gray-600 hover:text-blue-600 hover:bg-blue-50'"
+                               x-on:click="
+                                   activeSection = '#{{ $item['slug'] }}';
+                                   const element = document.getElementById('{{ $item['slug'] }}');
+                                   if (element) {
+                                       element.scrollIntoView({ behavior: 'smooth' });
+                                       window.location.hash = '#{{ $item['slug'] }}';
+                                   } else {
+                                       // 备用方案：查找包含标题文本的元素
+                                       const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
+                                       for (let heading of headings) {
+                                           if (heading.textContent.trim() === '{{ $item['title'] }}') {
+                                               heading.scrollIntoView({ behavior: 'smooth' });
+                                               window.location.hash = '#' + (heading.id || '{{ $item['slug'] }}');
+                                               break;
+                                           }
+                                       }
+                                   }
+                               ">
                                 {{ $item['title'] }}
-                            </a>
+                            </button>
                         @endforeach
                     @else
                         <p class="text-sm text-gray-500">{{ __('patterns.no_table_of_contents') }}</p>
@@ -121,7 +120,8 @@
                 <p class="text-lg text-gray-700 mb-6 sm:mb-8">{{ $pattern->description }}</p>
                 @endif
 
-                <x-markdown class="markdown-content prose prose-gray max-w-none">
+                <x-markdown class="markdown-content prose prose-gray max-w-none"
+                    :options="['html_input' => 'strip', 'allow_unsafe_links' => false, 'heading_permalink' => true]">
                     {!! $pattern->getContent() !!}
                 </x-markdown>
             </div>
