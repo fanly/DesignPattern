@@ -142,6 +142,7 @@ return [
         // ... existing providers
         Usamamuneerchaudhary\Commentify\Providers\CommentifyServiceProvider::class,
         App\Providers\CommentifyLangServiceProvider::class,
+        App\Providers\MarkdownServiceProvider::class,
     ],
 
 ];

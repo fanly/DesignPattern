@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
+use App\Livewire\MarkdownDemo;
 
 // 首页 - 使用Volt组件
 Volt::route('/', \App\Livewire\Pages\Home::class)->name('home');
@@ -28,6 +29,9 @@ Route::middleware(['auth'])->group(function () {
     // 管理员密码修改
     Volt::route('/admin/password', 'admin.password')->name('admin.password');
 });
+
+// Markdown 演示路由
+Route::get('/markdown-demo', MarkdownDemo::class)->name('markdown.demo');
 
 // 语言切换路由
 Route::get('/change-locale/{locale}', function ($locale) {

@@ -142,10 +142,9 @@
 
                 <!-- Markdown内容区域 -->
                 <div class="p-4 sm:p-6 lg:p-8">
-                    <x-markdown class="markdown-content prose prose-gray max-w-none"
-                        :options="['html_input' => 'strip', 'allow_unsafe_links' => false, 'heading_permalink' => true]">
-                        {!! $pattern->getContent() !!}
-                    </x-markdown>
+                    <x-enhanced-markdown 
+                        class="markdown-content prose prose-gray max-w-none"
+                        :content="$pattern->getContent()" />
                 </div>
             </div>
         </main>

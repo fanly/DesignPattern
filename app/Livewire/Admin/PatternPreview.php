@@ -4,7 +4,7 @@ namespace App\Livewire\Admin;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Blade;
-use Spatie\LaravelMarkdown\MarkdownRenderer;
+
 
 class PatternPreview extends Component
 {
@@ -16,7 +16,7 @@ class PatternPreview extends Component
     public function updatePreview($content)
     {
         $this->markdownContent = $content;
-        $this->renderedHtml = app(MarkdownRenderer::class)->toHtml($content);
+        $this->renderedHtml = app(\App\Services\MarkdownService::class)->toHtml($content);
     }
     
     public function render()
