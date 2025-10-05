@@ -4,6 +4,262 @@
 
 解释器模式给定一个语言，定义它的文法的一种表示，并定义一个解释器，这个解释器使用该表示来解释语言中的句子。它主要用于解释和执行特定语法规则的语言。
 
+## 架构图
+
+### 解释器模式类图
+```mermaid
+classDiagram
+    class AbstractExpression {
+        <<abstract>>
+        +interpret(context): mixed
+    }
+    
+    class TerminalExpression {
+        +interpret(context): mixed
+    }
+    
+    class NonTerminalExpression {
+        -expressions: array
+        +interpret(context): mixed
+        +addExpression(expr): void
+    }
+    
+    class Context {
+        -variables: Map
+        +getValue(name): mixed
+        +setValue(name, value): void
+    }
+    
+    class Client {
+        +buildSyntaxTree(): AbstractExpression
+        +interpret(expression, context): mixed
+    }
+    
+    AbstractExpression <|-- TerminalExpression
+    AbstractExpression <|-- NonTerminalExpression
+    NonTerminalExpression --> AbstractExpression : contains
+    Client --> AbstractExpression : uses
+    Client --> Context : uses
+    
+    note for TerminalExpression "终结符表达式\n处理语法的基本元素"
+    note for NonTerminalExpression "非终结符表达式\n处理语法规则"
+```
+
+### Laravel Blade 解释器架构
+```mermaid
+classDiagram
+    class BladeCompiler {
+        -customDirectives: array
+        -extensions: array
+        +compile(path): string
+        +compileString(value): string
+        +directive(name, handler): void
+    }
+    
+    class Expression {
+        <<abstract>>
+        +compile(compiler): string
+    }
+    
+    class DirectiveExpression {
+        -name: string
+        -parameters: string
+        +compile(compiler): string
+    }
+    
+    class EchoExpression {
+        -expression: string
+        -escaped: bool
+        +compile(compiler): string
+    }
+    
+    class ConditionalExpression {
+        -condition: string
+        -trueExpression: Expression
+        -falseExpression: Expression
+        +compile(compiler): string
+    }
+    
+    class LoopExpression {
+        -iterable: string
+        -variable: string
+        -body: Expression
+        +compile(compiler): string
+    }
+    
+    class CompilerContext {
+        -variables: array
+        -path: string
+        +getVariable(name): mixed
+        +setVariable(name, value): void
+    }
+    
+    BladeCompiler --> Expression : compiles
+    Expression <|-- DirectiveExpression
+    Expression <|-- EchoExpression
+    Expression <|-- ConditionalExpression
+    Expression <|-- LoopExpression
+    BladeCompiler --> CompilerContext : uses
+    
+    note for BladeCompiler "Blade编译器\n解释Blade语法"
+    note for DirectiveExpression "指令表达式\n如@if, @foreach"
+```
+
+### 解释器模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Context
+    participant NonTerminal
+    participant Terminal1
+    participant Terminal2
+    
+    Client->>Context: 设置变量
+    Client->>NonTerminal: interpret(context)
+    NonTerminal->>Terminal1: interpret(context)
+    Terminal1->>Context: getValue(var1)
+    Context-->>Terminal1: value1
+    Terminal1-->>NonTerminal: result1
+    
+    NonTerminal->>Terminal2: interpret(context)
+    Terminal2->>Context: getValue(var2)
+    Context-->>Terminal2: value2
+    Terminal2-->>NonTerminal: result2
+    
+    NonTerminal->>NonTerminal: 组合结果
+    NonTerminal-->>Client: final result
+    
+    Note over NonTerminal: 非终结符组合子表达式结果
+    Note over Terminal1: 终结符处理基本元素
+```
+
+### Laravel 查询构建器解释器
+```mermaid
+classDiagram
+    class QueryExpression {
+        <<abstract>>
+        +interpret(builder): Builder
+    }
+    
+    class WhereExpression {
+        -column: string
+        -operator: string
+        -value: mixed
+        +interpret(builder): Builder
+    }
+    
+    class JoinExpression {
+        -table: string
+        -first: string
+        -operator: string
+        -second: string
+        +interpret(builder): Builder
+    }
+    
+    class OrderExpression {
+        -column: string
+        -direction: string
+        +interpret(builder): Builder
+    }
+    
+    class LimitExpression {
+        -count: int
+        +interpret(builder): Builder
+    }
+    
+    class QueryBuilder {
+        -expressions: array
+        +where(column, operator, value): QueryBuilder
+        +join(table, first, operator, second): QueryBuilder
+        +orderBy(column, direction): QueryBuilder
+        +limit(count): QueryBuilder
+        +toSql(): string
+    }
+    
+    QueryExpression <|-- WhereExpression
+    QueryExpression <|-- JoinExpression
+    QueryExpression <|-- OrderExpression
+    QueryExpression <|-- LimitExpression
+    QueryBuilder --> QueryExpression : contains
+    
+    note for QueryBuilder "查询构建器\n解释查询表达式"
+    note for WhereExpression "WHERE条件表达式"
+```
+
+### Laravel 验证规则解释器
+```mermaid
+classDiagram
+    class ValidationRule {
+        <<abstract>>
+        +interpret(value, parameters): bool
+        +message(): string
+    }
+    
+    class RequiredRule {
+        +interpret(value, parameters): bool
+        +message(): string
+    }
+    
+    class EmailRule {
+        +interpret(value, parameters): bool
+        +message(): string
+    }
+    
+    class MinRule {
+        +interpret(value, parameters): bool
+        +message(): string
+    }
+    
+    class MaxRule {
+        +interpret(value, parameters): bool
+        +message(): string
+    }
+    
+    class CompositeRule {
+        -rules: array
+        -operator: string
+        +interpret(value, parameters): bool
+        +addRule(rule): void
+    }
+    
+    class ValidationContext {
+        -data: array
+        -rules: array
+        +getValue(field): mixed
+        +getRule(field): string
+    }
+    
+    ValidationRule <|-- RequiredRule
+    ValidationRule <|-- EmailRule
+    ValidationRule <|-- MinRule
+    ValidationRule <|-- MaxRule
+    ValidationRule <|-- CompositeRule
+    CompositeRule --> ValidationRule : contains
+    
+    note for ValidationRule "验证规则基类"
+    note for CompositeRule "组合验证规则"
+```
+
+### Blade 编译流程
+```mermaid
+flowchart TD
+    A[Blade模板] --> B[词法分析]
+    B --> C[语法分析]
+    C --> D[构建AST]
+    D --> E[表达式解释]
+    E --> F[PHP代码生成]
+    F --> G[缓存编译结果]
+    
+    H[解释器组件]
+    B -.-> H1[DirectiveExpression]
+    C -.-> H2[EchoExpression]
+    D -.-> H3[ConditionalExpression]
+    E -.-> H4[LoopExpression]
+    
+    style A fill:#e1f5fe
+    style G fill:#e8f5e8
+```
+
 ## 设计意图
 
 - **语法解释**：定义语言的文法规则

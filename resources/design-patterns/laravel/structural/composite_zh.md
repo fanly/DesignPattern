@@ -4,6 +4,312 @@
 
 组合模式将对象组合成树形结构以表示"部分-整体"的层次结构。组合模式使得用户对单个对象和组合对象的使用具有一致性。
 
+## 架构图
+
+### 组合模式类图
+```mermaid
+classDiagram
+    class Component {
+        <<abstract>>
+        +operation(): void
+        +add(component): void
+        +remove(component): void
+        +getChild(index): Component
+    }
+    
+    class Leaf {
+        +operation(): void
+    }
+    
+    class Composite {
+        -children: List~Component~
+        +operation(): void
+        +add(component): void
+        +remove(component): void
+        +getChild(index): Component
+    }
+    
+    Component <|-- Leaf
+    Component <|-- Composite
+    Composite --> Component : contains
+    
+    note for Component "组件抽象基类"
+    note for Leaf "叶子节点\n不能包含子组件"
+    note for Composite "组合节点\n可以包含子组件"
+```
+
+### Laravel 视图组合架构
+```mermaid
+classDiagram
+    class ViewContract {
+        <<interface>>
+        +render(): string
+        +with(data): ViewContract
+    }
+    
+    class View {
+        -factory: Factory
+        -engine: Engine
+        -view: string
+        -data: array
+        +render(): string
+        +with(data): View
+        +nest(key, view): View
+    }
+    
+    class ComponentView {
+        -component: Component
+        -data: array
+        +render(): string
+        +with(data): ComponentView
+    }
+    
+    class CompositeView {
+        -views: array
+        +render(): string
+        +addView(view): void
+        +removeView(view): void
+    }
+    
+    class LayoutView {
+        -layout: string
+        -sections: array
+        +render(): string
+        +section(name, content): void
+        +yield(section): string
+    }
+    
+    ViewContract <|.. View
+    ViewContract <|.. ComponentView
+    ViewContract <|.. CompositeView
+    ViewContract <|.. LayoutView
+    
+    CompositeView --> ViewContract : contains
+    LayoutView --> ViewContract : contains
+    
+    note for CompositeView "组合视图\n包含多个子视图"
+    note for LayoutView "布局视图\n包含多个区块"
+```
+
+### 组合模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Composite
+    participant Leaf1
+    participant Leaf2
+    participant SubComposite
+    
+    Client->>Composite: operation()
+    Composite->>Leaf1: operation()
+    Leaf1-->>Composite: result1
+    Composite->>Leaf2: operation()
+    Leaf2-->>Composite: result2
+    Composite->>SubComposite: operation()
+    SubComposite->>SubComposite: 递归处理子组件
+    SubComposite-->>Composite: result3
+    Composite-->>Client: 合并所有结果
+    
+    Note over Composite: 递归调用所有子组件
+```
+
+### Laravel 菜单组合结构
+```mermaid
+classDiagram
+    class MenuComponent {
+        <<abstract>>
+        -name: string
+        -url: string
+        -icon: string
+        +render(): string
+        +add(component): void
+        +remove(component): void
+    }
+    
+    class MenuItem {
+        +render(): string
+    }
+    
+    class MenuGroup {
+        -children: array
+        +render(): string
+        +add(component): void
+        +remove(component): void
+        +getChildren(): array
+    }
+    
+    class MenuSeparator {
+        +render(): string
+    }
+    
+    class MenuDropdown {
+        -children: array
+        -label: string
+        +render(): string
+        +add(component): void
+        +remove(component): void
+    }
+    
+    MenuComponent <|-- MenuItem
+    MenuComponent <|-- MenuGroup
+    MenuComponent <|-- MenuSeparator
+    MenuComponent <|-- MenuDropdown
+    
+    MenuGroup --> MenuComponent : contains
+    MenuDropdown --> MenuComponent : contains
+    
+    note for MenuGroup "菜单组\n包含多个菜单项"
+    note for MenuDropdown "下拉菜单\n包含子菜单项"
+```
+
+### 表单组合架构
+```mermaid
+classDiagram
+    class FormElement {
+        <<abstract>>
+        -name: string
+        -value: mixed
+        -attributes: array
+        +render(): string
+        +validate(): bool
+        +setValue(value): void
+    }
+    
+    class InputField {
+        -type: string
+        +render(): string
+        +validate(): bool
+    }
+    
+    class SelectField {
+        -options: array
+        +render(): string
+        +validate(): bool
+        +addOption(value, label): void
+    }
+    
+    class FieldGroup {
+        -fields: array
+        -legend: string
+        +render(): string
+        +validate(): bool
+        +addField(field): void
+        +removeField(field): void
+    }
+    
+    class Form {
+        -elements: array
+        -action: string
+        -method: string
+        +render(): string
+        +validate(): bool
+        +addElement(element): void
+        +submit(): Response
+    }
+    
+    FormElement <|-- InputField
+    FormElement <|-- SelectField
+    FormElement <|-- FieldGroup
+    FormElement <|-- Form
+    
+    FieldGroup --> FormElement : contains
+    Form --> FormElement : contains
+    
+    note for FieldGroup "字段组\n包含相关字段"
+    note for Form "表单\n包含所有表单元素"
+```
+
+### 权限组合模式
+```mermaid
+classDiagram
+    class Permission {
+        <<abstract>>
+        -name: string
+        -description: string
+        +check(user): bool
+        +add(permission): void
+        +remove(permission): void
+    }
+    
+    class SimplePermission {
+        -action: string
+        -resource: string
+        +check(user): bool
+    }
+    
+    class PermissionGroup {
+        -permissions: array
+        -operator: string
+        +check(user): bool
+        +add(permission): void
+        +remove(permission): void
+    }
+    
+    class Role {
+        -permissions: array
+        -name: string
+        +check(user): bool
+        +addPermission(permission): void
+        +removePermission(permission): void
+    }
+    
+    Permission <|-- SimplePermission
+    Permission <|-- PermissionGroup
+    Permission <|-- Role
+    
+    PermissionGroup --> Permission : contains
+    Role --> Permission : contains
+    
+    note for PermissionGroup "权限组\n组合多个权限"
+    note for Role "角色\n包含多个权限"
+```
+
+### 文件系统组合结构
+```mermaid
+flowchart TD
+    A[文件系统根目录] --> B[目录1]
+    A --> C[目录2]
+    A --> D[文件1.txt]
+    
+    B --> E[子目录1]
+    B --> F[文件2.txt]
+    B --> G[文件3.txt]
+    
+    C --> H[子目录2]
+    C --> I[文件4.txt]
+    
+    E --> J[文件5.txt]
+    E --> K[文件6.txt]
+    
+    H --> L[文件7.txt]
+    
+    style A fill:#e1f5fe
+    style B fill:#e8f5e8
+    style C fill:#e8f5e8
+    style E fill:#fff3e0
+    style H fill:#fff3e0
+```
+
+### Laravel 集合组合操作
+```mermaid
+flowchart LR
+    A[Collection] --> B[map操作]
+    B --> C[filter操作]
+    C --> D[groupBy操作]
+    D --> E[sort操作]
+    E --> F[chunk操作]
+    F --> G[最终结果]
+    
+    H[组合操作特点]
+    B -.-> H1[每个操作返回新Collection]
+    C -.-> H2[支持链式调用]
+    D -.-> H3[保持统一接口]
+    E -.-> H4[可以任意组合]
+    
+    style A fill:#e1f5fe
+    style G fill:#e8f5e8
+```
+
 ## 设计意图
 
 - **统一处理**：统一对待单个对象和组合对象

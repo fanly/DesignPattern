@@ -4,6 +4,269 @@
 
 抽象工厂模式提供一个创建一系列相关或相互依赖对象的接口，而无需指定它们具体的类。它强调产品族的创建，能够确保创建的产品相互兼容。
 
+## 架构图
+
+### 抽象工厂模式类图
+```mermaid
+classDiagram
+    class AbstractFactory {
+        <<interface>>
+        +createProductA(): AbstractProductA
+        +createProductB(): AbstractProductB
+    }
+    
+    class ConcreteFactory1 {
+        +createProductA(): AbstractProductA
+        +createProductB(): AbstractProductB
+    }
+    
+    class ConcreteFactory2 {
+        +createProductA(): AbstractProductA
+        +createProductB(): AbstractProductB
+    }
+    
+    class AbstractProductA {
+        <<interface>>
+        +operationA(): void
+    }
+    
+    class AbstractProductB {
+        <<interface>>
+        +operationB(): void
+    }
+    
+    class ProductA1 {
+        +operationA(): void
+    }
+    
+    class ProductA2 {
+        +operationA(): void
+    }
+    
+    class ProductB1 {
+        +operationB(): void
+    }
+    
+    class ProductB2 {
+        +operationB(): void
+    }
+    
+    AbstractFactory <|.. ConcreteFactory1
+    AbstractFactory <|.. ConcreteFactory2
+    AbstractProductA <|.. ProductA1
+    AbstractProductA <|.. ProductA2
+    AbstractProductB <|.. ProductB1
+    AbstractProductB <|.. ProductB2
+    ConcreteFactory1 ..> ProductA1 : creates
+    ConcreteFactory1 ..> ProductB1 : creates
+    ConcreteFactory2 ..> ProductA2 : creates
+    ConcreteFactory2 ..> ProductB2 : creates
+    
+    note for AbstractFactory "创建产品族接口"
+    note for ConcreteFactory1 "创建产品族1"
+    note for ConcreteFactory2 "创建产品族2"
+```
+
+### Laravel 数据库抽象工厂架构
+```mermaid
+classDiagram
+    class DatabaseManager {
+        +connection(name): Connection
+        +createMysqlConnection(): Connection
+        +createPostgresConnection(): Connection
+        +createSqliteConnection(): Connection
+    }
+    
+    class Connection {
+        <<abstract>>
+        +getQueryGrammar(): Grammar
+        +getSchemaBuilder(): Builder
+        +getQueryBuilder(): QueryBuilder
+    }
+    
+    class MySqlConnection {
+        +getQueryGrammar(): MySqlGrammar
+        +getSchemaBuilder(): MySqlBuilder
+        +getQueryBuilder(): QueryBuilder
+    }
+    
+    class PostgresConnection {
+        +getQueryGrammar(): PostgresGrammar
+        +getSchemaBuilder(): PostgresBuilder
+        +getQueryBuilder(): QueryBuilder
+    }
+    
+    class Grammar {
+        <<abstract>>
+        +compileSelect(): string
+        +compileInsert(): string
+    }
+    
+    class MySqlGrammar {
+        +compileSelect(): string
+        +compileInsert(): string
+    }
+    
+    class PostgresGrammar {
+        +compileSelect(): string
+        +compileInsert(): string
+    }
+    
+    class SchemaBuilder {
+        <<abstract>>
+        +hasTable(): bool
+        +getColumns(): array
+    }
+    
+    class MySqlBuilder {
+        +hasTable(): bool
+        +getColumns(): array
+    }
+    
+    class PostgresBuilder {
+        +hasTable(): bool
+        +getColumns(): array
+    }
+    
+    DatabaseManager --> Connection : creates
+    MySqlConnection --|> Connection
+    PostgresConnection --|> Connection
+    MySqlGrammar --|> Grammar
+    PostgresGrammar --|> Grammar
+    MySqlBuilder --|> SchemaBuilder
+    PostgresBuilder --|> SchemaBuilder
+    MySqlConnection ..> MySqlGrammar : creates
+    MySqlConnection ..> MySqlBuilder : creates
+    PostgresConnection ..> PostgresGrammar : creates
+    PostgresConnection ..> PostgresBuilder : creates
+    
+    note for DatabaseManager "数据库抽象工厂"
+    note for MySqlConnection "MySQL产品族"
+    note for PostgresConnection "PostgreSQL产品族"
+```
+
+### 抽象工厂时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant AbstractFactory
+    participant ConcreteFactory
+    participant ProductA
+    participant ProductB
+    
+    Client->>ConcreteFactory: createProductA()
+    ConcreteFactory->>ProductA: new ProductA()
+    ProductA-->>ConcreteFactory: instance
+    ConcreteFactory-->>Client: ProductA
+    
+    Client->>ConcreteFactory: createProductB()
+    ConcreteFactory->>ProductB: new ProductB()
+    ProductB-->>ConcreteFactory: instance
+    ConcreteFactory-->>Client: ProductB
+    
+    Note over ProductA, ProductB: 同一产品族的产品
+    Client->>ProductA: operationA()
+    Client->>ProductB: operationB()
+    
+    Note over Client: 产品族内的产品协同工作
+```
+
+### Laravel 缓存抽象工厂架构
+```mermaid
+classDiagram
+    class CacheManager {
+        +store(name): Repository
+        +createRedisStore(): RedisStore
+        +createDatabaseStore(): DatabaseStore
+        +createFileStore(): FileStore
+    }
+    
+    class Store {
+        <<interface>>
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+    }
+    
+    class RedisStore {
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +getConnection(): Redis
+        +getSerializer(): TaggedCache
+    }
+    
+    class DatabaseStore {
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +getConnection(): Connection
+        +getEncrypter(): Encrypter
+    }
+    
+    class FileStore {
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +getFilesystem(): Filesystem
+        +getHasher(): Hasher
+    }
+    
+    class Repository {
+        -store: Store
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +remember(key, callback): mixed
+    }
+    
+    CacheManager --> Store : creates
+    CacheManager --> Repository : wraps
+    RedisStore ..|> Store
+    DatabaseStore ..|> Store
+    FileStore ..|> Store
+    Repository --> Store : uses
+    
+    note for CacheManager "缓存系统抽象工厂"
+    note for RedisStore "Redis缓存产品族"
+    note for DatabaseStore "数据库缓存产品族"
+```
+
+### 抽象工厂产品族关系图
+```mermaid
+flowchart TD
+    A[Client需要产品族] --> B[选择具体工厂]
+    B --> C{工厂类型}
+    
+    C -->|MySQL| D[MySqlFactory]
+    C -->|PostgreSQL| E[PostgresFactory]
+    C -->|SQLite| F[SqliteFactory]
+    
+    D --> G[MySQL产品族]
+    E --> H[PostgreSQL产品族]
+    F --> I[SQLite产品族]
+    
+    G --> J[MySqlConnection]
+    G --> K[MySqlGrammar]
+    G --> L[MySqlSchemaBuilder]
+    
+    H --> M[PostgresConnection]
+    H --> N[PostgresGrammar]
+    H --> O[PostgresSchemaBuilder]
+    
+    I --> P[SqliteConnection]
+    I --> Q[SqliteGrammar]
+    I --> R[SqliteSchemaBuilder]
+    
+    style G fill:#e8f5e8
+    style H fill:#e1f5fe
+    style I fill:#fff3e0
+    
+    note1[产品族内的产品相互兼容]
+    G -.-> note1
+    H -.-> note1
+    I -.-> note1
+```
+
 ## 设计意图
 
 - **产品族创建**：创建一系列相关的产品对象

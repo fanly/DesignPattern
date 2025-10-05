@@ -4,6 +4,266 @@
 
 装饰器模式动态地给一个对象添加一些额外的职责，就增加功能来说，装饰器模式相比生成子类更为灵活。它通过创建一个包装对象来扩展功能，而不是通过继承。
 
+## 架构图
+
+### 装饰器模式类图
+```mermaid
+classDiagram
+    class Component {
+        <<interface>>
+        +operation(): void
+    }
+    
+    class ConcreteComponent {
+        +operation(): void
+    }
+    
+    class Decorator {
+        <<abstract>>
+        -component: Component
+        +operation(): void
+    }
+    
+    class ConcreteDecoratorA {
+        +operation(): void
+        +addedBehaviorA(): void
+    }
+    
+    class ConcreteDecoratorB {
+        +operation(): void
+        +addedBehaviorB(): void
+    }
+    
+    Component <|.. ConcreteComponent
+    Component <|.. Decorator
+    Decorator <|-- ConcreteDecoratorA
+    Decorator <|-- ConcreteDecoratorB
+    Decorator --> Component : wraps
+    
+    note for Decorator "装饰器基类\n包装组件对象"
+    note for ConcreteDecoratorA "具体装饰器A\n添加特定功能"
+```
+
+### Laravel 中间件装饰器架构
+```mermaid
+classDiagram
+    class Kernel {
+        -middleware: array
+        -routeMiddleware: array
+        +handle(request): Response
+        +sendRequestThroughRouter(request): Response
+    }
+    
+    class Pipeline {
+        -passable: Request
+        -middleware: array
+        +send(passable): Pipeline
+        +through(middleware): Pipeline
+        +then(destination): mixed
+    }
+    
+    class Middleware {
+        <<interface>>
+        +handle(request, next): Response
+    }
+    
+    class AuthMiddleware {
+        +handle(request, next): Response
+    }
+    
+    class CorsMiddleware {
+        +handle(request, next): Response
+    }
+    
+    class ThrottleMiddleware {
+        +handle(request, next): Response
+    }
+    
+    class Controller {
+        +action(request): Response
+    }
+    
+    Kernel --> Pipeline : uses
+    Pipeline --> Middleware : processes
+    AuthMiddleware ..|> Middleware
+    CorsMiddleware ..|> Middleware
+    ThrottleMiddleware ..|> Middleware
+    Pipeline --> Controller : finally calls
+    
+    note for Pipeline "中间件管道\n装饰器链"
+    note for Middleware "中间件接口"
+```
+
+### 装饰器模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant DecoratorA
+    participant DecoratorB
+    participant Component
+    
+    Client->>DecoratorA: operation()
+    Note over DecoratorA: 添加功能A
+    DecoratorA->>DecoratorB: operation()
+    Note over DecoratorB: 添加功能B
+    DecoratorB->>Component: operation()
+    Component-->>DecoratorB: result
+    Note over DecoratorB: 处理结果B
+    DecoratorB-->>DecoratorA: enhanced result
+    Note over DecoratorA: 处理结果A
+    DecoratorA-->>Client: final result
+    
+    Note over Client: 获得经过多层装饰的结果
+```
+
+### Laravel 中间件执行流程
+```mermaid
+flowchart TD
+    A[HTTP请求] --> B[Kernel]
+    B --> C[Pipeline创建]
+    C --> D[中间件栈]
+    D --> E[AuthMiddleware]
+    E --> F[CorsMiddleware]
+    F --> G[ThrottleMiddleware]
+    G --> H[路由处理]
+    H --> I[控制器方法]
+    I --> J[响应生成]
+    J --> K[ThrottleMiddleware后处理]
+    K --> L[CorsMiddleware后处理]
+    L --> M[AuthMiddleware后处理]
+    M --> N[最终响应]
+    
+    style D fill:#e1f5fe
+    style I fill:#e8f5e8
+    style N fill:#fff3e0
+```
+
+### 缓存装饰器架构
+```mermaid
+classDiagram
+    class CacheContract {
+        <<interface>>
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+    }
+    
+    class Repository {
+        -store: Store
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+    }
+    
+    class TaggedCache {
+        -store: Store
+        -tags: array
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +flush(): bool
+    }
+    
+    class RateLimitedCache {
+        -cache: CacheContract
+        -limiter: RateLimiter
+        +get(key): mixed
+        +put(key, value, ttl): bool
+    }
+    
+    class EncryptedCache {
+        -cache: CacheContract
+        -encrypter: Encrypter
+        +get(key): mixed
+        +put(key, value, ttl): bool
+    }
+    
+    Repository ..|> CacheContract
+    TaggedCache ..|> CacheContract
+    RateLimitedCache ..|> CacheContract
+    EncryptedCache ..|> CacheContract
+    
+    RateLimitedCache --> CacheContract : decorates
+    EncryptedCache --> CacheContract : decorates
+    TaggedCache --> Repository : decorates
+    
+    note for TaggedCache "标签缓存装饰器"
+    note for RateLimitedCache "限流缓存装饰器"
+    note for EncryptedCache "加密缓存装饰器"
+```
+
+### 日志装饰器模式
+```mermaid
+classDiagram
+    class LoggerInterface {
+        <<interface>>
+        +info(message): void
+        +error(message): void
+        +debug(message): void
+    }
+    
+    class Logger {
+        -handler: Handler
+        +info(message): void
+        +error(message): void
+        +debug(message): void
+    }
+    
+    class TimestampDecorator {
+        -logger: LoggerInterface
+        +info(message): void
+        +error(message): void
+        +debug(message): void
+    }
+    
+    class ContextDecorator {
+        -logger: LoggerInterface
+        -context: array
+        +info(message): void
+        +error(message): void
+        +debug(message): void
+    }
+    
+    class FilterDecorator {
+        -logger: LoggerInterface
+        -level: string
+        +info(message): void
+        +error(message): void
+        +debug(message): void
+    }
+    
+    Logger ..|> LoggerInterface
+    TimestampDecorator ..|> LoggerInterface
+    ContextDecorator ..|> LoggerInterface
+    FilterDecorator ..|> LoggerInterface
+    
+    TimestampDecorator --> LoggerInterface : decorates
+    ContextDecorator --> LoggerInterface : decorates
+    FilterDecorator --> LoggerInterface : decorates
+    
+    note for TimestampDecorator "添加时间戳"
+    note for ContextDecorator "添加上下文信息"
+    note for FilterDecorator "过滤日志级别"
+```
+
+### 响应装饰器链
+```mermaid
+flowchart LR
+    A[基础响应] --> B[JsonResponse装饰器]
+    B --> C[CorsResponse装饰器]
+    C --> D[CacheResponse装饰器]
+    D --> E[CompressResponse装饰器]
+    E --> F[最终响应]
+    
+    G[装饰器功能]
+    B -.-> G1[JSON格式化]
+    C -.-> G2[CORS头部]
+    D -.-> G3[缓存控制]
+    E -.-> G4[内容压缩]
+    
+    style A fill:#e1f5fe
+    style F fill:#e8f5e8
+```
+
 ## 设计意图
 
 - **动态扩展**：在运行时动态地给对象添加功能

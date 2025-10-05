@@ -4,6 +4,211 @@
 
 责任链模式为请求创建了一个接收者对象的链，使多个对象都有机会处理请求，从而避免请求的发送者和接收者之间的耦合关系。将这些对象连成一条链，并沿着这条链传递请求，直到有一个对象处理它为止。
 
+## 架构图
+
+### 责任链模式类图
+```mermaid
+classDiagram
+    class Handler {
+        <<abstract>>
+        -successor: Handler
+        +setSuccessor(handler): void
+        +handleRequest(request): void
+    }
+    
+    class ConcreteHandlerA {
+        +handleRequest(request): void
+        +canHandle(request): bool
+    }
+    
+    class ConcreteHandlerB {
+        +handleRequest(request): void
+        +canHandle(request): bool
+    }
+    
+    class ConcreteHandlerC {
+        +handleRequest(request): void
+        +canHandle(request): bool
+    }
+    
+    class Client {
+        +sendRequest(request): void
+    }
+    
+    Handler <|-- ConcreteHandlerA
+    Handler <|-- ConcreteHandlerB
+    Handler <|-- ConcreteHandlerC
+    Handler --> Handler : successor
+    Client --> Handler : uses
+    
+    note for Handler "抽象处理者\n定义处理接口"
+    note for ConcreteHandlerA "具体处理者A\n处理特定类型请求"
+```
+
+### Laravel 中间件责任链架构
+```mermaid
+classDiagram
+    class Pipeline {
+        -pipes: array
+        -passable: mixed
+        +through(pipes): Pipeline
+        +send(passable): Pipeline
+        +then(destination): mixed
+    }
+    
+    class Middleware {
+        <<interface>>
+        +handle(request, next): Response
+    }
+    
+    class AuthMiddleware {
+        +handle(request, next): Response
+        +authenticate(request): void
+    }
+    
+    class CorsMiddleware {
+        +handle(request, next): Response
+        +addCorsHeaders(response): Response
+    }
+    
+    class ThrottleMiddleware {
+        -limiter: RateLimiter
+        +handle(request, next): Response
+        +tooManyAttempts(request): bool
+    }
+    
+    class Kernel {
+        -middleware: array
+        -routeMiddleware: array
+        +handle(request): Response
+        +sendRequestThroughRouter(request): Response
+    }
+    
+    Pipeline --> Middleware : processes
+    AuthMiddleware ..|> Middleware
+    CorsMiddleware ..|> Middleware
+    ThrottleMiddleware ..|> Middleware
+    Kernel --> Pipeline : uses
+    
+    note for Pipeline "管道\n实现责任链传递"
+    note for Middleware "中间件接口\n定义处理方法"
+```
+
+### 责任链处理流程
+```mermaid
+sequenceDiagram
+    participant Client
+    participant HandlerA
+    participant HandlerB
+    participant HandlerC
+    
+    Client->>HandlerA: handleRequest(request)
+    HandlerA->>HandlerA: canHandle(request)?
+    alt 可以处理
+        HandlerA-->>Client: 处理结果
+    else 不能处理
+        HandlerA->>HandlerB: handleRequest(request)
+        HandlerB->>HandlerB: canHandle(request)?
+        alt 可以处理
+            HandlerB-->>Client: 处理结果
+        else 不能处理
+            HandlerB->>HandlerC: handleRequest(request)
+            HandlerC->>HandlerC: canHandle(request)?
+            HandlerC-->>Client: 处理结果或异常
+        end
+    end
+    
+    Note over HandlerA: 每个处理者检查是否能处理请求
+    Note over HandlerB: 不能处理则传递给下一个处理者
+```
+
+### Laravel 中间件执行流程
+```mermaid
+flowchart TD
+    A[HTTP请求] --> B[Kernel接收]
+    B --> C[Pipeline创建]
+    C --> D[AuthMiddleware]
+    D --> E{认证通过?}
+    E -->|是| F[CorsMiddleware]
+    E -->|否| G[返回401]
+    F --> H[ThrottleMiddleware]
+    H --> I{限流检查}
+    I -->|通过| J[路由处理]
+    I -->|超限| K[返回429]
+    J --> L[控制器执行]
+    L --> M[响应返回]
+    
+    style D fill:#e1f5fe
+    style F fill:#e8f5e8
+    style H fill:#fff3e0
+    style L fill:#f3e5f5
+```
+
+### 异常处理责任链
+```mermaid
+classDiagram
+    class ExceptionHandler {
+        <<abstract>>
+        -nextHandler: ExceptionHandler
+        +handle(exception): void
+        +setNext(handler): void
+    }
+    
+    class ValidationExceptionHandler {
+        +handle(exception): void
+        +canHandle(exception): bool
+    }
+    
+    class AuthenticationExceptionHandler {
+        +handle(exception): void
+        +canHandle(exception): bool
+    }
+    
+    class ModelNotFoundExceptionHandler {
+        +handle(exception): void
+        +canHandle(exception): bool
+    }
+    
+    class GeneralExceptionHandler {
+        +handle(exception): void
+        +canHandle(exception): bool
+    }
+    
+    ExceptionHandler <|-- ValidationExceptionHandler
+    ExceptionHandler <|-- AuthenticationExceptionHandler
+    ExceptionHandler <|-- ModelNotFoundExceptionHandler
+    ExceptionHandler <|-- GeneralExceptionHandler
+    ExceptionHandler --> ExceptionHandler : nextHandler
+    
+    note for ValidationExceptionHandler "验证异常处理器"
+    note for AuthenticationExceptionHandler "认证异常处理器"
+    note for GeneralExceptionHandler "通用异常处理器"
+```
+
+### Laravel 路由中间件链
+```mermaid
+flowchart LR
+    A[请求] --> B[web中间件组]
+    B --> C[EncryptCookies]
+    C --> D[AddQueuedCookiesToResponse]
+    D --> E[StartSession]
+    E --> F[ShareErrorsFromSession]
+    F --> G[VerifyCsrfToken]
+    G --> H[SubstituteBindings]
+    H --> I[路由处理器]
+    I --> J[响应]
+    
+    K[中间件特点]
+    C -.-> K1[加密Cookie]
+    E -.-> K2[启动Session]
+    G -.-> K3[CSRF验证]
+    H -.-> K4[模型绑定]
+    
+    style A fill:#e1f5fe
+    style I fill:#e8f5e8
+    style J fill:#fff3e0
+```
+
 ## 设计意图
 
 - **解耦发送者和接收者**：请求发送者不需要知道哪个对象会处理请求

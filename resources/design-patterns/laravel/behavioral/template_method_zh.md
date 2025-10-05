@@ -4,6 +4,246 @@
 
 模板方法模式定义一个操作中的算法骨架，而将一些步骤延迟到子类中。模板方法使得子类可以不改变一个算法的结构即可重定义该算法的某些特定步骤。
 
+## 架构图
+
+### 模板方法模式类图
+```mermaid
+classDiagram
+    class AbstractClass {
+        <<abstract>>
+        +templateMethod(): void
+        +primitiveOperation1(): void
+        +primitiveOperation2(): void
+        +hook(): void
+    }
+    
+    class ConcreteClassA {
+        +primitiveOperation1(): void
+        +primitiveOperation2(): void
+        +hook(): void
+    }
+    
+    class ConcreteClassB {
+        +primitiveOperation1(): void
+        +primitiveOperation2(): void
+    }
+    
+    AbstractClass <|-- ConcreteClassA
+    AbstractClass <|-- ConcreteClassB
+    
+    note for AbstractClass "抽象类\n定义算法骨架"
+    note for ConcreteClassA "具体类A\n实现所有抽象方法"
+    note for ConcreteClassB "具体类B\n实现必要的抽象方法"
+```
+
+### Laravel 控制器模板方法架构
+```mermaid
+classDiagram
+    class Controller {
+        <<abstract>>
+        +callAction(method, parameters): mixed
+        +setupLayout(): void
+        +cleanupLayout(): void
+        +middleware(): array
+    }
+    
+    class ResourceController {
+        +index(): Response
+        +create(): Response
+        +store(request): Response
+        +show(id): Response
+        +edit(id): Response
+        +update(id, request): Response
+        +destroy(id): Response
+    }
+    
+    class UserController {
+        +setupLayout(): void
+        +middleware(): array
+        +index(): Response
+        +store(request): Response
+    }
+    
+    class ApiController {
+        +setupLayout(): void
+        +cleanupLayout(): void
+        +respondWithSuccess(data): JsonResponse
+        +respondWithError(message): JsonResponse
+    }
+    
+    Controller <|-- ResourceController
+    Controller <|-- UserController
+    Controller <|-- ApiController
+    
+    note for Controller "控制器基类\n定义请求处理模板"
+    note for UserController "用户控制器\n重写特定方法"
+```
+
+### 模板方法执行流程
+```mermaid
+flowchart TD
+    A[templateMethod调用] --> B[primitiveOperation1]
+    B --> C[primitiveOperation2]
+    C --> D{hook方法存在?}
+    D -->|是| E[执行hook方法]
+    D -->|否| F[跳过hook]
+    E --> G[算法完成]
+    F --> G
+    
+    H[子类职责]
+    B -.-> H1[必须实现]
+    C -.-> H2[必须实现]
+    E -.-> H3[可选实现]
+    
+    style A fill:#e1f5fe
+    style G fill:#e8f5e8
+    style D fill:#fff3e0
+```
+
+### Laravel 认证模板方法架构
+```mermaid
+classDiagram
+    class Guard {
+        <<abstract>>
+        +user(): User
+        +check(): bool
+        +guest(): bool
+        +authenticate(): User
+        +login(user): void
+        +logout(): void
+    }
+    
+    class SessionGuard {
+        -session: Session
+        -provider: UserProvider
+        +user(): User
+        +attempt(credentials): bool
+        +login(user): void
+        +logout(): void
+    }
+    
+    class TokenGuard {
+        -request: Request
+        -provider: UserProvider
+        +user(): User
+        +validate(credentials): bool
+        +setRequest(request): void
+    }
+    
+    class JwtGuard {
+        -jwt: JwtManager
+        -provider: UserProvider
+        +user(): User
+        +attempt(credentials): bool
+        +refresh(): string
+    }
+    
+    Guard <|-- SessionGuard
+    Guard <|-- TokenGuard
+    Guard <|-- JwtGuard
+    
+    note for Guard "认证守卫基类\n定义认证流程模板"
+    note for SessionGuard "会话认证\n基于Session的认证"
+    note for TokenGuard "令牌认证\n基于API Token的认证"
+```
+
+### Laravel 中间件模板方法
+```mermaid
+classDiagram
+    class Middleware {
+        <<interface>>
+        +handle(request, next): Response
+    }
+    
+    class AuthMiddleware {
+        +handle(request, next): Response
+        +authenticate(request): void
+        +redirectTo(request): string
+    }
+    
+    class ThrottleMiddleware {
+        -limiter: RateLimiter
+        +handle(request, next): Response
+        +resolveRequestSignature(request): string
+        +buildResponse(key, maxAttempts): Response
+    }
+    
+    class CorsMiddleware {
+        +handle(request, next): Response
+        +addHeaders(response): Response
+        +isPreflightRequest(request): bool
+    }
+    
+    AuthMiddleware ..|> Middleware
+    ThrottleMiddleware ..|> Middleware
+    CorsMiddleware ..|> Middleware
+    
+    note for Middleware "中间件接口\n定义处理模板"
+    note for AuthMiddleware "认证中间件\n实现认证逻辑"
+```
+
+### Laravel 验证模板方法
+```mermaid
+classDiagram
+    class Validator {
+        <<abstract>>
+        -data: array
+        -rules: array
+        -messages: array
+        +validate(): bool
+        +passes(): bool
+        +fails(): bool
+        +validateAttribute(attribute, rule): bool
+    }
+    
+    class FormRequestValidator {
+        +authorize(): bool
+        +rules(): array
+        +messages(): array
+        +attributes(): array
+        +withValidator(validator): void
+    }
+    
+    class ApiValidator {
+        +rules(): array
+        +messages(): array
+        +failedValidation(validator): void
+        +passedValidation(): void
+    }
+    
+    Validator <|-- FormRequestValidator
+    Validator <|-- ApiValidator
+    
+    note for Validator "验证器基类\n定义验证流程"
+    note for FormRequestValidator "表单请求验证器"
+    note for ApiValidator "API验证器"
+```
+
+### 验证流程时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Validator
+    participant ConcreteValidator
+    
+    Client->>Validator: validate()
+    Validator->>ConcreteValidator: authorize()
+    ConcreteValidator-->>Validator: bool
+    alt 授权通过
+        Validator->>ConcreteValidator: rules()
+        ConcreteValidator-->>Validator: array
+        Validator->>Validator: validateAttributes()
+        Validator->>ConcreteValidator: messages()
+        ConcreteValidator-->>Validator: array
+        Validator-->>Client: validation result
+    else 授权失败
+        Validator-->>Client: authorization failed
+    end
+    
+    Note over Validator: 模板方法控制验证流程
+    Note over ConcreteValidator: 子类实现具体验证规则
+```
+
 ## 设计意图
 
 - **算法复用**：将公共的算法逻辑提取到父类中

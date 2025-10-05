@@ -4,6 +4,157 @@
 
 享元模式运用共享技术有效地支持大量细粒度对象的复用。它通过共享已经存在的对象来大幅度减少需要创建的对象数量，避免大量相似类的开销，从而提高系统资源的利用率。
 
+## 架构图
+
+### 享元模式类图
+```mermaid
+classDiagram
+    class FlyweightFactory {
+        -flyweights: Map
+        +getFlyweight(key): Flyweight
+        +getCreatedFlyweights(): int
+    }
+    
+    class Flyweight {
+        <<interface>>
+        +operation(extrinsicState): void
+    }
+    
+    class ConcreteFlyweight {
+        -intrinsicState: any
+        +operation(extrinsicState): void
+    }
+    
+    class UnsharedConcreteFlyweight {
+        -allState: any
+        +operation(extrinsicState): void
+    }
+    
+    class Context {
+        -flyweight: Flyweight
+        -extrinsicState: any
+        +operation(): void
+    }
+    
+    FlyweightFactory --> Flyweight : creates and manages
+    ConcreteFlyweight ..|> Flyweight
+    UnsharedConcreteFlyweight ..|> Flyweight
+    Context --> Flyweight : uses
+    
+    note for ConcreteFlyweight "共享的享元对象\n存储内部状态"
+    note for Context "上下文对象\n存储外部状态"
+```
+
+### Laravel 配置享元架构
+```mermaid
+classDiagram
+    class ConfigRepository {
+        -items: array
+        -loadedConfigurations: array
+        +get(key): mixed
+        +set(key, value): void
+        +has(key): bool
+    }
+    
+    class ConfigLoader {
+        -files: Filesystem
+        -defaultPath: string
+        +load(name): array
+        +exists(name): bool
+    }
+    
+    class ConfigCache {
+        -cached: array
+        +get(key): mixed
+        +put(key, value): void
+        +forget(key): void
+    }
+    
+    class Application {
+        -config: ConfigRepository
+        +config(key): mixed
+        +make(abstract): mixed
+    }
+    
+    ConfigRepository --> ConfigLoader : loads configs
+    ConfigRepository --> ConfigCache : caches configs
+    Application --> ConfigRepository : uses
+    
+    note for ConfigRepository "配置仓库\n管理配置享元对象"
+    note for ConfigCache "配置缓存\n共享配置数据"
+```
+
+### 享元模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Factory
+    participant Flyweight
+    participant Context
+    
+    Client->>Factory: getFlyweight(key)
+    Factory->>Factory: 检查是否已存在
+    alt 享元对象已存在
+        Factory-->>Client: return existing flyweight
+    else 享元对象不存在
+        Factory->>Flyweight: create new flyweight
+        Factory->>Factory: store in pool
+        Factory-->>Client: return new flyweight
+    end
+    
+    Client->>Context: create with extrinsic state
+    Client->>Context: operation()
+    Context->>Flyweight: operation(extrinsicState)
+    Flyweight-->>Context: result
+    Context-->>Client: result
+    
+    Note over Factory: 享元工厂管理对象池
+    Note over Context: 上下文存储外部状态
+```
+
+### Laravel 视图享元模式
+```mermaid
+classDiagram
+    class ViewFactory {
+        -engines: array
+        -finder: ViewFinder
+        -shared: array
+        +make(view, data): View
+        +exists(view): bool
+        +share(key, value): void
+    }
+    
+    class View {
+        -factory: ViewFactory
+        -engine: Engine
+        -view: string
+        -data: array
+        +render(): string
+        +with(key, value): View
+    }
+    
+    class BladeEngine {
+        -compiler: BladeCompiler
+        -files: Filesystem
+        +get(path, data): string
+    }
+    
+    class ViewFinder {
+        -files: Filesystem
+        -paths: array
+        -views: array
+        +find(name): string
+    }
+    
+    ViewFactory --> ViewFinder : finds views
+    ViewFactory --> BladeEngine : uses engine
+    ViewFactory --> View : creates
+    View --> BladeEngine : renders with
+    
+    note for ViewFactory "视图工厂\n管理视图享元对象"
+    note for ViewFinder "视图查找器\n缓存视图路径"
+```
+
 ## 设计意图
 
 - **对象复用**：共享相似对象，减少内存占用

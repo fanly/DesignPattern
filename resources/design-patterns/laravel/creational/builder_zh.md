@@ -4,6 +4,280 @@
 
 建造者模式将一个复杂对象的构建与它的表示分离，使得同样的构建过程可以创建不同的表示。它通过一步一步构建复杂对象，最终返回完整的对象。
 
+## 架构图
+
+### 建造者模式类图
+```mermaid
+classDiagram
+    class Director {
+        -builder: Builder
+        +construct(): Product
+        +setBuilder(builder): void
+    }
+    
+    class Builder {
+        <<abstract>>
+        +buildPartA(): void
+        +buildPartB(): void
+        +buildPartC(): void
+        +getResult(): Product
+    }
+    
+    class ConcreteBuilder {
+        -product: Product
+        +buildPartA(): void
+        +buildPartB(): void
+        +buildPartC(): void
+        +getResult(): Product
+    }
+    
+    class Product {
+        -partA: string
+        -partB: string
+        -partC: string
+        +setPartA(part): void
+        +setPartB(part): void
+        +setPartC(part): void
+    }
+    
+    Director --> Builder : uses
+    ConcreteBuilder --|> Builder
+    ConcreteBuilder ..> Product : builds
+    
+    note for Director "控制构建过程"
+    note for Builder "定义构建接口"
+    note for ConcreteBuilder "具体构建实现"
+```
+
+### Laravel 查询构建器架构
+```mermaid
+classDiagram
+    class QueryBuilder {
+        -columns: array
+        -from: string
+        -wheres: array
+        -orders: array
+        -limit: int
+        -offset: int
+        +select(columns): QueryBuilder
+        +from(table): QueryBuilder
+        +where(column, operator, value): QueryBuilder
+        +orderBy(column, direction): QueryBuilder
+        +limit(count): QueryBuilder
+        +offset(count): QueryBuilder
+        +get(): Collection
+        +toSql(): string
+    }
+    
+    class Grammar {
+        <<abstract>>
+        +compileSelect(builder): string
+        +compileWheres(builder): string
+        +compileOrders(builder): string
+    }
+    
+    class MySqlGrammar {
+        +compileSelect(builder): string
+        +compileWheres(builder): string
+        +compileOrders(builder): string
+    }
+    
+    class PostgresGrammar {
+        +compileSelect(builder): string
+        +compileWheres(builder): string
+        +compileOrders(builder): string
+    }
+    
+    class Connection {
+        -grammar: Grammar
+        +select(query, bindings): array
+        +insert(query, bindings): bool
+    }
+    
+    QueryBuilder --> Grammar : uses
+    QueryBuilder --> Connection : executes
+    MySqlGrammar --|> Grammar
+    PostgresGrammar --|> Grammar
+    Connection --> Grammar : uses
+    
+    note for QueryBuilder "逐步构建SQL查询"
+    note for Grammar "SQL语法构建器"
+```
+
+### 建造者模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Director
+    participant Builder
+    participant Product
+    
+    Client->>Director: construct()
+    Director->>Builder: buildPartA()
+    Builder->>Product: setPartA()
+    Director->>Builder: buildPartB()
+    Builder->>Product: setPartB()
+    Director->>Builder: buildPartC()
+    Builder->>Product: setPartC()
+    Director->>Builder: getResult()
+    Builder-->>Director: product
+    Director-->>Client: product
+    
+    Note over Director: 控制构建顺序
+    Note over Builder: 逐步构建产品
+```
+
+### Laravel 查询构建流程
+```mermaid
+flowchart TD
+    A[开始构建查询] --> B[QueryBuilder实例]
+    B --> C[select字段]
+    C --> D[from表名]
+    D --> E[where条件]
+    E --> F[orderBy排序]
+    F --> G[limit限制]
+    G --> H[offset偏移]
+    H --> I[构建完成]
+    I --> J{执行类型}
+    
+    J -->|get| K[Grammar编译SQL]
+    J -->|toSql| L[返回SQL字符串]
+    J -->|first| M[添加limit 1]
+    J -->|count| N[编译count查询]
+    
+    K --> O[Connection执行]
+    L --> P[返回SQL]
+    M --> O
+    N --> O
+    
+    O --> Q[返回结果]
+    P --> Q
+    
+    style B fill:#e1f5fe
+    style I fill:#e8f5e8
+    style Q fill:#fff3e0
+```
+
+### Eloquent 查询构建器架构
+```mermaid
+classDiagram
+    class EloquentBuilder {
+        -query: QueryBuilder
+        -model: Model
+        +select(columns): EloquentBuilder
+        +where(column, operator, value): EloquentBuilder
+        +with(relations): EloquentBuilder
+        +orderBy(column, direction): EloquentBuilder
+        +limit(count): EloquentBuilder
+        +get(): Collection
+        +first(): Model
+        +find(id): Model
+    }
+    
+    class QueryBuilder {
+        +select(columns): QueryBuilder
+        +where(column, operator, value): QueryBuilder
+        +orderBy(column, direction): QueryBuilder
+        +limit(count): QueryBuilder
+        +get(): Collection
+    }
+    
+    class Model {
+        -attributes: array
+        -relations: array
+        +newEloquentBuilder(): EloquentBuilder
+        +newQuery(): EloquentBuilder
+    }
+    
+    class Collection {
+        -items: array
+        +map(callback): Collection
+        +filter(callback): Collection
+        +first(): mixed
+    }
+    
+    EloquentBuilder --> QueryBuilder : wraps
+    EloquentBuilder --> Model : creates
+    EloquentBuilder --> Collection : returns
+    Model --> EloquentBuilder : creates
+    
+    note for EloquentBuilder "Eloquent查询构建器"
+    note for QueryBuilder "底层查询构建器"
+```
+
+### 响应构建器模式
+```mermaid
+classDiagram
+    class ResponseBuilder {
+        -data: mixed
+        -status: int
+        -headers: array
+        -cookies: array
+        +data(data): ResponseBuilder
+        +status(code): ResponseBuilder
+        +header(key, value): ResponseBuilder
+        +cookie(name, value): ResponseBuilder
+        +json(): JsonResponse
+        +view(template): ViewResponse
+        +redirect(url): RedirectResponse
+    }
+    
+    class JsonResponse {
+        -data: mixed
+        -status: int
+        -headers: array
+        +setData(data): void
+        +setStatusCode(code): void
+    }
+    
+    class ViewResponse {
+        -view: string
+        -data: array
+        -status: int
+        +setView(view): void
+        +with(data): void
+    }
+    
+    class RedirectResponse {
+        -url: string
+        -status: int
+        +setTargetUrl(url): void
+        +setStatusCode(code): void
+    }
+    
+    ResponseBuilder ..> JsonResponse : creates
+    ResponseBuilder ..> ViewResponse : creates
+    ResponseBuilder ..> RedirectResponse : creates
+    
+    note for ResponseBuilder "逐步构建HTTP响应"
+```
+
+### 表单请求构建器
+```mermaid
+flowchart TD
+    A[FormRequest构建] --> B[验证规则构建]
+    B --> C[rules方法]
+    C --> D[添加字段规则]
+    D --> E[添加自定义验证]
+    E --> F[添加条件验证]
+    F --> G[构建完整验证器]
+    G --> H[执行验证]
+    H --> I{验证结果}
+    
+    I -->|通过| J[继续请求处理]
+    I -->|失败| K[返回验证错误]
+    
+    J --> L[authorize方法]
+    L --> M[权限检查]
+    M --> N[请求处理完成]
+    
+    K --> O[重定向回表单]
+    
+    style B fill:#e1f5fe
+    style G fill:#e8f5e8
+    style H fill:#fff3e0
+```
+
 ## 设计意图
 
 - **分离构建过程**：将复杂对象的构建过程与对象本身分离

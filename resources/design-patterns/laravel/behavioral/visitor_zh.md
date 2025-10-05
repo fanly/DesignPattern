@@ -4,6 +4,279 @@
 
 访问者模式是一种将算法与对象结构分离的设计模式。它允许在不修改现有对象结构的情况下定义新的操作。访问者模式通过将操作封装在访问者对象中，实现了操作与对象结构的解耦。
 
+## 架构图
+
+### 访问者模式类图
+```mermaid
+classDiagram
+    class Visitor {
+        <<interface>>
+        +visitConcreteElementA(element): void
+        +visitConcreteElementB(element): void
+    }
+    
+    class ConcreteVisitorA {
+        +visitConcreteElementA(element): void
+        +visitConcreteElementB(element): void
+    }
+    
+    class ConcreteVisitorB {
+        +visitConcreteElementA(element): void
+        +visitConcreteElementB(element): void
+    }
+    
+    class Element {
+        <<interface>>
+        +accept(visitor): void
+    }
+    
+    class ConcreteElementA {
+        +accept(visitor): void
+        +operationA(): void
+    }
+    
+    class ConcreteElementB {
+        +accept(visitor): void
+        +operationB(): void
+    }
+    
+    class ObjectStructure {
+        -elements: array
+        +attach(element): void
+        +detach(element): void
+        +accept(visitor): void
+    }
+    
+    Visitor <|.. ConcreteVisitorA
+    Visitor <|.. ConcreteVisitorB
+    Element <|.. ConcreteElementA
+    Element <|.. ConcreteElementB
+    ObjectStructure --> Element : contains
+    
+    note for Visitor "访问者接口\n定义访问操作"
+    note for Element "元素接口\n接受访问者"
+```
+
+### Laravel 路由访问者架构
+```mermaid
+classDiagram
+    class RouteVisitor {
+        <<interface>>
+        +visitRoute(route): mixed
+        +visitRouteGroup(group): mixed
+        +visitResource(resource): mixed
+    }
+    
+    class RouteCompiler {
+        +visitRoute(route): CompiledRoute
+        +visitRouteGroup(group): array
+        +visitResource(resource): array
+    }
+    
+    class RouteAnalyzer {
+        +visitRoute(route): array
+        +visitRouteGroup(group): array
+        +visitResource(resource): array
+    }
+    
+    class RouteOptimizer {
+        +visitRoute(route): Route
+        +visitRouteGroup(group): RouteGroup
+        +visitResource(resource): ResourceRoute
+    }
+    
+    class Route {
+        -uri: string
+        -methods: array
+        -action: mixed
+        +accept(visitor): mixed
+        +getUri(): string
+    }
+    
+    class RouteGroup {
+        -routes: array
+        -attributes: array
+        +accept(visitor): mixed
+        +getRoutes(): array
+    }
+    
+    class ResourceRoute {
+        -resource: string
+        -controller: string
+        +accept(visitor): mixed
+        +getResource(): string
+    }
+    
+    RouteVisitor <|.. RouteCompiler
+    RouteVisitor <|.. RouteAnalyzer
+    RouteVisitor <|.. RouteOptimizer
+    
+    Route --> RouteVisitor : accepts
+    RouteGroup --> RouteVisitor : accepts
+    ResourceRoute --> RouteVisitor : accepts
+    
+    note for RouteCompiler "路由编译访问者"
+    note for RouteAnalyzer "路由分析访问者"
+```
+
+### 访问者模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant ObjectStructure
+    participant ElementA
+    participant ElementB
+    participant Visitor
+    
+    Client->>ObjectStructure: accept(visitor)
+    ObjectStructure->>ElementA: accept(visitor)
+    ElementA->>Visitor: visitConcreteElementA(this)
+    Visitor-->>ElementA: result
+    ElementA-->>ObjectStructure: result
+    
+    ObjectStructure->>ElementB: accept(visitor)
+    ElementB->>Visitor: visitConcreteElementB(this)
+    Visitor-->>ElementB: result
+    ElementB-->>ObjectStructure: result
+    
+    ObjectStructure-->>Client: aggregated results
+    
+    Note over Visitor: 访问者对不同元素执行不同操作
+    Note over ElementA: 元素接受访问者并调用相应方法
+```
+
+### Laravel 表单验证访问者
+```mermaid
+classDiagram
+    class ValidationVisitor {
+        <<interface>>
+        +visitTextField(field): array
+        +visitEmailField(field): array
+        +visitPasswordField(field): array
+        +visitFileField(field): array
+    }
+    
+    class RuleVisitor {
+        +visitTextField(field): array
+        +visitEmailField(field): array
+        +visitPasswordField(field): array
+        +visitFileField(field): array
+    }
+    
+    class MessageVisitor {
+        +visitTextField(field): array
+        +visitEmailField(field): array
+        +visitPasswordField(field): array
+        +visitFileField(field): array
+    }
+    
+    class FormField {
+        <<abstract>>
+        -name: string
+        -value: mixed
+        +accept(visitor): mixed
+        +getName(): string
+    }
+    
+    class TextField {
+        +accept(visitor): mixed
+        +getMaxLength(): int
+    }
+    
+    class EmailField {
+        +accept(visitor): mixed
+        +getDomain(): string
+    }
+    
+    class PasswordField {
+        +accept(visitor): mixed
+        +getMinLength(): int
+    }
+    
+    class FileField {
+        +accept(visitor): mixed
+        +getAllowedTypes(): array
+    }
+    
+    ValidationVisitor <|.. RuleVisitor
+    ValidationVisitor <|.. MessageVisitor
+    FormField <|-- TextField
+    FormField <|-- EmailField
+    FormField <|-- PasswordField
+    FormField <|-- FileField
+    
+    note for RuleVisitor "规则生成访问者"
+    note for MessageVisitor "消息生成访问者"
+```
+
+### Laravel 数据库查询访问者
+```mermaid
+classDiagram
+    class QueryVisitor {
+        <<interface>>
+        +visitSelect(query): string
+        +visitInsert(query): string
+        +visitUpdate(query): string
+        +visitDelete(query): string
+    }
+    
+    class MySqlVisitor {
+        +visitSelect(query): string
+        +visitInsert(query): string
+        +visitUpdate(query): string
+        +visitDelete(query): string
+    }
+    
+    class PostgresVisitor {
+        +visitSelect(query): string
+        +visitInsert(query): string
+        +visitUpdate(query): string
+        +visitDelete(query): string
+    }
+    
+    class SqliteVisitor {
+        +visitSelect(query): string
+        +visitInsert(query): string
+        +visitUpdate(query): string
+        +visitDelete(query): string
+    }
+    
+    class Query {
+        <<abstract>>
+        +accept(visitor): string
+    }
+    
+    class SelectQuery {
+        -columns: array
+        -tables: array
+        -conditions: array
+        +accept(visitor): string
+    }
+    
+    class InsertQuery {
+        -table: string
+        -data: array
+        +accept(visitor): string
+    }
+    
+    class UpdateQuery {
+        -table: string
+        -data: array
+        -conditions: array
+        +accept(visitor): string
+    }
+    
+    QueryVisitor <|.. MySqlVisitor
+    QueryVisitor <|.. PostgresVisitor
+    QueryVisitor <|.. SqliteVisitor
+    Query <|-- SelectQuery
+    Query <|-- InsertQuery
+    Query <|-- UpdateQuery
+    
+    note for MySqlVisitor "MySQL语法访问者"
+    note for PostgresVisitor "PostgreSQL语法访问者"
+```
+
 ## 设计意图
 
 - **操作与结构分离**：将算法从对象结构中分离出来

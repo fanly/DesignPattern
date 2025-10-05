@@ -4,6 +4,95 @@
 
 Define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
 
+## Architecture Diagram
+
+### Observer Pattern Structure
+
+```mermaid
+classDiagram
+    class Subject {
+        <<interface>>
+        +attach(observer: Observer): void
+        +detach(observer: Observer): void
+        +notify(): void
+    }
+    
+    class ConcreteSubject {
+        -observers: List~Observer~
+        -state: State
+        +attach(observer: Observer): void
+        +detach(observer: Observer): void
+        +notify(): void
+        +getState(): State
+        +setState(state: State): void
+    }
+    
+    class Observer {
+        <<interface>>
+        +update(subject: Subject): void
+    }
+    
+    class ConcreteObserver {
+        -observerState: State
+        +update(subject: Subject): void
+    }
+    
+    Subject <|.. ConcreteSubject : implements
+    Observer <|.. ConcreteObserver : implements
+    ConcreteSubject --> Observer : notifies
+    ConcreteObserver --> ConcreteSubject : observes
+```
+
+### Laravel Event System Architecture
+
+```mermaid
+graph TB
+    A[Event Trigger] --> B[Event Dispatcher]
+    B --> C[Event Listeners Registry]
+    C --> D{Has Listeners?}
+    D -->|Yes| E[Execute Listeners]
+    D -->|No| F[End]
+    E --> G[Listener 1]
+    E --> H[Listener 2]
+    E --> I[Listener N]
+    G --> J[Handle Event]
+    H --> K[Handle Event]
+    I --> L[Handle Event]
+    
+    style B fill:#e1f5fe
+    style E fill:#f3e5f5
+    style J fill:#fff3e0
+    style K fill:#fff3e0
+    style L fill:#fff3e0
+```
+
+### Event Flow Sequence
+
+```mermaid
+sequenceDiagram
+    participant Model
+    participant EventDispatcher
+    participant Listener1
+    participant Listener2
+    participant Queue
+    
+    Model->>EventDispatcher: fire('user.created', $user)
+    EventDispatcher->>EventDispatcher: getListeners('user.created')
+    
+    EventDispatcher->>Listener1: handle($event)
+    Listener1->>Listener1: sendWelcomeEmail()
+    Listener1-->>EventDispatcher: completed
+    
+    EventDispatcher->>Listener2: handle($event)
+    Listener2->>Queue: dispatch(UpdateUserStats)
+    Listener2-->>EventDispatcher: queued
+    
+    EventDispatcher-->>Model: all listeners notified
+    
+    note over Queue: Async processing
+    Queue->>Queue: process UpdateUserStats
+```
+
 ## Design Intent
 
 - **Loose coupling**: Reduce dependency between subject and observers

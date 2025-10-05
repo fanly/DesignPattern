@@ -4,6 +4,286 @@
 
 中介者模式用一个中介对象来封装一系列的对象交互。中介者使各对象不需要显式地相互引用，从而使其耦合松散，而且可以独立地改变它们之间的交互。
 
+## 架构图
+
+### 中介者模式类图
+```mermaid
+classDiagram
+    class Mediator {
+        <<interface>>
+        +notify(sender, event): void
+    }
+    
+    class ConcreteMediator {
+        -componentA: ComponentA
+        -componentB: ComponentB
+        +notify(sender, event): void
+        +createComponents(): void
+    }
+    
+    class BaseComponent {
+        <<abstract>>
+        -mediator: Mediator
+        +setMediator(mediator): void
+    }
+    
+    class ComponentA {
+        +doA(): void
+        +doSomething(): void
+    }
+    
+    class ComponentB {
+        +doB(): void
+        +doSomethingElse(): void
+    }
+    
+    Mediator <|.. ConcreteMediator
+    BaseComponent <|-- ComponentA
+    BaseComponent <|-- ComponentB
+    ConcreteMediator --> ComponentA : manages
+    ConcreteMediator --> ComponentB : manages
+    BaseComponent --> Mediator : communicates through
+    
+    note for ConcreteMediator "具体中介者\n协调组件交互"
+    note for BaseComponent "基础组件\n通过中介者通信"
+```
+
+### Laravel 事件系统中介者架构
+```mermaid
+classDiagram
+    class EventDispatcher {
+        -listeners: array
+        -wildcards: array
+        +listen(event, listener): void
+        +dispatch(event, payload): array
+        +fire(event, payload): array
+        +forget(event): void
+    }
+    
+    class Event {
+        <<abstract>>
+        +broadcastOn(): array
+        +broadcastWith(): array
+    }
+    
+    class UserRegistered {
+        +user: User
+        +broadcastOn(): array
+    }
+    
+    class OrderPlaced {
+        +order: Order
+        +broadcastOn(): array
+    }
+    
+    class Listener {
+        <<interface>>
+        +handle(event): void
+    }
+    
+    class SendWelcomeEmail {
+        +handle(UserRegistered): void
+    }
+    
+    class UpdateUserStats {
+        +handle(UserRegistered): void
+    }
+    
+    class ProcessPayment {
+        +handle(OrderPlaced): void
+    }
+    
+    EventDispatcher --> Event : dispatches
+    EventDispatcher --> Listener : notifies
+    UserRegistered --|> Event
+    OrderPlaced --|> Event
+    SendWelcomeEmail ..|> Listener
+    UpdateUserStats ..|> Listener
+    ProcessPayment ..|> Listener
+    
+    note for EventDispatcher "事件分发器\n作为中介者协调事件和监听器"
+    note for Event "事件类\n封装事件数据"
+```
+
+### 中介者模式时序图
+```mermaid
+sequenceDiagram
+    participant ComponentA
+    participant Mediator
+    participant ComponentB
+    participant ComponentC
+    
+    ComponentA->>Mediator: notify(this, "eventA")
+    Mediator->>ComponentB: handleEventA()
+    Mediator->>ComponentC: handleEventA()
+    ComponentB-->>Mediator: response
+    ComponentC-->>Mediator: response
+    Mediator-->>ComponentA: aggregated response
+    
+    Note over Mediator: 中介者协调所有组件交互
+    Note over ComponentA: 组件只与中介者通信
+```
+
+### Laravel 服务容器中介者
+```mermaid
+classDiagram
+    class Container {
+        -bindings: array
+        -instances: array
+        -aliases: array
+        +bind(abstract, concrete): void
+        +singleton(abstract, concrete): void
+        +make(abstract): mixed
+        +resolve(abstract): mixed
+    }
+    
+    class ServiceProvider {
+        <<abstract>>
+        -app: Container
+        +register(): void
+        +boot(): void
+        +provides(): array
+    }
+    
+    class UserService {
+        -repository: UserRepository
+        +createUser(data): User
+        +updateUser(id, data): User
+    }
+    
+    class UserRepository {
+        -model: User
+        +find(id): User
+        +create(data): User
+        +update(id, data): User
+    }
+    
+    class UserController {
+        -userService: UserService
+        +store(request): Response
+        +update(id, request): Response
+    }
+    
+    Container --> ServiceProvider : manages
+    Container --> UserService : resolves
+    Container --> UserRepository : resolves
+    Container --> UserController : resolves
+    UserController --> UserService : uses
+    UserService --> UserRepository : uses
+    
+    note for Container "服务容器\n作为中介者管理依赖"
+    note for ServiceProvider "服务提供者\n注册服务绑定"
+```
+
+### Laravel 广播系统中介者
+```mermaid
+classDiagram
+    class BroadcastManager {
+        -drivers: array
+        -app: Application
+        +driver(name): Broadcaster
+        +event(event): PendingBroadcast
+    }
+    
+    class Broadcaster {
+        <<interface>>
+        +broadcast(channels, event, payload): void
+        +auth(request): mixed
+    }
+    
+    class PusherBroadcaster {
+        -pusher: Pusher
+        +broadcast(channels, event, payload): void
+        +auth(request): mixed
+    }
+    
+    class RedisBroadcaster {
+        -redis: Redis
+        +broadcast(channels, event, payload): void
+        +auth(request): mixed
+    }
+    
+    class Channel {
+        -name: string
+        +getName(): string
+        +broadcastOn(): array
+    }
+    
+    class PrivateChannel {
+        +broadcastOn(): array
+        +authorize(user): bool
+    }
+    
+    class PresenceChannel {
+        +broadcastOn(): array
+        +authorize(user): bool
+        +getUserInfo(user): array
+    }
+    
+    BroadcastManager --> Broadcaster : manages
+    PusherBroadcaster ..|> Broadcaster
+    RedisBroadcaster ..|> Broadcaster
+    BroadcastManager --> Channel : uses
+    Channel <|-- PrivateChannel
+    Channel <|-- PresenceChannel
+    
+    note for BroadcastManager "广播管理器\n协调广播驱动和频道"
+    note for Broadcaster "广播器接口\n定义广播方法"
+```
+
+### Laravel 队列系统中介者
+```mermaid
+classDiagram
+    class QueueManager {
+        -connections: array
+        -app: Application
+        +connection(name): Queue
+        +push(job, data, queue): mixed
+        +later(delay, job, data, queue): mixed
+    }
+    
+    class Queue {
+        <<interface>>
+        +push(job, data, queue): mixed
+        +pushOn(queue, job, data): mixed
+        +later(delay, job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class DatabaseQueue {
+        -database: Connection
+        +push(job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class RedisQueue {
+        -redis: Redis
+        +push(job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class SqsQueue {
+        -sqs: SqsClient
+        +push(job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class Worker {
+        -manager: QueueManager
+        +daemon(): void
+        +runNextJob(): void
+    }
+    
+    QueueManager --> Queue : manages
+    DatabaseQueue ..|> Queue
+    RedisQueue ..|> Queue
+    SqsQueue ..|> Queue
+    Worker --> QueueManager : uses
+    
+    note for QueueManager "队列管理器\n协调不同队列驱动"
+    note for Worker "队列工作者\n处理队列任务"
+```
+
 ## 设计意图
 
 - **解耦对象**：减少对象间的直接依赖

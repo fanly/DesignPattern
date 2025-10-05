@@ -4,6 +4,105 @@
 
 备忘录模式在不破坏封装性的前提下，捕获一个对象的内部状态，并在该对象之外保存这个状态。这样以后就可将该对象恢复到原先保存的状态。
 
+## 架构图
+
+### 备忘录模式类图
+```mermaid
+classDiagram
+    class Originator {
+        -state: string
+        +setState(state): void
+        +getState(): string
+        +createMemento(): Memento
+        +restoreFromMemento(memento): void
+    }
+    
+    class Memento {
+        -state: string
+        +Memento(state)
+        +getState(): string
+    }
+    
+    class Caretaker {
+        -mementos: array
+        +addMemento(memento): void
+        +getMemento(index): Memento
+        +removeMemento(index): void
+    }
+    
+    Originator --> Memento : creates
+    Caretaker --> Memento : stores
+    Caretaker --> Originator : manages
+    
+    note for Originator "原发器\n创建和恢复备忘录"
+    note for Memento "备忘录\n存储原发器状态"
+    note for Caretaker "管理者\n管理备忘录"
+```
+
+### Laravel 数据库事务备忘录架构
+```mermaid
+classDiagram
+    class Connection {
+        -transactions: int
+        -pdo: PDO
+        +beginTransaction(): void
+        +commit(): void
+        +rollBack(toLevel): void
+        +savepoint(name): void
+        +rollBackToSavepoint(name): void
+    }
+    
+    class TransactionManager {
+        -connection: Connection
+        -savepoints: array
+        -level: int
+        +begin(): void
+        +commit(): void
+        +rollback(): void
+        +savepoint(name): string
+    }
+    
+    class Savepoint {
+        -name: string
+        -level: int
+        -timestamp: DateTime
+        +getName(): string
+        +getLevel(): int
+    }
+    
+    Connection --> TransactionManager : uses
+    TransactionManager --> Savepoint : creates
+    
+    note for Savepoint "保存点\n数据库状态备忘录"
+    note for TransactionManager "事务管理器\n管理保存点"
+```
+
+### 备忘录模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Originator
+    participant Memento
+    participant Caretaker
+    
+    Client->>Originator: setState("State1")
+    Client->>Originator: createMemento()
+    Originator->>Memento: new Memento(state)
+    Originator-->>Client: memento
+    Client->>Caretaker: addMemento(memento)
+    
+    Client->>Originator: setState("State2")
+    
+    Note over Client: 需要恢复状态
+    Client->>Caretaker: getMemento(0)
+    Caretaker-->>Client: memento
+    Client->>Originator: restoreFromMemento(memento)
+    Originator->>Memento: getState()
+    Memento-->>Originator: "State1"
+    
+    Note over Originator: 状态已恢复到State1
+```
+
 ## 设计意图
 
 - **状态保存**：捕获对象内部状态

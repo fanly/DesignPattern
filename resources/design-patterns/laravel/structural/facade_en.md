@@ -4,6 +4,99 @@
 
 Provide a unified interface to a set of interfaces in a subsystem. Facade defines a higher-level interface that makes the subsystem easier to use.
 
+## Architecture Diagram
+
+### Facade Pattern Structure
+
+```mermaid
+classDiagram
+    class Facade {
+        +operation1(): void
+        +operation2(): void
+    }
+    
+    class SubsystemA {
+        +operationA1(): void
+        +operationA2(): void
+    }
+    
+    class SubsystemB {
+        +operationB1(): void
+        +operationB2(): void
+    }
+    
+    class SubsystemC {
+        +operationC1(): void
+        +operationC2(): void
+    }
+    
+    class Client {
+        +main(): void
+    }
+    
+    Client --> Facade : uses
+    Facade --> SubsystemA : delegates
+    Facade --> SubsystemB : delegates
+    Facade --> SubsystemC : delegates
+    
+    note for Facade "Simplifies subsystem access"
+    note for Client "Only knows about Facade"
+```
+
+### Laravel Facade System Architecture
+
+```mermaid
+graph TB
+    A[Client Code] --> B[Laravel Facade]
+    B --> C[Facade Base Class]
+    C --> D[Service Container]
+    D --> E{Service Resolution}
+    E --> F[Cache Service]
+    E --> G[Database Service]
+    E --> H[Mail Service]
+    E --> I[Queue Service]
+    
+    F --> J[Complex Cache Implementation]
+    G --> K[Complex Database Implementation]
+    H --> L[Complex Mail Implementation]
+    I --> M[Complex Queue Implementation]
+    
+    style B fill:#e1f5fe
+    style D fill:#f3e5f5
+    style J fill:#fff3e0
+    style K fill:#fff3e0
+    style L fill:#fff3e0
+    style M fill:#fff3e0
+```
+
+### Facade Resolution Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant CacheFacade
+    participant FacadeBase
+    participant Container
+    participant CacheManager
+    participant CacheStore
+    
+    Client->>CacheFacade: Cache::get('key')
+    CacheFacade->>FacadeBase: __callStatic('get', ['key'])
+    FacadeBase->>FacadeBase: getFacadeRoot()
+    FacadeBase->>Container: make('cache')
+    Container->>CacheManager: resolve cache service
+    CacheManager-->>Container: cache manager instance
+    Container-->>FacadeBase: cache manager
+    FacadeBase->>CacheManager: get('key')
+    CacheManager->>CacheStore: get('key')
+    CacheStore-->>CacheManager: value
+    CacheManager-->>FacadeBase: value
+    FacadeBase-->>CacheFacade: value
+    CacheFacade-->>Client: value
+    
+    note over FacadeBase: Resolves service from container
+```
+
 ## Design Intent
 
 - **Simplify complex systems**: Hide subsystem complexity behind a simple interface

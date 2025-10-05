@@ -4,6 +4,73 @@
 
 The Singleton pattern ensures that a class has only one instance and provides a global point of access to it. This is one of the most commonly used design patterns, particularly suitable for scenarios that require globally unique instances, such as configuration management, database connections, and loggers.
 
+## Architecture Diagram
+
+### Singleton Pattern Structure
+
+```mermaid
+classDiagram
+    class Singleton {
+        -instance: Singleton
+        -Singleton()
+        +getInstance(): Singleton
+        +operation(): void
+    }
+    
+    class Client {
+        +main(): void
+    }
+    
+    Client --> Singleton : uses
+    Singleton --> Singleton : creates/returns
+    
+    note for Singleton "Only one instance exists"
+```
+
+### Laravel Container Singleton Implementation
+
+```mermaid
+graph TB
+    A[Client Request] --> B[Container::singleton()]
+    B --> C{Instance Exists?}
+    C -->|No| D[Create New Instance]
+    C -->|Yes| E[Return Existing Instance]
+    D --> F[Store in Container]
+    F --> E
+    E --> G[Return Instance to Client]
+    
+    style D fill:#e1f5fe
+    style E fill:#f3e5f5
+    style F fill:#fff3e0
+```
+
+### Singleton Lifecycle in Laravel
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Container
+    participant ServiceProvider
+    participant SingletonInstance
+    
+    Client->>ServiceProvider: Register Service
+    ServiceProvider->>Container: singleton(abstract, concrete)
+    Container->>Container: bind(abstract, concrete, shared=true)
+    
+    Client->>Container: resolve(abstract)
+    Container->>Container: Check if instance exists
+    
+    alt Instance not exists
+        Container->>SingletonInstance: Create new instance
+        SingletonInstance-->>Container: Return instance
+        Container->>Container: Store instance
+    else Instance exists
+        Container->>Container: Get stored instance
+    end
+    
+    Container-->>Client: Return singleton instance
+```
+
 ## Design Intent
 
 - **Uniqueness**: Ensure only one instance of a class exists

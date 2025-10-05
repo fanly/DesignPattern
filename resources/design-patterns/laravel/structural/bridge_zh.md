@@ -4,6 +4,115 @@
 
 桥接模式将抽象部分与它的实现部分分离，使它们都可以独立地变化。它通过组合的方式建立两个类层次结构之间的桥梁。
 
+## 架构图
+
+### 桥接模式类图
+```mermaid
+classDiagram
+    class Abstraction {
+        -implementor: Implementor
+        +operation(): void
+        +setImplementor(impl): void
+    }
+    
+    class RefinedAbstraction {
+        +operation(): void
+        +extendedOperation(): void
+    }
+    
+    class Implementor {
+        <<interface>>
+        +operationImpl(): void
+    }
+    
+    class ConcreteImplementorA {
+        +operationImpl(): void
+    }
+    
+    class ConcreteImplementorB {
+        +operationImpl(): void
+    }
+    
+    Abstraction --> Implementor : bridge
+    RefinedAbstraction --|> Abstraction
+    ConcreteImplementorA ..|> Implementor
+    ConcreteImplementorB ..|> Implementor
+    
+    note for Abstraction "抽象层\n定义高层接口"
+    note for Implementor "实现层接口\n定义底层操作"
+```
+
+### Laravel 数据库桥接架构
+```mermaid
+classDiagram
+    class Connection {
+        <<abstract>>
+        -grammar: Grammar
+        -processor: Processor
+        +select(query): array
+        +insert(query): bool
+        +update(query): int
+        +delete(query): int
+    }
+    
+    class MySqlConnection {
+        +getDriverName(): string
+        +getDefaultQueryGrammar(): Grammar
+        +getDefaultPostProcessor(): Processor
+    }
+    
+    class PostgresConnection {
+        +getDriverName(): string
+        +getDefaultQueryGrammar(): Grammar
+        +getDefaultPostProcessor(): Processor
+    }
+    
+    class Grammar {
+        <<abstract>>
+        +compileSelect(builder): string
+        +compileInsert(builder): string
+        +compileUpdate(builder): string
+        +compileDelete(builder): string
+    }
+    
+    class MySqlGrammar {
+        +compileSelect(builder): string
+        +compileInsert(builder): string
+        +compileLimit(builder, limit): string
+    }
+    
+    class PostgresGrammar {
+        +compileSelect(builder): string
+        +compileInsert(builder): string
+        +compileLimit(builder, limit): string
+    }
+    
+    Connection --> Grammar : uses
+    MySqlConnection --|> Connection
+    PostgresConnection --|> Connection
+    MySqlGrammar --|> Grammar
+    PostgresGrammar --|> Grammar
+    
+    note for Connection "数据库连接抽象"
+    note for Grammar "SQL语法实现"
+```
+
+### 桥接模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Abstraction
+    participant Implementor
+    
+    Client->>Abstraction: operation()
+    Abstraction->>Implementor: operationImpl()
+    Implementor-->>Abstraction: result
+    Abstraction-->>Client: processed result
+    
+    Note over Abstraction: 抽象层处理高层逻辑
+    Note over Implementor: 实现层处理底层操作
+```
+
 ## 设计意图
 
 - **分离抽象与实现**：将抽象接口与其实现解耦

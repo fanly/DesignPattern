@@ -4,6 +4,155 @@
 
 Allow an object to alter its behavior when its internal state changes. The object will appear to change its class.
 
+## Architecture Diagrams
+
+### State Pattern Class Diagram
+```mermaid
+classDiagram
+    class Context {
+        -state: State
+        +setState(state): void
+        +request(): void
+        +getState(): State
+    }
+    
+    class State {
+        <<abstract>>
+        +handle(context): void
+        +canTransitionTo(state): boolean
+    }
+    
+    class ConcreteStateA {
+        +handle(context): void
+        +canTransitionTo(state): boolean
+    }
+    
+    class ConcreteStateB {
+        +handle(context): void
+        +canTransitionTo(state): boolean
+    }
+    
+    class ConcreteStateC {
+        +handle(context): void
+        +canTransitionTo(state): boolean
+    }
+    
+    Context --> State
+    State <|-- ConcreteStateA
+    State <|-- ConcreteStateB
+    State <|-- ConcreteStateC
+    ConcreteStateA --> Context : changes state
+    ConcreteStateB --> Context : changes state
+    ConcreteStateC --> Context : changes state
+```
+
+### State Transition Diagram
+```mermaid
+stateDiagram-v2
+    [*] --> Pending
+    Pending --> Processing : process()
+    Pending --> Cancelled : cancel()
+    Processing --> Completed : complete()
+    Processing --> Cancelled : cancel()
+    Completed --> [*]
+    Cancelled --> [*]
+    
+    note right of Pending
+        Initial state
+        Can be processed or cancelled
+    end note
+    
+    note right of Processing
+        Active processing
+        Can be completed or cancelled
+    end note
+    
+    note right of Completed
+        Final state
+        No further transitions
+    end note
+    
+    note right of Cancelled
+        Final state
+        No further transitions
+    end note
+```
+
+### Laravel Order State Machine
+```mermaid
+classDiagram
+    class Order {
+        -state: OrderState
+        -status: string
+        +process(): void
+        +cancel(): void
+        +complete(): void
+        +setState(state): void
+    }
+    
+    class OrderState {
+        <<interface>>
+        +process(order): void
+        +cancel(order): void
+        +complete(order): void
+    }
+    
+    class PendingState {
+        +process(order): void
+        +cancel(order): void
+        +complete(order): void
+    }
+    
+    class ProcessingState {
+        +process(order): void
+        +cancel(order): void
+        +complete(order): void
+    }
+    
+    class CompletedState {
+        +process(order): void
+        +cancel(order): void
+        +complete(order): void
+    }
+    
+    class CancelledState {
+        +process(order): void
+        +cancel(order): void
+        +complete(order): void
+    }
+    
+    Order --> OrderState
+    OrderState <|.. PendingState
+    OrderState <|.. ProcessingState
+    OrderState <|.. CompletedState
+    OrderState <|.. CancelledState
+```
+
+### State Pattern Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Order
+    participant PendingState
+    participant ProcessingState
+    participant CompletedState
+    
+    Client->>Order: new Order()
+    Order->>PendingState: setState(PendingState)
+    
+    Client->>Order: process()
+    Order->>PendingState: process(order)
+    PendingState->>Order: setState(ProcessingState)
+    PendingState->>Order: status = 'processing'
+    
+    Client->>Order: complete()
+    Order->>ProcessingState: complete(order)
+    ProcessingState->>Order: setState(CompletedState)
+    ProcessingState->>Order: status = 'completed'
+    
+    Note over Order: State transitions managed internally
+```
+
 ## Design Intent
 
 - **State encapsulation**: Encapsulate state-specific behavior in separate classes

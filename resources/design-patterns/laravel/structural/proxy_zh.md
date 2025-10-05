@@ -4,6 +4,273 @@
 
 代理模式为其他对象提供一种代理以控制对这个对象的访问。代理对象在客户端和目标对象之间起到中介作用，可以用于控制访问、延迟加载、记录日志、缓存等。
 
+## 架构图
+
+### 代理模式类图
+```mermaid
+classDiagram
+    class Subject {
+        <<interface>>
+        +request(): void
+    }
+    
+    class RealSubject {
+        +request(): void
+    }
+    
+    class Proxy {
+        -realSubject: RealSubject
+        +request(): void
+        +checkAccess(): bool
+        +logAccess(): void
+    }
+    
+    class Client {
+        +operation(): void
+    }
+    
+    Client --> Subject
+    RealSubject ..|> Subject
+    Proxy ..|> Subject
+    Proxy --> RealSubject : controls access
+    
+    note for Proxy "代理对象\n控制对真实对象的访问"
+    note for RealSubject "真实对象\n实际执行业务逻辑"
+```
+
+### Laravel 延迟加载代理架构
+```mermaid
+classDiagram
+    class Model {
+        -attributes: array
+        -relations: array
+        +getAttribute(key): mixed
+        +getRelation(key): mixed
+        +load(relations): Model
+    }
+    
+    class Relation {
+        <<abstract>>
+        -parent: Model
+        -related: Model
+        -query: Builder
+        +getResults(): Collection
+        +get(): Collection
+        +first(): Model
+    }
+    
+    class HasMany {
+        +getResults(): Collection
+        +get(): Collection
+        +create(attributes): Model
+    }
+    
+    class BelongsTo {
+        +getResults(): Model
+        +get(): Model
+        +associate(model): Model
+    }
+    
+    class LazyCollection {
+        -loader: Closure
+        -loaded: bool
+        -items: array
+        +all(): array
+        +first(): mixed
+        +count(): int
+    }
+    
+    Model --> Relation : has relations
+    HasMany --|> Relation
+    BelongsTo --|> Relation
+    Relation --> LazyCollection : returns
+    LazyCollection --> Model : loads when accessed
+    
+    note for Relation "关联代理\n延迟加载相关数据"
+    note for LazyCollection "延迟集合代理"
+```
+
+### 代理模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Proxy
+    participant RealSubject
+    
+    Client->>Proxy: request()
+    Proxy->>Proxy: checkAccess()
+    alt 访问被允许
+        Proxy->>RealSubject: request()
+        RealSubject-->>Proxy: result
+        Proxy->>Proxy: logAccess()
+        Proxy-->>Client: result
+    else 访问被拒绝
+        Proxy-->>Client: access denied
+    end
+    
+    Note over Proxy: 代理控制访问和添加额外功能
+```
+
+### Laravel 模型关联延迟加载流程
+```mermaid
+flowchart TD
+    A[访问模型关联] --> B{关联已加载?}
+    B -->|是| C[返回缓存数据]
+    B -->|否| D[创建关联查询]
+    D --> E[执行数据库查询]
+    E --> F[构建关联对象]
+    F --> G[缓存关联数据]
+    G --> H[返回关联对象]
+    C --> I[完成]
+    H --> I
+    
+    style D fill:#e1f5fe
+    style E fill:#fff3e0
+    style G fill:#e8f5e8
+```
+
+### 缓存代理架构
+```mermaid
+classDiagram
+    class CacheProxy {
+        -target: Service
+        -cache: Cache
+        -ttl: int
+        +getData(key): mixed
+        +setData(key, value): bool
+        +invalidate(key): bool
+    }
+    
+    class DatabaseService {
+        -connection: Connection
+        +findUser(id): User
+        +findPost(id): Post
+        +getStatistics(): array
+    }
+    
+    class ApiService {
+        -client: HttpClient
+        +fetchUserData(id): array
+        +fetchWeatherData(location): array
+    }
+    
+    class FileService {
+        -filesystem: Filesystem
+        +readFile(path): string
+        +writeFile(path, content): bool
+    }
+    
+    CacheProxy --> DatabaseService : proxies
+    CacheProxy --> ApiService : proxies
+    CacheProxy --> FileService : proxies
+    
+    note for CacheProxy "缓存代理\n自动缓存服务调用结果"
+```
+
+### 权限代理模式
+```mermaid
+classDiagram
+    class AuthProxy {
+        -target: Controller
+        -auth: Auth
+        -permissions: array
+        +handle(request): Response
+        +checkPermission(action): bool
+        +logAccess(user, action): void
+    }
+    
+    class UserController {
+        +index(): Response
+        +show(id): Response
+        +store(request): Response
+        +update(id, request): Response
+        +destroy(id): Response
+    }
+    
+    class AdminController {
+        +dashboard(): Response
+        +users(): Response
+        +settings(): Response
+    }
+    
+    class ApiController {
+        +getData(): Response
+        +postData(request): Response
+    }
+    
+    AuthProxy --> UserController : protects
+    AuthProxy --> AdminController : protects
+    AuthProxy --> ApiController : protects
+    
+    note for AuthProxy "权限代理\n控制访问权限"
+```
+
+### 虚拟代理模式
+```mermaid
+classDiagram
+    class ImageProxy {
+        -filename: string
+        -image: Image
+        -loaded: bool
+        +display(): void
+        +getSize(): array
+        +loadImage(): void
+    }
+    
+    class Image {
+        -data: binary
+        -width: int
+        -height: int
+        +display(): void
+        +getSize(): array
+        +resize(width, height): void
+    }
+    
+    class DocumentProxy {
+        -path: string
+        -document: Document
+        -loaded: bool
+        +getContent(): string
+        +getMetadata(): array
+        +loadDocument(): void
+    }
+    
+    class Document {
+        -content: string
+        -metadata: array
+        +getContent(): string
+        +getMetadata(): array
+        +parse(): void
+    }
+    
+    ImageProxy --> Image : loads on demand
+    DocumentProxy --> Document : loads on demand
+    
+    note for ImageProxy "图片虚拟代理\n延迟加载大图片"
+    note for DocumentProxy "文档虚拟代理\n延迟加载大文档"
+```
+
+### Laravel Gate 权限代理
+```mermaid
+flowchart TD
+    A[用户请求] --> B[Gate代理]
+    B --> C{检查权限}
+    C -->|有权限| D[执行原始操作]
+    C -->|无权限| E[抛出授权异常]
+    D --> F[记录访问日志]
+    F --> G[返回结果]
+    E --> H[返回403错误]
+    
+    I[权限检查流程]
+    C --> J[检查用户角色]
+    C --> K[检查资源权限]
+    C --> L[检查策略规则]
+    
+    style B fill:#e1f5fe
+    style D fill:#e8f5e8
+    style E fill:#ffebee
+```
+
 ## 设计意图
 
 - **访问控制**：控制对真实对象的访问权限

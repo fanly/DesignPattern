@@ -4,6 +4,234 @@
 
 命令模式将一个请求封装为一个对象，从而使你可用不同的请求对客户进行参数化，对请求排队或记录请求日志，以及支持可撤销的操作。它将请求的发送者和接收者解耦。
 
+## 架构图
+
+### 命令模式类图
+```mermaid
+classDiagram
+    class Command {
+        <<interface>>
+        +execute(): void
+        +undo(): void
+    }
+    
+    class ConcreteCommand {
+        -receiver: Receiver
+        -state: any
+        +execute(): void
+        +undo(): void
+    }
+    
+    class Receiver {
+        +action(): void
+        +undoAction(): void
+    }
+    
+    class Invoker {
+        -command: Command
+        -history: array
+        +setCommand(cmd): void
+        +executeCommand(): void
+        +undo(): void
+    }
+    
+    class Client {
+        +createCommand(): Command
+    }
+    
+    ConcreteCommand ..|> Command
+    ConcreteCommand --> Receiver : operates on
+    Invoker --> Command : invokes
+    Client --> ConcreteCommand : creates
+    Client --> Receiver : creates
+    
+    note for ConcreteCommand "具体命令\n封装请求和接收者"
+    note for Invoker "调用者\n管理命令执行"
+```
+
+### Laravel Artisan 命令架构
+```mermaid
+classDiagram
+    class Kernel {
+        -commands: array
+        -artisan: Application
+        +handle(input, output): int
+        +call(command, parameters): int
+        +queue(command, parameters): void
+    }
+    
+    class Command {
+        <<abstract>>
+        -name: string
+        -description: string
+        +handle(): int
+        +fire(): void
+        +argument(key): mixed
+        +option(key): mixed
+    }
+    
+    class MakeCommand {
+        +handle(): int
+        +buildClass(name): string
+        +getStub(): string
+    }
+    
+    class MigrateCommand {
+        -migrator: Migrator
+        +handle(): int
+        +runMigrations(): void
+    }
+    
+    class QueueCommand {
+        -worker: Worker
+        +handle(): int
+        +runWorker(): void
+    }
+    
+    class Application {
+        -commands: array
+        +add(command): void
+        +find(name): Command
+        +run(input, output): int
+    }
+    
+    Kernel --> Application : uses
+    Command <|-- MakeCommand
+    Command <|-- MigrateCommand
+    Command <|-- QueueCommand
+    Application --> Command : manages
+    
+    note for Command "命令基类\n定义命令接口"
+    note for Kernel "命令调用者\n管理命令执行"
+```
+
+### 命令模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Invoker
+    participant Command
+    participant Receiver
+    
+    Client->>Command: create(receiver)
+    Client->>Invoker: setCommand(command)
+    Client->>Invoker: executeCommand()
+    Invoker->>Command: execute()
+    Command->>Receiver: action()
+    Receiver-->>Command: result
+    Command-->>Invoker: result
+    Invoker-->>Client: result
+    
+    Note over Invoker: 调用者不知道具体接收者
+    Note over Command: 命令封装了请求和接收者
+```
+
+### Laravel 队列命令架构
+```mermaid
+classDiagram
+    class Job {
+        <<interface>>
+        +handle(): void
+        +failed(exception): void
+    }
+    
+    class Queueable {
+        <<trait>>
+        +onQueue(queue): self
+        +onConnection(connection): self
+        +delay(delay): self
+    }
+    
+    class SendEmailJob {
+        -user: User
+        -email: Email
+        +handle(): void
+        +failed(exception): void
+    }
+    
+    class ProcessPaymentJob {
+        -payment: Payment
+        +handle(): void
+        +failed(exception): void
+    }
+    
+    class Queue {
+        +push(job): mixed
+        +later(delay, job): mixed
+        +pop(queue): Job
+    }
+    
+    class Worker {
+        -queue: Queue
+        +daemon(): void
+        +runNextJob(): void
+        +process(job): void
+    }
+    
+    SendEmailJob ..|> Job
+    ProcessPaymentJob ..|> Job
+    SendEmailJob ..|> Queueable
+    ProcessPaymentJob ..|> Queueable
+    
+    Queue --> Job : manages
+    Worker --> Queue : processes
+    Worker --> Job : executes
+    
+    note for Job "队列任务接口\n封装异步操作"
+    note for Worker "队列工作者\n执行队列命令"
+```
+
+### Laravel 事件命令模式
+```mermaid
+classDiagram
+    class Event {
+        <<abstract>>
+        +broadcastOn(): array
+        +broadcastWith(): array
+    }
+    
+    class UserRegistered {
+        +user: User
+        +broadcastOn(): array
+    }
+    
+    class OrderPlaced {
+        +order: Order
+        +broadcastOn(): array
+    }
+    
+    class Listener {
+        <<interface>>
+        +handle(event): void
+    }
+    
+    class SendWelcomeEmail {
+        +handle(UserRegistered): void
+    }
+    
+    class UpdateInventory {
+        +handle(OrderPlaced): void
+    }
+    
+    class EventDispatcher {
+        -listeners: array
+        +listen(event, listener): void
+        +dispatch(event): void
+        +fire(event): void
+    }
+    
+    UserRegistered --|> Event
+    OrderPlaced --|> Event
+    SendWelcomeEmail ..|> Listener
+    UpdateInventory ..|> Listener
+    
+    EventDispatcher --> Event : dispatches
+    EventDispatcher --> Listener : invokes
+    
+    note for EventDispatcher "事件分发器\n管理事件和监听器"
+    note for Listener "事件监听器\n处理具体事件"
+```
+
 ## 设计意图
 
 - **请求封装**：将请求封装为对象

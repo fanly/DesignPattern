@@ -4,6 +4,241 @@
 
 原型模式用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。它允许通过复制现有对象来创建新对象，而不是通过实例化类。
 
+## 架构图
+
+### 原型模式类图
+```mermaid
+classDiagram
+    class Prototype {
+        <<interface>>
+        +clone(): Prototype
+    }
+    
+    class ConcretePrototype {
+        -field1: string
+        -field2: int
+        +clone(): ConcretePrototype
+        +setField1(value): void
+        +setField2(value): void
+    }
+    
+    class Client {
+        -prototype: Prototype
+        +operation(): void
+    }
+    
+    Client --> Prototype : uses
+    ConcretePrototype ..|> Prototype
+    ConcretePrototype ..> ConcretePrototype : clones
+    
+    note for ConcretePrototype "实现克隆方法\n复制自身状态"
+```
+
+### Laravel 模型原型架构
+```mermaid
+classDiagram
+    class Model {
+        <<abstract>>
+        -attributes: array
+        -relations: array
+        -original: array
+        +replicate(except): Model
+        +duplicate(): Model
+        +clone(): void
+        +setRawAttributes(attributes): void
+        +setRelations(relations): void
+    }
+    
+    class User {
+        +name: string
+        +email: string
+        +password: string
+        +replicate(except): User
+    }
+    
+    class Post {
+        +title: string
+        +content: string
+        +author_id: int
+        +replicate(except): Post
+    }
+    
+    class Order {
+        +customer_id: int
+        +total: decimal
+        +status: string
+        +replicate(except): Order
+    }
+    
+    User --|> Model
+    Post --|> Model
+    Order --|> Model
+    
+    User ..> User : replicates
+    Post ..> Post : replicates
+    Order ..> Order : replicates
+    
+    note for Model "提供复制功能的基类"
+    note for User "用户模型原型"
+```
+
+### 原型模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant OriginalObject
+    participant ClonedObject
+    
+    Note over OriginalObject: 原型对象已存在
+    Client->>OriginalObject: clone()
+    OriginalObject->>ClonedObject: new ClonedObject()
+    OriginalObject->>ClonedObject: 复制属性和状态
+    ClonedObject-->>OriginalObject: 克隆完成
+    OriginalObject-->>Client: ClonedObject
+    
+    Note over Client: 获得原型的副本
+    Client->>ClonedObject: 修改副本属性
+    
+    Note over OriginalObject, ClonedObject: 两个独立的对象实例
+```
+
+### Laravel 模型复制流程
+```mermaid
+flowchart TD
+    A[现有模型实例] --> B[调用replicate方法]
+    B --> C[获取当前属性]
+    C --> D[排除指定字段]
+    D --> E{排除默认字段}
+    E --> F[主键ID]
+    E --> G[created_at]
+    E --> H[updated_at]
+    
+    F --> I[创建新模型实例]
+    G --> I
+    H --> I
+    
+    I --> J[设置原始属性]
+    J --> K[复制关联关系]
+    K --> L[返回新实例]
+    
+    L --> M[可选：修改属性]
+    M --> N[保存到数据库]
+    
+    style B fill:#e1f5fe
+    style I fill:#e8f5e8
+    style L fill:#fff3e0
+```
+
+### 配置原型模式
+```mermaid
+classDiagram
+    class ConfigRepository {
+        -items: array
+        +get(key): mixed
+        +set(key, value): void
+        +all(): array
+        +clone(): ConfigRepository
+    }
+    
+    class CacheConfig {
+        -stores: array
+        -default: string
+        +getStores(): array
+        +getDefault(): string
+        +clone(): CacheConfig
+    }
+    
+    class DatabaseConfig {
+        -connections: array
+        -default: string
+        +getConnections(): array
+        +getDefault(): string
+        +clone(): DatabaseConfig
+    }
+    
+    class MailConfig {
+        -mailers: array
+        -default: string
+        +getMailers(): array
+        +getDefault(): string
+        +clone(): MailConfig
+    }
+    
+    ConfigRepository --> CacheConfig : manages
+    ConfigRepository --> DatabaseConfig : manages
+    ConfigRepository --> MailConfig : manages
+    
+    CacheConfig ..> CacheConfig : clones
+    DatabaseConfig ..> DatabaseConfig : clones
+    MailConfig ..> MailConfig : clones
+    
+    note for ConfigRepository "配置管理器"
+    note for CacheConfig "缓存配置原型"
+```
+
+### 请求原型模式
+```mermaid
+classDiagram
+    class Request {
+        -attributes: array
+        -query: array
+        -request: array
+        -headers: array
+        +duplicate(): Request
+        +clone(): void
+        +merge(input): Request
+    }
+    
+    class FormRequest {
+        -validator: Validator
+        -rules: array
+        +duplicate(): FormRequest
+        +rules(): array
+        +authorize(): bool
+    }
+    
+    class ApiRequest {
+        -token: string
+        -apiVersion: string
+        +duplicate(): ApiRequest
+        +getToken(): string
+        +getVersion(): string
+    }
+    
+    FormRequest --|> Request
+    ApiRequest --|> Request
+    
+    Request ..> Request : duplicates
+    FormRequest ..> FormRequest : duplicates
+    ApiRequest ..> ApiRequest : duplicates
+    
+    note for Request "HTTP请求原型"
+```
+
+### 集合原型模式
+```mermaid
+flowchart TD
+    A[原始集合] --> B[Collection实例]
+    B --> C[包含多个模型]
+    C --> D[调用replicate方法]
+    D --> E[遍历集合项目]
+    E --> F[复制每个模型]
+    F --> G[创建新集合]
+    G --> H{需要修改?}
+    
+    H -->|是| I[批量修改属性]
+    H -->|否| J[保持原样]
+    
+    I --> K[返回新集合]
+    J --> K
+    
+    K --> L[可选：批量保存]
+    
+    style B fill:#e1f5fe
+    style F fill:#e8f5e8
+    style G fill:#fff3e0
+```
+
 ## 设计意图
 
 - **对象复制**：通过复制现有对象来创建新对象

@@ -4,6 +4,193 @@
 
 工厂方法模式定义了一个创建对象的接口，但让子类决定实例化哪个类。工厂方法让类的实例化延迟到子类，实现了创建者与具体产品的解耦。
 
+## 架构图
+
+### 工厂方法模式类图
+```mermaid
+classDiagram
+    class Creator {
+        <<abstract>>
+        +factoryMethod(): Product
+        +operation(): void
+    }
+    
+    class ConcreteCreator {
+        +factoryMethod(): Product
+    }
+    
+    class Product {
+        <<interface>>
+        +operation(): void
+    }
+    
+    class ConcreteProduct {
+        +operation(): void
+    }
+    
+    Creator --> Product : creates
+    ConcreteCreator --|> Creator
+    ConcreteProduct ..|> Product
+    ConcreteCreator ..> ConcreteProduct : creates
+    
+    note for Creator "定义工厂方法接口\n延迟到子类实现"
+```
+
+### Laravel 数据库连接工厂架构
+```mermaid
+classDiagram
+    class DatabaseManager {
+        -connections: array
+        -factory: ConnectionFactory
+        +connection(name): Connection
+        +makeConnection(name): Connection
+    }
+    
+    class ConnectionFactory {
+        +make(config, name): Connection
+        +createMysqlConnection(config): Connection
+        +createPostgresConnection(config): Connection
+        +createSqliteConnection(config): Connection
+    }
+    
+    class Connection {
+        <<abstract>>
+        +select(query): array
+        +insert(query): bool
+        +update(query): int
+        +delete(query): int
+    }
+    
+    class MySqlConnection {
+        -pdo: PDO
+        +select(query): array
+        +insert(query): bool
+    }
+    
+    class PostgresConnection {
+        -pdo: PDO
+        +select(query): array
+        +insert(query): bool
+    }
+    
+    class SqliteConnection {
+        -pdo: PDO
+        +select(query): array
+        +insert(query): bool
+    }
+    
+    DatabaseManager --> ConnectionFactory
+    ConnectionFactory --> Connection : creates
+    MySqlConnection --|> Connection
+    PostgresConnection --|> Connection
+    SqliteConnection --|> Connection
+    ConnectionFactory ..> MySqlConnection : creates
+    ConnectionFactory ..> PostgresConnection : creates
+    ConnectionFactory ..> SqliteConnection : creates
+    
+    note for ConnectionFactory "根据配置创建不同类型的数据库连接"
+```
+
+### 工厂方法时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Creator
+    participant ConcreteCreator
+    participant ConcreteProduct
+    
+    Client->>Creator: operation()
+    Creator->>ConcreteCreator: factoryMethod()
+    ConcreteCreator->>ConcreteProduct: new ConcreteProduct()
+    ConcreteProduct-->>ConcreteCreator: instance
+    ConcreteCreator-->>Creator: product
+    Creator->>ConcreteProduct: operation()
+    ConcreteProduct-->>Creator: result
+    Creator-->>Client: result
+    
+    Note over ConcreteCreator: 子类决定创建哪个产品
+```
+
+### Laravel 连接创建流程
+```mermaid
+flowchart TD
+    A[请求数据库连接] --> B[DatabaseManager]
+    B --> C{连接已存在?}
+    C -->|是| D[返回缓存连接]
+    C -->|否| E[makeConnection]
+    E --> F[获取配置信息]
+    F --> G[ConnectionFactory]
+    G --> H{数据库驱动类型}
+    H -->|mysql| I[createMysqlConnection]
+    H -->|pgsql| J[createPostgresConnection]
+    H -->|sqlite| K[createSqliteConnection]
+    H -->|sqlsrv| L[createSqlServerConnection]
+    
+    I --> M[MySqlConnection实例]
+    J --> N[PostgresConnection实例]
+    K --> O[SqliteConnection实例]
+    L --> P[SqlServerConnection实例]
+    
+    M --> Q[缓存连接]
+    N --> Q
+    O --> Q
+    P --> Q
+    Q --> R[返回连接实例]
+    D --> R
+    
+    style G fill:#e1f5fe
+    style Q fill:#e8f5e8
+    style R fill:#fff3e0
+```
+
+### 队列驱动工厂架构
+```mermaid
+classDiagram
+    class QueueManager {
+        -connections: array
+        +connection(name): QueueContract
+        +resolve(name): QueueContract
+    }
+    
+    class QueueContract {
+        <<interface>>
+        +push(job, data, queue): mixed
+        +later(delay, job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class DatabaseQueue {
+        -database: Connection
+        +push(job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class RedisQueue {
+        -redis: Redis
+        +push(job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class SqsQueue {
+        -sqs: SqsClient
+        +push(job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    class SyncQueue {
+        +push(job, data, queue): mixed
+        +pop(queue): Job
+    }
+    
+    QueueManager --> QueueContract : creates
+    DatabaseQueue ..|> QueueContract
+    RedisQueue ..|> QueueContract
+    SqsQueue ..|> QueueContract
+    SyncQueue ..|> QueueContract
+    
+    note for QueueManager "根据配置创建不同的队列驱动"
+```
+
 ## 设计意图
 
 - **解耦创建逻辑**：将对象的创建与使用分离

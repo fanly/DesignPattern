@@ -4,6 +4,302 @@
 
 策略模式定义了一系列算法，并将每个算法封装起来，使它们可以相互替换。策略模式让算法独立于使用它的客户而变化。
 
+## 架构图
+
+### 策略模式类图
+```mermaid
+classDiagram
+    class Context {
+        -strategy: Strategy
+        +setStrategy(strategy): void
+        +executeStrategy(): void
+    }
+    
+    class Strategy {
+        <<interface>>
+        +execute(): void
+    }
+    
+    class ConcreteStrategyA {
+        +execute(): void
+    }
+    
+    class ConcreteStrategyB {
+        +execute(): void
+    }
+    
+    class ConcreteStrategyC {
+        +execute(): void
+    }
+    
+    Context --> Strategy
+    ConcreteStrategyA ..|> Strategy
+    ConcreteStrategyB ..|> Strategy
+    ConcreteStrategyC ..|> Strategy
+    
+    note for Context "维护策略引用\n委托算法执行"
+```
+
+### Laravel 支付策略架构
+```mermaid
+classDiagram
+    class PaymentContext {
+        -strategy: PaymentStrategy
+        +setPaymentMethod(strategy): void
+        +processPayment(amount, data): PaymentResult
+        +processRefund(transactionId, amount): RefundResult
+    }
+    
+    class PaymentStrategy {
+        <<interface>>
+        +pay(amount, data): PaymentResult
+        +refund(transactionId, amount): RefundResult
+        +validate(data): bool
+    }
+    
+    class CreditCardPayment {
+        +pay(amount, data): PaymentResult
+        +refund(transactionId, amount): RefundResult
+        +validate(data): bool
+    }
+    
+    class PayPalPayment {
+        +pay(amount, data): PaymentResult
+        +refund(transactionId, amount): RefundResult
+        +validate(data): bool
+    }
+    
+    class WeChatPayment {
+        +pay(amount, data): PaymentResult
+        +refund(transactionId, amount): RefundResult
+        +validate(data): bool
+    }
+    
+    class AlipayPayment {
+        +pay(amount, data): PaymentResult
+        +refund(transactionId, amount): RefundResult
+        +validate(data): bool
+    }
+    
+    PaymentContext --> PaymentStrategy
+    CreditCardPayment ..|> PaymentStrategy
+    PayPalPayment ..|> PaymentStrategy
+    WeChatPayment ..|> PaymentStrategy
+    AlipayPayment ..|> PaymentStrategy
+    
+    note for PaymentContext "根据用户选择切换支付策略"
+```
+
+### 策略模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Context
+    participant StrategyA
+    participant StrategyB
+    
+    Client->>Context: setStrategy(StrategyA)
+    Client->>Context: executeStrategy()
+    Context->>StrategyA: execute()
+    StrategyA-->>Context: result
+    Context-->>Client: result
+    
+    Note over Client: 切换策略
+    Client->>Context: setStrategy(StrategyB)
+    Client->>Context: executeStrategy()
+    Context->>StrategyB: execute()
+    StrategyB-->>Context: result
+    Context-->>Client: result
+    
+    Note over Context: 运行时动态切换算法
+```
+
+### Laravel 缓存策略架构
+```mermaid
+classDiagram
+    class CacheManager {
+        -stores: array
+        +store(name): Repository
+        +createRedisStore(): RedisStore
+        +createDatabaseStore(): DatabaseStore
+        +createFileStore(): FileStore
+    }
+    
+    class Store {
+        <<interface>>
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class RedisStore {
+        -redis: Redis
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class DatabaseStore {
+        -connection: Connection
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class FileStore {
+        -files: Filesystem
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class MemcachedStore {
+        -memcached: Memcached
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    CacheManager --> Store : manages
+    RedisStore ..|> Store
+    DatabaseStore ..|> Store
+    FileStore ..|> Store
+    MemcachedStore ..|> Store
+    
+    note for CacheManager "根据配置选择缓存策略"
+```
+
+### 队列处理策略流程
+```mermaid
+flowchart TD
+    A[任务入队] --> B[QueueManager]
+    B --> C{选择队列驱动}
+    C -->|sync| D[SyncQueue - 同步执行]
+    C -->|database| E[DatabaseQueue - 数据库队列]
+    C -->|redis| F[RedisQueue - Redis队列]
+    C -->|sqs| G[SqsQueue - AWS SQS]
+    C -->|beanstalkd| H[BeanstalkdQueue]
+    
+    D --> I[立即执行任务]
+    E --> J[存储到数据库表]
+    F --> K[推送到Redis列表]
+    G --> L[发送到AWS SQS]
+    H --> M[推送到Beanstalkd管道]
+    
+    J --> N[队列工作进程]
+    K --> N
+    L --> N
+    M --> N
+    
+    N --> O[执行任务]
+    I --> O
+    O --> P[任务完成]
+    
+    style B fill:#e1f5fe
+    style N fill:#e8f5e8
+    style O fill:#fff3e0
+```
+
+### 文件存储策略架构
+```mermaid
+classDiagram
+    class FilesystemManager {
+        -disks: array
+        +disk(name): FilesystemAdapter
+        +createLocalDriver(): FilesystemAdapter
+        +createS3Driver(): FilesystemAdapter
+        +createFtpDriver(): FilesystemAdapter
+    }
+    
+    class FilesystemContract {
+        <<interface>>
+        +put(path, contents): bool
+        +get(path): string
+        +exists(path): bool
+        +delete(path): bool
+        +copy(from, to): bool
+        +move(from, to): bool
+    }
+    
+    class LocalFilesystem {
+        -adapter: LocalAdapter
+        +put(path, contents): bool
+        +get(path): string
+        +exists(path): bool
+    }
+    
+    class S3Filesystem {
+        -adapter: S3Adapter
+        +put(path, contents): bool
+        +get(path): string
+        +exists(path): bool
+    }
+    
+    class FtpFilesystem {
+        -adapter: FtpAdapter
+        +put(path, contents): bool
+        +get(path): string
+        +exists(path): bool
+    }
+    
+    FilesystemManager --> FilesystemContract : creates
+    LocalFilesystem ..|> FilesystemContract
+    S3Filesystem ..|> FilesystemContract
+    FtpFilesystem ..|> FilesystemContract
+    
+    note for FilesystemManager "根据配置选择存储策略"
+```
+
+### 验证策略模式
+```mermaid
+classDiagram
+    class ValidationContext {
+        -rules: array
+        +validate(data): ValidationResult
+        +addRule(field, rule): void
+    }
+    
+    class ValidationRule {
+        <<interface>>
+        +passes(attribute, value): bool
+        +message(): string
+    }
+    
+    class RequiredRule {
+        +passes(attribute, value): bool
+        +message(): string
+    }
+    
+    class EmailRule {
+        +passes(attribute, value): bool
+        +message(): string
+    }
+    
+    class NumericRule {
+        +passes(attribute, value): bool
+        +message(): string
+    }
+    
+    class CustomRule {
+        -closure: Closure
+        +passes(attribute, value): bool
+        +message(): string
+    }
+    
+    ValidationContext --> ValidationRule : uses
+    RequiredRule ..|> ValidationRule
+    EmailRule ..|> ValidationRule
+    NumericRule ..|> ValidationRule
+    CustomRule ..|> ValidationRule
+    
+    note for ValidationContext "组合多个验证策略"
+```
+
 ## 设计意图
 
 - **算法封装**：将算法封装在独立的策略类中

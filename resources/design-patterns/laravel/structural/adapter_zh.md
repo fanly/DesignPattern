@@ -4,6 +4,176 @@
 
 适配器模式将一个类的接口转换成客户期望的另一个接口，使得原本由于接口不兼容而不能一起工作的类可以一起工作。它充当两个不兼容接口之间的桥梁。
 
+## 架构图
+
+### 适配器模式类图
+```mermaid
+classDiagram
+    class Target {
+        <<interface>>
+        +request(): void
+    }
+    
+    class Adapter {
+        -adaptee: Adaptee
+        +request(): void
+    }
+    
+    class Adaptee {
+        +specificRequest(): void
+    }
+    
+    class Client {
+        +main(): void
+    }
+    
+    Client --> Target
+    Adapter ..|> Target
+    Adapter --> Adaptee
+    
+    note for Adapter "将Adaptee的接口\n转换为Target接口"
+```
+
+### Laravel 文件系统适配器架构
+```mermaid
+classDiagram
+    class Filesystem {
+        <<interface>>
+        +put(path, contents): bool
+        +get(path): string
+        +exists(path): bool
+        +delete(path): bool
+    }
+    
+    class FilesystemAdapter {
+        -driver: AdapterInterface
+        +put(path, contents): bool
+        +get(path): string
+        +exists(path): bool
+        +delete(path): bool
+    }
+    
+    class LocalAdapter {
+        +write(path, contents): bool
+        +read(path): string
+        +has(path): bool
+        +delete(path): bool
+    }
+    
+    class S3Adapter {
+        -client: S3Client
+        +write(path, contents): bool
+        +read(path): string
+        +has(path): bool
+        +delete(path): bool
+    }
+    
+    class FtpAdapter {
+        -connection: FtpConnection
+        +write(path, contents): bool
+        +read(path): string
+        +has(path): bool
+        +delete(path): bool
+    }
+    
+    FilesystemAdapter ..|> Filesystem
+    FilesystemAdapter --> LocalAdapter
+    FilesystemAdapter --> S3Adapter
+    FilesystemAdapter --> FtpAdapter
+    
+    note for FilesystemAdapter "统一不同存储驱动的接口"
+```
+
+### 适配器模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Adapter
+    participant Adaptee
+    
+    Client->>Adapter: request()
+    Adapter->>Adaptee: specificRequest()
+    Adaptee-->>Adapter: 返回结果
+    Adapter-->>Client: 转换后的结果
+    
+    Note over Adapter: 接口转换逻辑
+```
+
+### Laravel 多驱动适配器工作流程
+```mermaid
+flowchart TD
+    A[客户端调用] --> B[FilesystemManager]
+    B --> C{选择驱动}
+    C -->|local| D[LocalAdapter]
+    C -->|s3| E[S3Adapter]
+    C -->|ftp| F[FtpAdapter]
+    
+    D --> G[FilesystemAdapter包装]
+    E --> H[FilesystemAdapter包装]
+    F --> I[FilesystemAdapter包装]
+    
+    G --> J[统一的Filesystem接口]
+    H --> J
+    I --> J
+    
+    J --> K[返回给客户端]
+    
+    style B fill:#e1f5fe
+    style J fill:#e8f5e8
+    style K fill:#fff3e0
+```
+
+### 缓存适配器架构图
+```mermaid
+classDiagram
+    class Cache {
+        <<interface>>
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class Repository {
+        -store: Store
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class RedisStore {
+        -redis: Redis
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class DatabaseStore {
+        -connection: Connection
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    class FileStore {
+        -files: Filesystem
+        +get(key): mixed
+        +put(key, value, ttl): bool
+        +forget(key): bool
+        +flush(): bool
+    }
+    
+    Repository ..|> Cache
+    Repository --> RedisStore
+    Repository --> DatabaseStore
+    Repository --> FileStore
+    
+    note for Repository "适配不同缓存存储"
+```
+
 ## 设计意图
 
 - **接口转换**：将不兼容的接口转换为兼容的接口

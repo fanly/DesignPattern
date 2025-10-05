@@ -4,6 +4,101 @@
 
 单例模式确保一个类只有一个实例，并提供一个全局访问点。这是最常用的设计模式之一，特别适用于需要全局唯一实例的场景，如配置管理、数据库连接、日志记录器等。
 
+## 架构图
+
+### 单例模式类图
+```mermaid
+classDiagram
+    class Singleton {
+        -static instance: Singleton
+        -Singleton()
+        +static getInstance(): Singleton
+        +operation(): void
+    }
+    
+    class Client {
+        +main(): void
+    }
+    
+    Client --> Singleton : getInstance()
+    
+    note for Singleton "私有构造函数\n确保只能通过getInstance()创建实例"
+```
+
+### Laravel 容器单例实现
+```mermaid
+classDiagram
+    class Container {
+        -static instance: Container
+        -bindings: array
+        -instances: array
+        +static getInstance(): Container
+        +singleton(abstract, concrete): void
+        +make(abstract): object
+        -resolve(abstract): object
+    }
+    
+    class ServiceProvider {
+        +register(): void
+        +boot(): void
+    }
+    
+    class ConfigRepository {
+        -items: array
+        +get(key): mixed
+        +set(key, value): void
+    }
+    
+    Container --> Container : getInstance()
+    ServiceProvider --> Container : singleton()
+    Container --> ConfigRepository : 创建单例实例
+    
+    note for Container "Laravel服务容器\n管理所有单例服务"
+```
+
+### 单例模式时序图
+```mermaid
+sequenceDiagram
+    participant Client1
+    participant Client2
+    participant Singleton
+    
+    Client1->>Singleton: getInstance()
+    alt 首次调用
+        Singleton->>Singleton: new Singleton()
+        Singleton-->>Client1: 返回新实例
+    end
+    
+    Client2->>Singleton: getInstance()
+    alt 后续调用
+        Singleton-->>Client2: 返回已存在实例
+    end
+    
+    Note over Client1,Client2: 两个客户端获得相同实例
+```
+
+### Laravel 服务容器单例流程
+```mermaid
+flowchart TD
+    A[应用启动] --> B[创建Container实例]
+    B --> C[注册服务提供者]
+    C --> D[调用register方法]
+    D --> E{是否为单例服务?}
+    E -->|是| F[调用singleton方法]
+    E -->|否| G[调用bind方法]
+    F --> H[标记为共享实例]
+    G --> I[标记为非共享]
+    H --> J[首次解析时创建实例]
+    I --> K[每次解析都创建新实例]
+    J --> L[存储在instances数组]
+    L --> M[后续请求返回缓存实例]
+    K --> N[每次返回新实例]
+    
+    style F fill:#e1f5fe
+    style H fill:#e8f5e8
+    style L fill:#fff3e0
+```
+
 ## 设计意图
 
 - **唯一性**：确保类只有一个实例存在

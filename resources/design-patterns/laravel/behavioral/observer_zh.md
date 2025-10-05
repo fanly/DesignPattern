@@ -4,6 +4,215 @@
 
 定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。
 
+## 架构图
+
+### 观察者模式类图
+```mermaid
+classDiagram
+    class Subject {
+        <<abstract>>
+        -observers: List~Observer~
+        +attach(observer): void
+        +detach(observer): void
+        +notify(): void
+    }
+    
+    class ConcreteSubject {
+        -state: State
+        +getState(): State
+        +setState(state): void
+        +notify(): void
+    }
+    
+    class Observer {
+        <<interface>>
+        +update(subject): void
+    }
+    
+    class ConcreteObserver {
+        -observerState: State
+        +update(subject): void
+    }
+    
+    Subject --> Observer : notifies
+    ConcreteSubject --|> Subject
+    ConcreteObserver ..|> Observer
+    ConcreteObserver --> ConcreteSubject : observes
+    
+    note for Subject "维护观察者列表\n通知所有观察者"
+```
+
+### Laravel 事件系统架构
+```mermaid
+classDiagram
+    class EventDispatcher {
+        -listeners: array
+        -wildcards: array
+        +listen(event, listener): void
+        +dispatch(event, payload): array
+        +getListeners(event): array
+    }
+    
+    class Event {
+        <<abstract>>
+        +broadcastOn(): Channel
+        +broadcastWith(): array
+    }
+    
+    class Listener {
+        <<interface>>
+        +handle(event): void
+    }
+    
+    class OrderShipped {
+        +order: Order
+        +__construct(order): void
+    }
+    
+    class SendShipmentNotification {
+        +handle(event): void
+    }
+    
+    class UpdateInventory {
+        +handle(event): void
+    }
+    
+    class LogOrderActivity {
+        +handle(event): void
+    }
+    
+    EventDispatcher --> Event : dispatches
+    EventDispatcher --> Listener : notifies
+    OrderShipped --|> Event
+    SendShipmentNotification ..|> Listener
+    UpdateInventory ..|> Listener
+    LogOrderActivity ..|> Listener
+    
+    note for EventDispatcher "Laravel事件调度器\n管理事件和监听器"
+```
+
+### 观察者模式时序图
+```mermaid
+sequenceDiagram
+    participant Subject
+    participant Observer1
+    participant Observer2
+    participant Observer3
+    
+    Note over Subject: 状态发生变化
+    Subject->>Subject: setState(newState)
+    Subject->>Observer1: update()
+    Subject->>Observer2: update()
+    Subject->>Observer3: update()
+    
+    Observer1->>Subject: getState()
+    Observer2->>Subject: getState()
+    Observer3->>Subject: getState()
+    
+    Note over Observer1,Observer3: 所有观察者同步更新
+```
+
+### Laravel 事件处理流程
+```mermaid
+flowchart TD
+    A[事件触发] --> B[EventDispatcher]
+    B --> C[解析事件名称]
+    C --> D[获取监听器列表]
+    D --> E{有监听器?}
+    E -->|否| F[结束]
+    E -->|是| G[遍历监听器]
+    G --> H[创建监听器实例]
+    H --> I{是否队列监听器?}
+    I -->|是| J[推送到队列]
+    I -->|否| K[立即执行]
+    J --> L[队列处理器]
+    K --> M[调用handle方法]
+    L --> M
+    M --> N{返回false?}
+    N -->|是| O[停止传播]
+    N -->|否| P[继续下一个监听器]
+    P --> G
+    O --> F
+    
+    style B fill:#e1f5fe
+    style J fill:#fff3e0
+    style M fill:#e8f5e8
+```
+
+### 模型事件观察者架构
+```mermaid
+classDiagram
+    class Model {
+        -static dispatcher: EventDispatcher
+        +static creating(callback): void
+        +static created(callback): void
+        +static updating(callback): void
+        +static updated(callback): void
+        +static deleting(callback): void
+        +static deleted(callback): void
+        -fireModelEvent(event): mixed
+    }
+    
+    class UserObserver {
+        +creating(user): void
+        +created(user): void
+        +updating(user): void
+        +updated(user): void
+        +deleting(user): void
+        +deleted(user): void
+    }
+    
+    class User {
+        +name: string
+        +email: string
+        +save(): bool
+        +delete(): bool
+    }
+    
+    class AuditLog {
+        +log(action, model): void
+    }
+    
+    class CacheManager {
+        +invalidate(tags): void
+    }
+    
+    Model --> EventDispatcher : uses
+    User --|> Model
+    UserObserver --> User : observes
+    UserObserver --> AuditLog : creates
+    UserObserver --> CacheManager : invalidates
+    
+    note for UserObserver "监听User模型的所有事件"
+```
+
+### 事件广播架构
+```mermaid
+flowchart TD
+    A[事件触发] --> B[事件调度器]
+    B --> C{实现ShouldBroadcast?}
+    C -->|否| D[仅本地处理]
+    C -->|是| E[广播队列]
+    E --> F[广播驱动]
+    F --> G{选择驱动}
+    G -->|Pusher| H[Pusher服务]
+    G -->|Redis| I[Redis发布订阅]
+    G -->|Socket.IO| J[Socket.IO服务器]
+    
+    H --> K[WebSocket连接]
+    I --> L[WebSocket连接]
+    J --> M[WebSocket连接]
+    
+    K --> N[前端应用]
+    L --> N
+    M --> N
+    
+    D --> O[本地监听器]
+    
+    style E fill:#fff3e0
+    style N fill:#e8f5e8
+```
+
 ## 设计意图
 
 - **松耦合**：减少主题和观察者之间的依赖关系

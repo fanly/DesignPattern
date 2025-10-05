@@ -4,6 +4,212 @@
 
 状态模式允许一个对象在其内部状态改变时改变它的行为。对象看起来似乎修改了它的类。
 
+## 架构图
+
+### 状态模式类图
+```mermaid
+classDiagram
+    class Context {
+        -state: State
+        +setState(state): void
+        +request(): void
+        +getState(): State
+    }
+    
+    class State {
+        <<interface>>
+        +handle(context): void
+        +canTransitionTo(state): bool
+    }
+    
+    class ConcreteStateA {
+        +handle(context): void
+        +canTransitionTo(state): bool
+    }
+    
+    class ConcreteStateB {
+        +handle(context): void
+        +canTransitionTo(state): bool
+    }
+    
+    class ConcreteStateC {
+        +handle(context): void
+        +canTransitionTo(state): bool
+    }
+    
+    Context --> State : current state
+    ConcreteStateA ..|> State
+    ConcreteStateB ..|> State
+    ConcreteStateC ..|> State
+    
+    note for Context "上下文\n维护当前状态"
+    note for State "状态接口\n定义状态行为"
+```
+
+### Laravel 工作流状态架构
+```mermaid
+classDiagram
+    class WorkflowContext {
+        -currentState: WorkflowState
+        -data: array
+        +transitionTo(state): void
+        +process(): void
+        +canTransitionTo(state): bool
+    }
+    
+    class WorkflowState {
+        <<interface>>
+        +process(context): void
+        +canTransitionTo(state): bool
+        +getName(): string
+    }
+    
+    class DraftState {
+        +process(context): void
+        +canTransitionTo(state): bool
+        +getName(): string
+    }
+    
+    class PendingReviewState {
+        +process(context): void
+        +canTransitionTo(state): bool
+        +getName(): string
+    }
+    
+    class ApprovedState {
+        +process(context): void
+        +canTransitionTo(state): bool
+        +getName(): string
+    }
+    
+    class RejectedState {
+        +process(context): void
+        +canTransitionTo(state): bool
+        +getName(): string
+    }
+    
+    WorkflowContext --> WorkflowState : current state
+    DraftState ..|> WorkflowState
+    PendingReviewState ..|> WorkflowState
+    ApprovedState ..|> WorkflowState
+    RejectedState ..|> WorkflowState
+    
+    note for WorkflowContext "工作流上下文\n管理状态转换"
+    note for DraftState "草稿状态"
+    note for ApprovedState "已批准状态"
+```
+
+### 状态转换图
+```mermaid
+stateDiagram-v2
+    [*] --> Draft : 创建
+    Draft --> PendingReview : 提交审核
+    Draft --> [*] : 删除
+    
+    PendingReview --> Approved : 审核通过
+    PendingReview --> Rejected : 审核拒绝
+    PendingReview --> Draft : 撤回
+    
+    Approved --> Published : 发布
+    Approved --> Draft : 修改
+    
+    Rejected --> Draft : 重新编辑
+    Rejected --> [*] : 删除
+    
+    Published --> Archived : 归档
+    Published --> Draft : 修改
+    
+    Archived --> Published : 重新发布
+    Archived --> [*] : 删除
+```
+
+### Laravel 订单状态模式
+```mermaid
+classDiagram
+    class Order {
+        -state: OrderState
+        -items: array
+        -total: decimal
+        +setState(state): void
+        +process(): void
+        +cancel(): void
+        +ship(): void
+    }
+    
+    class OrderState {
+        <<interface>>
+        +process(order): void
+        +cancel(order): void
+        +ship(order): void
+        +getStatus(): string
+    }
+    
+    class PendingState {
+        +process(order): void
+        +cancel(order): void
+        +ship(order): void
+        +getStatus(): string
+    }
+    
+    class ProcessingState {
+        +process(order): void
+        +cancel(order): void
+        +ship(order): void
+        +getStatus(): string
+    }
+    
+    class ShippedState {
+        +process(order): void
+        +cancel(order): void
+        +ship(order): void
+        +getStatus(): string
+    }
+    
+    class DeliveredState {
+        +process(order): void
+        +cancel(order): void
+        +ship(order): void
+        +getStatus(): string
+    }
+    
+    class CancelledState {
+        +process(order): void
+        +cancel(order): void
+        +ship(order): void
+        +getStatus(): string
+    }
+    
+    Order --> OrderState : current state
+    PendingState ..|> OrderState
+    ProcessingState ..|> OrderState
+    ShippedState ..|> OrderState
+    DeliveredState ..|> OrderState
+    CancelledState ..|> OrderState
+    
+    note for Order "订单上下文\n管理订单状态"
+    note for OrderState "订单状态接口"
+```
+
+### 状态模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Context
+    participant StateA
+    participant StateB
+    
+    Client->>Context: request()
+    Context->>StateA: handle(context)
+    StateA->>StateA: 处理请求
+    StateA->>Context: setState(StateB)
+    Context->>StateB: 设置新状态
+    StateA-->>Context: 处理完成
+    Context-->>Client: 响应
+    
+    Note over StateA: 状态A处理请求并转换状态
+    Note over Context: 上下文维护当前状态
+```
+
 ## 设计意图
 
 - **状态封装**：将每个状态的行为封装在独立的类中

@@ -4,6 +4,270 @@
 
 迭代器模式提供一种方法顺序访问一个聚合对象中各个元素，而又不需暴露该对象的内部表示。它将遍历逻辑与聚合对象分离，使得聚合对象可以专注于数据存储，而迭代器专注于遍历。
 
+## 架构图
+
+### 迭代器模式类图
+```mermaid
+classDiagram
+    class Iterator {
+        <<interface>>
+        +first(): void
+        +next(): void
+        +isDone(): bool
+        +currentItem(): mixed
+    }
+    
+    class ConcreteIterator {
+        -aggregate: ConcreteAggregate
+        -current: int
+        +first(): void
+        +next(): void
+        +isDone(): bool
+        +currentItem(): mixed
+    }
+    
+    class Aggregate {
+        <<interface>>
+        +createIterator(): Iterator
+    }
+    
+    class ConcreteAggregate {
+        -items: array
+        +createIterator(): Iterator
+        +getItem(index): mixed
+        +count(): int
+    }
+    
+    Iterator <|.. ConcreteIterator
+    Aggregate <|.. ConcreteAggregate
+    ConcreteIterator --> ConcreteAggregate : iterates
+    ConcreteAggregate --> ConcreteIterator : creates
+    
+    note for Iterator "迭代器接口\n定义遍历方法"
+    note for ConcreteAggregate "具体聚合类\n存储数据元素"
+```
+
+### Laravel Collection 迭代器架构
+```mermaid
+classDiagram
+    class Collection {
+        -items: array
+        +getIterator(): ArrayIterator
+        +each(callback): Collection
+        +map(callback): Collection
+        +filter(callback): Collection
+        +reduce(callback, initial): mixed
+    }
+    
+    class ArrayIterator {
+        -array: array
+        -position: int
+        +current(): mixed
+        +key(): mixed
+        +next(): void
+        +rewind(): void
+        +valid(): bool
+    }
+    
+    class LazyCollection {
+        -source: Generator
+        +getIterator(): Generator
+        +each(callback): LazyCollection
+        +map(callback): LazyCollection
+        +filter(callback): LazyCollection
+    }
+    
+    class Paginator {
+        -items: Collection
+        -perPage: int
+        -currentPage: int
+        +getIterator(): ArrayIterator
+        +items(): Collection
+    }
+    
+    Collection --> ArrayIterator : creates
+    LazyCollection --> Generator : uses
+    Paginator --> Collection : contains
+    
+    note for Collection "集合类\n实现IteratorAggregate"
+    note for LazyCollection "延迟集合\n使用生成器迭代"
+```
+
+### 迭代器模式时序图
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Aggregate
+    participant Iterator
+    
+    Client->>Aggregate: createIterator()
+    Aggregate->>Iterator: new Iterator(this)
+    Aggregate-->>Client: iterator
+    
+    loop 遍历元素
+        Client->>Iterator: isDone()
+        Iterator-->>Client: false
+        Client->>Iterator: currentItem()
+        Iterator-->>Client: item
+        Client->>Iterator: next()
+    end
+    
+    Client->>Iterator: isDone()
+    Iterator-->>Client: true
+    
+    Note over Iterator: 迭代器管理遍历状态
+    Note over Aggregate: 聚合对象专注数据存储
+```
+
+### Laravel 数据库查询迭代器
+```mermaid
+classDiagram
+    class Builder {
+        -connection: Connection
+        -grammar: Grammar
+        +get(): Collection
+        +cursor(): LazyCollection
+        +chunk(count, callback): bool
+        +chunkById(count, callback): bool
+    }
+    
+    class LazyCollection {
+        -source: Generator
+        +getIterator(): Generator
+        +map(callback): LazyCollection
+        +filter(callback): LazyCollection
+        +take(count): LazyCollection
+    }
+    
+    class Cursor {
+        -statement: PDOStatement
+        +current(): Model
+        +key(): mixed
+        +next(): void
+        +rewind(): void
+        +valid(): bool
+    }
+    
+    class ChunkIterator {
+        -builder: Builder
+        -chunkSize: int
+        -currentChunk: int
+        +current(): Collection
+        +next(): void
+        +valid(): bool
+    }
+    
+    Builder --> LazyCollection : creates
+    Builder --> ChunkIterator : creates
+    LazyCollection --> Cursor : uses
+    
+    note for LazyCollection "延迟集合\n节省内存"
+    note for ChunkIterator "分块迭代器\n处理大数据集"
+```
+
+### Laravel 文件系统迭代器
+```mermaid
+classDiagram
+    class Filesystem {
+        +files(directory): array
+        +allFiles(directory): array
+        +directories(directory): array
+        +glob(pattern): array
+    }
+    
+    class DirectoryIterator {
+        -path: string
+        +current(): SplFileInfo
+        +key(): string
+        +next(): void
+        +rewind(): void
+        +valid(): bool
+    }
+    
+    class RecursiveDirectoryIterator {
+        -path: string
+        -flags: int
+        +current(): SplFileInfo
+        +hasChildren(): bool
+        +getChildren(): RecursiveDirectoryIterator
+    }
+    
+    class GlobIterator {
+        -pattern: string
+        +current(): string
+        +key(): int
+        +next(): void
+        +count(): int
+    }
+    
+    Filesystem --> DirectoryIterator : uses
+    Filesystem --> RecursiveDirectoryIterator : uses
+    Filesystem --> GlobIterator : uses
+    
+    note for DirectoryIterator "目录迭代器\n遍历单层目录"
+    note for RecursiveDirectoryIterator "递归目录迭代器\n遍历子目录"
+```
+
+### Collection 操作链式迭代
+```mermaid
+flowchart LR
+    A[原始数据] --> B[Collection]
+    B --> C[map操作]
+    C --> D[filter操作]
+    D --> E[groupBy操作]
+    E --> F[sortBy操作]
+    F --> G[take操作]
+    G --> H[最终结果]
+    
+    I[迭代特点]
+    C -.-> I1[延迟执行]
+    D -.-> I2[链式调用]
+    E -.-> I3[内存优化]
+    F -.-> I4[类型安全]
+    
+    style A fill:#e1f5fe
+    style H fill:#e8f5e8
+```
+
+### Laravel 分页迭代器
+```mermaid
+classDiagram
+    class LengthAwarePaginator {
+        -items: Collection
+        -total: int
+        -perPage: int
+        -currentPage: int
+        +getIterator(): ArrayIterator
+        +items(): Collection
+        +links(): string
+    }
+    
+    class Paginator {
+        -items: Collection
+        -perPage: int
+        -currentPage: int
+        +getIterator(): ArrayIterator
+        +hasPages(): bool
+        +nextPageUrl(): string
+    }
+    
+    class CursorPaginator {
+        -items: Collection
+        -perPage: int
+        -cursor: Cursor
+        +getIterator(): ArrayIterator
+        +hasPages(): bool
+        +nextCursor(): Cursor
+    }
+    
+    LengthAwarePaginator --> Collection : contains
+    Paginator --> Collection : contains
+    CursorPaginator --> Collection : contains
+    
+    note for LengthAwarePaginator "长度感知分页器\n知道总数"
+    note for CursorPaginator "游标分页器\n适合大数据集"
+```
+
 ## 设计意图
 
 - **遍历封装**：将遍历逻辑封装在迭代器中
