@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# Laravel-Design-Patterns
-共创基于 Laravel 源代码的设计模式
-=======
 # Laravel设计模式电子书
 
 基于Laravel和Livewire构建的设计模式电子书网站，专注于通过Laravel源码讲解设计模式。
@@ -129,7 +125,3 @@ php artisan serve
 3. 构建前端资源
 4. 配置Web服务器
 
-## 许可证
-
-MIT License
->>>>>>> 90360af (完成Laravel设计模式电子书网站开发)
