@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ __('home.title') }}</title>
     
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -17,16 +17,31 @@
                 <div class="flex justify-between h-16">
                     <div class="flex items-center">
                         <a href="{{ route('home') }}" class="text-xl font-bold text-gray-900">
-                            {{ config('app.name') }}
+                            {{ __('nav.site_name') }}
                         </a>
                     </div>
                     <div class="flex items-center space-x-4">
-                        <a href="{{ route('markdown.demo') }}" class="text-gray-600 hover:text-gray-900">
-                            Markdown 演示
-                        </a>
                         <a href="{{ route('patterns.index') }}" class="text-gray-600 hover:text-gray-900">
-                            设计模式
+                            {{ __('nav.patterns') }}
                         </a>
+                        <a href="{{ route('categories.index') }}" class="text-gray-600 hover:text-gray-900">
+                            {{ __('nav.categories') }}
+                        </a>
+                        
+                        <!-- Language Switcher -->
+                        <div class="relative">
+                            <div class="flex items-center space-x-2">
+                                <a href="{{ route('change-locale', 'zh') }}" 
+                                   class="px-2 py-1 text-sm {{ app()->getLocale() == 'zh' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:text-gray-900' }} rounded">
+                                    中文
+                                </a>
+                                <span class="text-gray-400">|</span>
+                                <a href="{{ route('change-locale', 'en') }}" 
+                                   class="px-2 py-1 text-sm {{ app()->getLocale() == 'en' ? 'bg-blue-100 text-blue-800' : 'text-gray-600 hover:text-gray-900' }} rounded">
+                                    EN
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

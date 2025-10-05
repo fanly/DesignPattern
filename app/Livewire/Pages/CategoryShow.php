@@ -3,9 +3,11 @@
 namespace App\Livewire\Pages;
 
 use App\Models\PatternCategory;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class CategoryShow extends Component
 {
     public PatternCategory $category;

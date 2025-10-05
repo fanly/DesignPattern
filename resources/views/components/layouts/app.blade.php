@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>设计模式电子书</title>
+    <title>{{ __('home.title') }}</title>
     @livewireStyles
 </head>
 <body>
