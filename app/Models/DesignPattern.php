@@ -91,8 +91,8 @@ class DesignPattern extends Model
             }
         }
         
-        // 使用新的文件路径：resources/patterns/
-        $fullPath = base_path("resources/patterns/{$filePath}");
+        // 直接使用数据库中的文件路径
+        $fullPath = base_path($filePath);
         
         if (!file_exists($fullPath)) {
             return "# {$this->name}\n\n" . __('Content is being written...');
@@ -157,8 +157,8 @@ class DesignPattern extends Model
             $this->save();
         }
         
-        // 使用新的文件路径：resources/patterns/
-        $fullPath = base_path("resources/patterns/{$this->$filePathField}");
+        // 直接使用数据库中的文件路径
+        $fullPath = base_path($this->$filePathField);
         
         // 确保目录存在
         if (!is_dir(dirname($fullPath))) {

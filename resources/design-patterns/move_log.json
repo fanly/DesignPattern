@@ -1,0 +1,597 @@
+[
+    {
+        "source": "resources\/patterns\/68dbeb399efc7_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/decorator_en.md",
+        "pattern": "decorator",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98d2a374_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/factory_method_en.md",
+        "pattern": "factory_method",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe812be03f_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/observer_en.md",
+        "pattern": "observer",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a696d4_zh.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/适配器模式_(adapter_pattern)_zh.md",
+        "pattern": "适配器模式_(adapter_pattern)",
+        "category": "structural",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe811ee7ec_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/decorator_en.md",
+        "pattern": "decorator",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd229e2d2_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/facade_en.md",
+        "pattern": "facade",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbeb3a2d834_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/observer_en.md",
+        "pattern": "observer",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a696d4_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/adapter_en.md",
+        "pattern": "adapter",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93c5d546_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/facade_en.md",
+        "pattern": "facade",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd2306f92_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/observer_en.md",
+        "pattern": "observer",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98d60152_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/abstract_factory_en.md",
+        "pattern": "abstract_factory",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHcb_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/composite_en.md",
+        "pattern": "composite",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd21b673c_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/factory_method_en.md",
+        "pattern": "factory_method",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc=_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/template_method_en.md",
+        "pattern": "template_method",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93b54bdc_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/abstract_factory_en.md",
+        "pattern": "abstract_factory",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc=_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/模板方法模式_(template_method_pattern)_zh.md",
+        "pattern": "模板方法模式_(template_method_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHcb_zh.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/组合模式_(composite_pattern)_zh.md",
+        "pattern": "组合模式_(composite_pattern)",
+        "category": "structural",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93bd9376_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/adapter_en.md",
+        "pattern": "adapter",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd21e1c75_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/abstract_factory_en.md",
+        "pattern": "abstract_factory",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc9_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/策略模式_(strategy_pattern)_zh.md",
+        "pattern": "策略模式_(strategy_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe81238518_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/facade_en.md",
+        "pattern": "facade",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc9_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/strategy_en.md",
+        "pattern": "strategy",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98e41230_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/facade_en.md",
+        "pattern": "facade",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHcd_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/proxy_en.md",
+        "pattern": "proxy",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHcd_zh.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/代理模式_(proxy_pattern)_zh.md",
+        "pattern": "代理模式_(proxy_pattern)",
+        "category": "structural",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93ce23ef_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/observer_en.md",
+        "pattern": "observer",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHcc_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/flyweight_en.md",
+        "pattern": "flyweight",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a0a04b_zh.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/抽象工厂模式_(abstract_factory_pattern)_zh.md",
+        "pattern": "抽象工厂模式_(abstract_factory_pattern)",
+        "category": "creational",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHcc_zh.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/享元模式_(flyweight_pattern)_zh.md",
+        "pattern": "享元模式_(flyweight_pattern)",
+        "category": "structural",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a0a04b_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/abstract_factory_en.md",
+        "pattern": "abstract_factory",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93c21606_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/decorator_en.md",
+        "pattern": "decorator",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHca_zh.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/桥接模式_(bridge_pattern)_zh.md",
+        "pattern": "桥接模式_(bridge_pattern)",
+        "category": "structural",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/state_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/状态模式_(state_pattern)_zh.md",
+        "pattern": "状态模式_(state_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93ca6bf5_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/strategy_en.md",
+        "pattern": "strategy",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHca_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/bridge_en.md",
+        "pattern": "bridge",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd224dcd5_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/adapter_en.md",
+        "pattern": "adapter",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbeb3916bba_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/abstract_factory_en.md",
+        "pattern": "abstract_factory",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbeb3a53f6c_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/command_en.md",
+        "pattern": "command",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHce_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/visitor_en.md",
+        "pattern": "visitor",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd22770bc_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/decorator_en.md",
+        "pattern": "decorator",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHce_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/访问者模式_(visitor_pattern)_zh.md",
+        "pattern": "访问者模式_(visitor_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc8_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/备忘录模式_(memento_pattern)_zh.md",
+        "pattern": "备忘录模式_(memento_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc8_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/memento_en.md",
+        "pattern": "memento",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbeb38de96d_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/factory_method_en.md",
+        "pattern": "factory_method",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0b53750_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/command_en.md",
+        "pattern": "command",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbeb3a04a25_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/strategy_en.md",
+        "pattern": "strategy",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc4_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/command_en.md",
+        "pattern": "command",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc4_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/命令模式_(command_pattern)_zh.md",
+        "pattern": "命令模式_(command_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc6_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/迭代器模式_(iterator_pattern)_zh.md",
+        "pattern": "迭代器模式_(iterator_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc6_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/iterator_en.md",
+        "pattern": "iterator",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd232ee2c_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/command_en.md",
+        "pattern": "command",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe811b2896_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/adapter_en.md",
+        "pattern": "adapter",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98eb8252_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/observer_en.md",
+        "pattern": "observer",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc2_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/prototype_en.md",
+        "pattern": "prototype",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc2_zh.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/原型模式_(prototype_pattern)_zh.md",
+        "pattern": "原型模式_(prototype_pattern)",
+        "category": "creational",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe81303062_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/command_en.md",
+        "pattern": "command",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0abca1c_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/facade_en.md",
+        "pattern": "facade",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a92cf8_zh.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/装饰器模式_(decorator_pattern)_zh.md",
+        "pattern": "装饰器模式_(decorator_pattern)",
+        "category": "structural",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0b28ad1_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/observer_en.md",
+        "pattern": "observer",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a92cf8_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/decorator_en.md",
+        "pattern": "decorator",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98eead62_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/command_en.md",
+        "pattern": "command",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd09d0d5d_zh.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/工厂方法模式_(factory_method_pattern)_zh.md",
+        "pattern": "工厂方法模式_(factory_method_pattern)",
+        "category": "creational",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc7_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/中介者模式_(mediator_pattern)_zh.md",
+        "pattern": "中介者模式_(mediator_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe810e4589_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/factory_method_en.md",
+        "pattern": "factory_method",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0af39f4_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/strategy_en.md",
+        "pattern": "strategy",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd09d0d5d_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/factory_method_en.md",
+        "pattern": "factory_method",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc7_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/mediator_en.md",
+        "pattern": "mediator",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a32679_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/singleton_en.md",
+        "pattern": "singleton",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc5_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/interpreter_en.md",
+        "pattern": "interpreter",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98e0d622_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/decorator_en.md",
+        "pattern": "decorator",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe8112dd68_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/abstract_factory_en.md",
+        "pattern": "abstract_factory",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98e8538f_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/strategy_en.md",
+        "pattern": "strategy",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbeb39c511e_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/facade_en.md",
+        "pattern": "facade",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd0a32679_zh.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/单例模式_(singleton_pattern)_zh.md",
+        "pattern": "单例模式_(singleton_pattern)",
+        "category": "creational",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc5_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/解释器模式_(interpreter_pattern)_zh.md",
+        "pattern": "解释器模式_(interpreter_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc1_zh.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/建造者模式_(builder_pattern)_zh.md",
+        "pattern": "建造者模式_(builder_pattern)",
+        "category": "creational",
+        "language": "zh"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93d29915_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/command_en.md",
+        "pattern": "command",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbeb3974be0_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/adapter_en.md",
+        "pattern": "adapter",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc1_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/builder_en.md",
+        "pattern": "builder",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe93b15bf9_en.md",
+        "target": "resources\/design-patterns\/laravel\/creational\/factory_method_en.md",
+        "pattern": "factory_method",
+        "category": "creational",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbfd22d23b5_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/strategy_en.md",
+        "pattern": "strategy",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe98dd0524_en.md",
+        "target": "resources\/design-patterns\/laravel\/structural\/adapter_en.md",
+        "pattern": "adapter",
+        "category": "structural",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc3_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/chain_of_responsibility_en.md",
+        "pattern": "chain_of_responsibility",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dbe81280fef_en.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/strategy_en.md",
+        "pattern": "strategy",
+        "category": "behavioral",
+        "language": "en"
+    },
+    {
+        "source": "resources\/patterns\/68dF1ljKHc3_zh.md",
+        "target": "resources\/design-patterns\/laravel\/behavioral\/责任链模式_(chain_of_responsibility_pattern)_zh.md",
+        "pattern": "责任链模式_(chain_of_responsibility_pattern)",
+        "category": "behavioral",
+        "language": "zh"
+    }
+]
