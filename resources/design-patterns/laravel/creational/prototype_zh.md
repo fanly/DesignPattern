@@ -48,6 +48,53 @@ classDiagram
     Client --> Prototype
 ```
 
+### Laravel模型复制
+
+```mermaid
+graph TB
+    A[Original Model] --> B[Clone Operation]
+    B --> C{Clone Type}
+    C -->|Shallow Clone| D[Copy References]
+    C -->|Deep Clone| E[Copy Values]
+    
+    D --> F[Cloned Model]
+    E --> F
+    
+    F --> G[Reset Primary Key]
+    G --> H[Reset Timestamps]
+    H --> I[Reset Relations]
+    I --> J[Ready for Save]
+    
+    style D fill:#e1f5fe
+    style F fill:#f3e5f5
+    style J fill:#fff3e0
+```
+
+### 模型克隆流程
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant OriginalModel
+    participant ClonedModel
+    participant Database
+    
+    Client->>OriginalModel: replicate()
+    OriginalModel->>OriginalModel: getAttributes()
+    OriginalModel->>ClonedModel: new static(attributes)
+    ClonedModel->>ClonedModel: unsetPrimaryKey()
+    ClonedModel->>ClonedModel: unsetTimestamps()
+    ClonedModel-->>OriginalModel: cloned instance
+    OriginalModel-->>Client: cloned model
+    
+    Client->>ClonedModel: save()
+    ClonedModel->>Database: INSERT
+    Database-->>ClonedModel: new ID
+    ClonedModel-->>Client: saved model
+    
+    note over ClonedModel: New instance with copied attributes
+```
+
 ## Laravel实现
 
 ### 1. 基础原型接口

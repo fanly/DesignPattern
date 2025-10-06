@@ -10,7 +10,6 @@
 ```mermaid
 classDiagram
     class Creator {
-        <<abstract>>
         +factoryMethod()
         +operation()
     }
@@ -20,7 +19,6 @@ classDiagram
     }
     
     class Product {
-        <<interface>>
         +operation()
     }
     
@@ -28,33 +26,25 @@ classDiagram
         +operation()
     }
     
-    Creator --> Product : creates
+    Creator --> Product
     ConcreteCreator --|> Creator
-    ConcreteProduct ..|> Product
-    ConcreteCreator ..> ConcreteProduct : creates
-    
-    note for Creator "定义工厂方法接口\n延迟到子类实现"
+    ConcreteProduct --|> Product
+    ConcreteCreator --> ConcreteProduct
 ```
 
 ### Laravel 数据库连接工厂架构
 ```mermaid
 classDiagram
     class DatabaseManager {
-        -connections
-        -factory
         +connection(name)
         +makeConnection(name)
     }
     
     class ConnectionFactory {
         +make(config, name)
-        +createMysqlConnection(config): Connection
-        +createPostgresConnection(config): Connection
-        +createSqliteConnection(config): Connection
     }
     
     class Connection {
-        <<abstract>>
         +select(query)
         +insert(query)
         +update(query)
@@ -62,33 +52,28 @@ classDiagram
     }
     
     class MySqlConnection {
-        -pdo
         +select(query)
         +insert(query)
     }
     
     class PostgresConnection {
-        -pdo
         +select(query)
         +insert(query)
     }
     
     class SqliteConnection {
-        -pdo
         +select(query)
         +insert(query)
     }
     
     DatabaseManager --> ConnectionFactory
-    ConnectionFactory --> Connection : creates
+    ConnectionFactory --> Connection
     MySqlConnection --|> Connection
     PostgresConnection --|> Connection
     SqliteConnection --|> Connection
-    ConnectionFactory ..> MySqlConnection : creates
-    ConnectionFactory ..> PostgresConnection : creates
-    ConnectionFactory ..> SqliteConnection : creates
-    
-    note for ConnectionFactory "根据配置创建不同类型的数据库连接"
+    ConnectionFactory --> MySqlConnection
+    ConnectionFactory --> PostgresConnection
+    ConnectionFactory --> SqliteConnection
 ```
 
 ### 工厂方法时序图
@@ -147,48 +132,41 @@ flowchart TD
 ```mermaid
 classDiagram
     class QueueManager {
-        -connections
-        +connection(name): QueueContract
-        +resolve(name): QueueContract
+        +connection(name)
+        +resolve(name)
     }
     
     class QueueContract {
-        <<interface>>
         +push(job, data, queue)
         +later(delay, job, data, queue)
-        +pop(queue): Job
+        +pop(queue)
     }
     
     class DatabaseQueue {
-        -database: Connection
         +push(job, data, queue)
-        +pop(queue): Job
+        +pop(queue)
     }
     
     class RedisQueue {
-        -redis: Redis
         +push(job, data, queue)
-        +pop(queue): Job
+        +pop(queue)
     }
     
     class SqsQueue {
-        -sqs: SqsClient
         +push(job, data, queue)
-        +pop(queue): Job
+        +pop(queue)
     }
     
     class SyncQueue {
         +push(job, data, queue)
-        +pop(queue): Job
+        +pop(queue)
     }
     
-    QueueManager --> QueueContract : creates
-    DatabaseQueue ..|> QueueContract
-    RedisQueue ..|> QueueContract
-    SqsQueue ..|> QueueContract
-    SyncQueue ..|> QueueContract
-    
-    note for QueueManager "根据配置创建不同的队列驱动"
+    QueueManager --> QueueContract
+    DatabaseQueue --|> QueueContract
+    RedisQueue --|> QueueContract
+    SqsQueue --|> QueueContract
+    SyncQueue --|> QueueContract
 ```
 
 ## 设计意图

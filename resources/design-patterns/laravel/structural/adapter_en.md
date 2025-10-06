@@ -20,7 +20,6 @@ classDiagram
     }
     
     class Adapter {
-        -adaptee
         +request()
     }
     
@@ -28,11 +27,9 @@ classDiagram
         +specificRequest()
     }
     
-    Client --> Target : uses
-    Adapter ..|> Target : implements
-    Adapter --> Adaptee : adapts
-    
-    note for Adapter "Converts Adaptee interface to Target interface"
+    Client --> Target
+    Adapter ..|> Target
+    Adapter --> Adaptee
 ```
 
 ### Laravel Cache Adapter Implementation

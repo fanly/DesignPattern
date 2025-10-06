@@ -17,7 +17,9 @@
 
 单例模式通过私有化构造函数，提供静态方法来获取唯一实例。
 
-## UML类图
+## 架构图
+
+### 单例模式结构
 
 ```mermaid
 classDiagram
@@ -27,8 +29,43 @@ classDiagram
         +getInstance()
         +operation()
     }
-    
+
+    class Client {
+        +main()
+    }
+
+    Client --> Singleton : uses
+    Singleton --> Singleton : creates/returns
+
     note for Singleton "私有构造函数\n静态实例变量\n静态获取方法"
+```
+
+
+### Laravel中的单例生命周期
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Container
+    participant ServiceProvider
+    participant SingletonInstance
+
+    Client->>ServiceProvider: 注册服务
+    ServiceProvider->>Container: singleton(abstract, concrete)
+    Container->>Container: bind(abstract, concrete, shared=true)
+
+    Client->>Container: resolve(abstract)
+    Container->>Container: 检查实例是否存在
+
+    alt 实例不存在
+        Container->>SingletonInstance: 创建新实例
+        SingletonInstance-->>Container: 返回实例
+        Container->>Container: 存储实例
+    else 实例存在
+        Container->>Container: 获取存储的实例
+    end
+
+    Container-->>Client: 返回单例实例
 ```
 
 ## Laravel实现

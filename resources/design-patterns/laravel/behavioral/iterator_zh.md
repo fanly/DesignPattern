@@ -2,7 +2,7 @@
 
 ## 概述
 
-迭代器模式提供一种方法顺序访问一个聚合对象中各个元素，而又不需暴露该对象的内部表示。它将遍历逻辑与聚合对象分离，使得聚合对象可以专注于数据存储，而迭代器专注于遍历。
+迭代器模式提供一种方法顺序访问一个聚合对象中各个元素，而又不需暴露该对象的内部表示。它定义了一个标准接口用于遍历对象集合。
 
 ## 架构图
 
@@ -11,19 +11,19 @@
 classDiagram
     class Iterator {
         <<interface>>
-        +first()
+        +hasNext()
         +next()
-        +isDone()
-        +currentItem()
+        +current()
+        +rewind()
     }
     
     class ConcreteIterator {
-        -aggregate
-        -current
-        +first()
+        -collection
+        -position
+        +hasNext()
         +next()
-        +isDone()
-        +currentItem()
+        +current()
+        +rewind()
     }
     
     class Aggregate {
@@ -34,17 +34,15 @@ classDiagram
     class ConcreteAggregate {
         -items
         +createIterator()
-        +getItem(index)
-        +count()
+        +add(item)
+        +remove(item)
+        +getItems()
     }
     
     Iterator <|.. ConcreteIterator
     Aggregate <|.. ConcreteAggregate
-    ConcreteIterator --> ConcreteAggregate : iterates
     ConcreteAggregate --> ConcreteIterator : creates
-    
-    note for Iterator "迭代器接口\n定义遍历方法"
-    note for ConcreteAggregate "具体聚合类\n存储数据元素"
+    ConcreteIterator --> ConcreteAggregate : iterates
 ```
 
 ### Laravel Collection 迭代器架构
