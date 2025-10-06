@@ -1,12 +1,12 @@
-# Bridge Pattern {#bridge-pattern}
+# Bridge Pattern
 
-## Overview {#overview}
+## Overview
 
 Decouple an abstraction from its implementation so that the two can vary independently. The Bridge pattern separates an abstraction from its implementation so that both can be modified independently.
 
-## Architecture Diagram {#architecture-diagram}
+## Architecture Diagram
 
-### Bridge Pattern Structure {#bridge-pattern-structure}
+### Bridge Pattern Structure
 
 ```mermaid
 classDiagram
@@ -41,7 +41,7 @@ classDiagram
     note for Implementor "Defines implementation interface"
 ```
 
-### Laravel Database Bridge {#laravel-database-bridge}
+### Laravel Database Bridge
 
 ```mermaid
 graph TB
@@ -61,7 +61,7 @@ graph TB
     style H fill:#fff3e0
 ```
 
-### Bridge Pattern Sequence Diagram {#bridge-pattern-sequence-diagram}
+### Bridge Pattern Sequence Diagram
 
 ```mermaid
 sequenceDiagram
@@ -75,17 +75,17 @@ sequenceDiagram
     Abstraction-->>Client: result
 ```
 
-## Problem Scenario {#problem-scenario}
+## Problem Scenario
 
 In Laravel applications, we often need to handle different data storage methods (MySQL, Redis, files, etc.) or different notification methods (email, SMS, push notifications, etc.). If inheritance is used directly, it can lead to an explosive growth in the number of classes.
 
-## Solution {#solution}
+## Solution
 
 The Bridge pattern separates abstraction from implementation, allowing them to vary independently.
 
-## Laravel Implementation {#laravel-implementation}
+## Laravel Implementation
 
-### 1. Notification System Example {#notification-system-example}
+### 1. Notification System Example
 
 ```php
 <?php
@@ -188,7 +188,7 @@ class DelayedNotification extends Notification
 }
 ```
 
-### 2. Data Storage Example {#data-storage-example}
+### 2. Data Storage Example
 
 ```php
 <?php
@@ -362,9 +362,9 @@ class CachedStorage extends Storage
 }
 ```
 
-## Usage Examples {#usage-examples}
+## Usage Examples
 
-### Notification System Usage {#notification-system-usage}
+### Notification System Usage
 
 ```php
 <?php
@@ -380,7 +380,7 @@ $delayedPushNotification = new DelayedNotification(new PushImplementation(), 300
 $delayedPushNotification->send('Delayed Message', 'user123');
 ```
 
-### Storage System Usage {#storage-system-usage}
+### Storage System Usage
 
 ```php
 <?php
@@ -396,9 +396,9 @@ $dbStorage = new SimpleStorage(new DatabaseStorageImplementation());
 $dbStorage->store('config', ['theme' => 'dark', 'language' => 'zh']);
 ```
 
-## Practical Applications in Laravel {#practical-applications-in-laravel}
+## Practical Applications in Laravel
 
-### 1. Queue System {#queue-system}
+### 1. Queue System
 
 Laravel's queue system is a typical application of the Bridge pattern:
 
@@ -416,7 +416,7 @@ Queue::push(new SendEmailJob($user));
 ]
 ```
 
-### 2. Cache System {#cache-system}
+### 2. Cache System
 
 ```php
 // Abstraction layer
@@ -431,7 +431,7 @@ Cache::put('key', 'value', 3600);
 ]
 ```
 
-### 3. File System {#file-system}
+### 3. File System
 
 ```php
 // Abstraction layer
@@ -446,7 +446,7 @@ Storage::put('file.txt', 'content');
 ]
 ```
 
-## Database Query Grammar Bridge {#database-query-grammar-bridge}
+## Database Query Grammar Bridge
 
 Laravel uses the Bridge pattern to separate query building from SQL generation:
 
@@ -499,7 +499,7 @@ class PostgresGrammar extends Grammar
 }
 ```
 
-## Cache Store Bridge {#cache-store-bridge}
+## Cache Store Bridge
 
 ```php
 // Cache manager bridges different storage implementations
@@ -520,26 +520,26 @@ class CacheManager extends Manager implements FactoryContract
 }
 ```
 
-## Advantages {#advantages}
+## Advantages
 
 1. **Separation of abstraction and implementation**: Can vary independently
 2. **Runtime implementation switching**: Can dynamically change implementations
 3. **Good extensibility**: Easy to add new abstractions or implementations
 4. **Hidden implementation details**: Client only needs to know the abstract interface
 
-## Disadvantages {#disadvantages}
+## Disadvantages
 
 1. **Increased system complexity**: Introduces more classes and interfaces
 2. **Understanding difficulty**: Need to understand the concept of separation between abstraction and implementation
 
-## Applicable Scenarios {#applicable-scenarios}
+## Applicable Scenarios
 
 1. **When you don't want a fixed binding relationship between abstraction and implementation**
 2. **When both abstraction and implementation need independent extension**
 3. **When you need to switch implementations at runtime**
 4. **When you want to hide implementation details from the client**
 
-## Relationship with Other Patterns {#relationship-with-other-patterns}
+## Relationship with Other Patterns
 
 - **Adapter pattern**: Bridge pattern separates at design time, adapter pattern adapts after implementation
 - **State pattern**: Can be used together, state implementations can use the Bridge pattern

@@ -1,18 +1,18 @@
-# 桥接模式 (Bridge Pattern) {#桥接模式}
+# 桥接模式 (Bridge Pattern)
 
-## 概述 {#概述}
+## 概述
 
 桥接模式将抽象部分与它的实现部分分离，使它们都可以独立地变化。这种模式通过组合而不是继承来实现功能的扩展。
 
-## 问题场景 {#问题场景}
+## 问题场景
 
 在Laravel应用中，我们经常需要处理不同的数据存储方式（MySQL、Redis、文件等）或不同的通知方式（邮件、短信、推送等）。如果直接使用继承，会导致类的数量爆炸性增长。
 
-## 解决方案 {#解决方案}
+## 解决方案
 
 桥接模式通过将抽象和实现分离，让它们可以独立变化。
 
-## UML类图 {#uml类图}
+## UML类图
 
 ```mermaid
 classDiagram
@@ -43,9 +43,9 @@ classDiagram
     ConcreteImplementationB --|> Implementation
 ```
 
-## Laravel实现 {#laravel实现}
+## Laravel实现
 
-### 1. 通知系统示例 {#通知系统示例}
+### 1. 通知系统示例
 
 ```php
 <?php
@@ -148,7 +148,7 @@ class DelayedNotification extends Notification
 }
 ```
 
-### 2. 数据存储示例 {#数据存储示例}
+### 2. 数据存储示例
 
 ```php
 <?php
@@ -322,9 +322,9 @@ class CachedStorage extends Storage
 }
 ```
 
-## 使用示例 {#使用示例}
+## 使用示例
 
-### 通知系统使用 {#通知系统使用}
+### 通知系统使用
 
 ```php
 <?php
@@ -340,7 +340,7 @@ $delayedPushNotification = new DelayedNotification(new PushImplementation(), 300
 $delayedPushNotification->send('Delayed Message', 'user123');
 ```
 
-### 存储系统使用 {#存储系统使用}
+### 存储系统使用
 
 ```php
 <?php
@@ -356,9 +356,9 @@ $dbStorage = new SimpleStorage(new DatabaseStorageImplementation());
 $dbStorage->store('config', ['theme' => 'dark', 'language' => 'zh']);
 ```
 
-## Laravel中的实际应用 {#laravel中的实际应用}
+## Laravel中的实际应用
 
-### 1. 队列系统 {#队列系统}
+### 1. 队列系统
 
 Laravel的队列系统就是桥接模式的典型应用：
 
@@ -376,7 +376,7 @@ Queue::push(new SendEmailJob($user));
 ]
 ```
 
-### 2. 缓存系统 {#缓存系统}
+### 2. 缓存系统
 
 ```php
 // 抽象层
@@ -391,7 +391,7 @@ Cache::put('key', 'value', 3600);
 ]
 ```
 
-### 3. 文件系统 {#文件系统}
+### 3. 文件系统
 
 ```php
 // 抽象层
@@ -406,7 +406,7 @@ Storage::put('file.txt', 'content');
 ]
 ```
 
-## 时序图 {#时序图}
+## 时序图
 
 ```mermaid
 sequenceDiagram
@@ -420,26 +420,26 @@ sequenceDiagram
     Abstraction-->>Client: result
 ```
 
-## 优点 {#优点}
+## 优点
 
 1. **分离抽象和实现**：可以独立地变化
 2. **运行时切换实现**：可以动态改变实现
 3. **扩展性好**：新增抽象或实现都很容易
 4. **隐藏实现细节**：客户端只需要知道抽象接口
 
-## 缺点 {#缺点}
+## 缺点
 
 1. **增加系统复杂性**：引入了更多的类和接口
 2. **理解难度**：需要理解抽象和实现的分离概念
 
-## 适用场景 {#适用场景}
+## 适用场景
 
 1. **不希望在抽象和实现之间有固定绑定关系**
 2. **抽象和实现都需要独立扩展**
 3. **需要在运行时切换实现**
 4. **希望对客户端隐藏实现细节**
 
-## 与其他模式的关系 {#与其他模式的关系}
+## 与其他模式的关系
 
 - **适配器模式**：桥接模式在设计时分离，适配器模式在实现后适配
 - **状态模式**：可以结合使用，状态的实现可以使用桥接模式
