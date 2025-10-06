@@ -2,95 +2,624 @@
 
 ## 概述
 
-代理模式为其他对象提供一种代理以控制对这个对象的访问。代理对象在客户端和目标对象之间起到中介作用，可以用于控制访问、延迟加载、记录日志、缓存等。
+代理模式为其他对象提供一种代理以控制对这个对象的访问。代理对象在客户端和目标对象之间起到中介作用，可以在不改变目标对象的情况下，扩展目标对象的功能。
 
-## 架构图
+## 问题场景
 
-### 代理模式类图
+在Laravel应用中，我们经常需要：
+- 控制对昂贵资源的访问（如数据库连接、外部API）
+- 实现延迟加载（Lazy Loading）
+- 添加访问控制和权限验证
+- 缓存昂贵操作的结果
+- 记录访问日志和统计信息
+
+## 解决方案
+
+代理模式通过创建代理类来间接访问目标对象，代理类与目标对象实现相同的接口，在代理类中可以添加额外的控制逻辑。
+
+## UML类图
+
 ```mermaid
 classDiagram
     class Subject {
-        <<interface>>
-        +request(): void
+        +request()
     }
     
     class RealSubject {
-        +request(): void
+        +request()
     }
     
     class Proxy {
-        -realSubject: RealSubject
-        +request(): void
-        +checkAccess(): bool
-        +logAccess(): void
+        -realSubject
+        +request()
+        +checkAccess()
+        +logAccess()
     }
     
-    class Client {
-        +operation(): void
-    }
-    
-    Client --> Subject
-    RealSubject ..|> Subject
-    Proxy ..|> Subject
-    Proxy --> RealSubject : controls access
-    
-    note for Proxy "代理对象\n控制对真实对象的访问"
-    note for RealSubject "真实对象\n实际执行业务逻辑"
+    Subject <|-- RealSubject
+    Subject <|-- Proxy
+    Proxy --> RealSubject
 ```
 
-### Laravel 延迟加载代理架构
-```mermaid
-classDiagram
-    class Model {
-        -attributes: array
-        -relations: array
-        +getAttribute(key): mixed
-        +getRelation(key): mixed
-        +load(relations): Model
+## Laravel实现
+
+### 1. 虚拟代理（延迟加载）示例
+
+```php
+<?php
+
+namespace App\Patterns\Proxy;
+
+// 服务接口
+interface ImageServiceInterface
+{
+    public function display(): string;
+    public function getSize(): array;
+    public function getMetadata(): array;
+}
+
+// 真实的图片服务（昂贵的资源）
+class RealImageService implements ImageServiceInterface
+{
+    private string $filename;
+    private array $imageData;
+    
+    public function __construct(string $filename)
+    {
+        $this->filename = $filename;
+        $this->loadImage();
     }
     
-    class Relation {
-        <<abstract>>
-        -parent: Model
-        -related: Model
-        -query: Builder
-        +getResults(): Collection
-        +get(): Collection
-        +first(): Model
+    private function loadImage(): void
+    {
+        // 模拟昂贵的图片加载操作
+        echo "Loading image: {$this->filename}\n";
+        sleep(2); // 模拟加载时间
+        
+        $this->imageData = [
+            'filename' => $this->filename,
+            'size' => [800, 600],
+            'format' => 'JPEG',
+            'data' => 'binary_image_data...'
+        ];
     }
     
-    class HasMany {
-        +getResults(): Collection
-        +get(): Collection
-        +create(attributes): Model
+    public function display(): string
+    {
+        return "<img src='{$this->filename}' alt='Image' />";
     }
     
-    class BelongsTo {
-        +getResults(): Model
-        +get(): Model
-        +associate(model): Model
+    public function getSize(): array
+    {
+        return $this->imageData['size'];
     }
     
-    class LazyCollection {
-        -loader: Closure
-        -loaded: bool
-        -items: array
-        +all(): array
-        +first(): mixed
-        +count(): int
+    public function getMetadata(): array
+    {
+        return [
+            'filename' => $this->imageData['filename'],
+            'format' => $this->imageData['format'],
+            'size' => $this->imageData['size']
+        ];
+    }
+}
+
+// 虚拟代理（延迟加载）
+class VirtualImageProxy implements ImageServiceInterface
+{
+    private string $filename;
+    private ?RealImageService $realImage = null;
+    
+    public function __construct(string $filename)
+    {
+        $this->filename = $filename;
     }
     
-    Model --> Relation : has relations
-    HasMany --|> Relation
-    BelongsTo --|> Relation
-    Relation --> LazyCollection : returns
-    LazyCollection --> Model : loads when accessed
+    private function getRealImage(): RealImageService
+    {
+        if ($this->realImage === null) {
+            $this->realImage = new RealImageService($this->filename);
+        }
+        
+        return $this->realImage;
+    }
     
-    note for Relation "关联代理\n延迟加载相关数据"
-    note for LazyCollection "延迟集合代理"
+    public function display(): string
+    {
+        return $this->getRealImage()->display();
+    }
+    
+    public function getSize(): array
+    {
+        return $this->getRealImage()->getSize();
+    }
+    
+    public function getMetadata(): array
+    {
+        return $this->getRealImage()->getMetadata();
+    }
+}
 ```
 
-### 代理模式时序图
+### 2. 保护代理（权限控制）示例
+
+```php
+<?php
+
+namespace App\Patterns\Proxy;
+
+// 用户服务接口
+interface UserServiceInterface
+{
+    public function getUserInfo(int $userId): array;
+    public function updateUser(int $userId, array $data): bool;
+    public function deleteUser(int $userId): bool;
+}
+
+// 真实的用户服务
+class RealUserService implements UserServiceInterface
+{
+    public function getUserInfo(int $userId): array
+    {
+        // 模拟从数据库获取用户信息
+        return [
+            'id' => $userId,
+            'name' => 'User ' . $userId,
+            'email' => "user{$userId}@example.com",
+            'role' => 'user'
+        ];
+    }
+    
+    public function updateUser(int $userId, array $data): bool
+    {
+        // 模拟更新用户信息
+        echo "Updating user {$userId} with data: " . json_encode($data) . "\n";
+        return true;
+    }
+    
+    public function deleteUser(int $userId): bool
+    {
+        // 模拟删除用户
+        echo "Deleting user {$userId}\n";
+        return true;
+    }
+}
+
+// 保护代理（权限控制）
+class ProtectionUserProxy implements UserServiceInterface
+{
+    private RealUserService $userService;
+    private array $currentUser;
+    
+    public function __construct(array $currentUser)
+    {
+        $this->userService = new RealUserService();
+        $this->currentUser = $currentUser;
+    }
+    
+    private function hasPermission(string $action, int $targetUserId = null): bool
+    {
+        // 管理员有所有权限
+        if ($this->currentUser['role'] === 'admin') {
+            return true;
+        }
+        
+        // 普通用户只能查看和修改自己的信息
+        if ($action === 'read') {
+            return true; // 所有用户都可以读取
+        }
+        
+        if ($action === 'update' && $targetUserId === $this->currentUser['id']) {
+            return true;
+        }
+        
+        if ($action === 'delete') {
+            return false; // 普通用户不能删除
+        }
+        
+        return false;
+    }
+    
+    public function getUserInfo(int $userId): array
+    {
+        if (!$this->hasPermission('read', $userId)) {
+            throw new \Exception('Access denied: Cannot read user information');
+        }
+        
+        return $this->userService->getUserInfo($userId);
+    }
+    
+    public function updateUser(int $userId, array $data): bool
+    {
+        if (!$this->hasPermission('update', $userId)) {
+            throw new \Exception('Access denied: Cannot update user information');
+        }
+        
+        return $this->userService->updateUser($userId, $data);
+    }
+    
+    public function deleteUser(int $userId): bool
+    {
+        if (!$this->hasPermission('delete', $userId)) {
+            throw new \Exception('Access denied: Cannot delete user');
+        }
+        
+        return $this->userService->deleteUser($userId);
+    }
+}
+```
+
+### 3. 缓存代理示例
+
+```php
+<?php
+
+namespace App\Patterns\Proxy;
+
+// 数据服务接口
+interface DataServiceInterface
+{
+    public function getData(string $key): ?array;
+    public function setData(string $key, array $data): bool;
+}
+
+// 真实的数据服务（可能是昂贵的数据库操作）
+class RealDataService implements DataServiceInterface
+{
+    public function getData(string $key): ?array
+    {
+        // 模拟昂贵的数据库查询
+        echo "Querying database for key: {$key}\n";
+        sleep(1); // 模拟查询时间
+        
+        // 模拟返回数据
+        return [
+            'key' => $key,
+            'value' => 'data_for_' . $key,
+            'timestamp' => time()
+        ];
+    }
+    
+    public function setData(string $key, array $data): bool
+    {
+        // 模拟数据库写入
+        echo "Writing to database: {$key} = " . json_encode($data) . "\n";
+        sleep(0.5); // 模拟写入时间
+        
+        return true;
+    }
+}
+
+// 缓存代理
+class CachingDataProxy implements DataServiceInterface
+{
+    private RealDataService $dataService;
+    private array $cache = [];
+    private int $ttl;
+    
+    public function __construct(int $ttl = 300)
+    {
+        $this->dataService = new RealDataService();
+        $this->ttl = $ttl;
+    }
+    
+    public function getData(string $key): ?array
+    {
+        // 检查缓存
+        if (isset($this->cache[$key])) {
+            $cachedData = $this->cache[$key];
+            
+            // 检查是否过期
+            if (time() - $cachedData['cached_at'] < $this->ttl) {
+                echo "Cache hit for key: {$key}\n";
+                return $cachedData['data'];
+            } else {
+                // 缓存过期，清除
+                unset($this->cache[$key]);
+            }
+        }
+        
+        // 缓存未命中，从真实服务获取数据
+        echo "Cache miss for key: {$key}\n";
+        $data = $this->dataService->getData($key);
+        
+        if ($data !== null) {
+            // 存储到缓存
+            $this->cache[$key] = [
+                'data' => $data,
+                'cached_at' => time()
+            ];
+        }
+        
+        return $data;
+    }
+    
+    public function setData(string $key, array $data): bool
+    {
+        $result = $this->dataService->setData($key, $data);
+        
+        if ($result) {
+            // 更新缓存
+            $this->cache[$key] = [
+                'data' => $data,
+                'cached_at' => time()
+            ];
+        }
+        
+        return $result;
+    }
+    
+    public function clearCache(string $key = null): void
+    {
+        if ($key === null) {
+            $this->cache = [];
+            echo "All cache cleared\n";
+        } else {
+            unset($this->cache[$key]);
+            echo "Cache cleared for key: {$key}\n";
+        }
+    }
+}
+```
+
+### 4. 远程代理示例
+
+```php
+<?php
+
+namespace App\Patterns\Proxy;
+
+// API服务接口
+interface ApiServiceInterface
+{
+    public function request(string $endpoint, array $params = []): array;
+}
+
+// 真实的API服务
+class RealApiService implements ApiServiceInterface
+{
+    private string $baseUrl;
+    private array $headers;
+    
+    public function __construct(string $baseUrl, array $headers = [])
+    {
+        $this->baseUrl = $baseUrl;
+        $this->headers = $headers;
+    }
+    
+    public function request(string $endpoint, array $params = []): array
+    {
+        $url = $this->baseUrl . '/' . $endpoint;
+        
+        // 模拟HTTP请求
+        echo "Making HTTP request to: {$url}\n";
+        
+        // 使用Guzzle或其他HTTP客户端
+        $response = \Http::withHeaders($this->headers)->get($url, $params);
+        
+        return $response->json();
+    }
+}
+
+// 远程代理（带重试和错误处理）
+class RemoteApiProxy implements ApiServiceInterface
+{
+    private RealApiService $apiService;
+    private int $maxRetries;
+    private int $retryDelay;
+    
+    public function __construct(string $baseUrl, array $headers = [], int $maxRetries = 3, int $retryDelay = 1)
+    {
+        $this->apiService = new RealApiService($baseUrl, $headers);
+        $this->maxRetries = $maxRetries;
+        $this->retryDelay = $retryDelay;
+    }
+    
+    public function request(string $endpoint, array $params = []): array
+    {
+        $attempts = 0;
+        
+        while ($attempts < $this->maxRetries) {
+            try {
+                return $this->apiService->request($endpoint, $params);
+            } catch (\Exception $e) {
+                $attempts++;
+                
+                if ($attempts >= $this->maxRetries) {
+                    throw new \Exception("API request failed after {$this->maxRetries} attempts: " . $e->getMessage());
+                }
+                
+                echo "Request failed (attempt {$attempts}), retrying in {$this->retryDelay} seconds...\n";
+                sleep($this->retryDelay);
+            }
+        }
+        
+        return [];
+    }
+}
+```
+
+## 使用示例
+
+### 虚拟代理使用
+
+```php
+<?php
+
+// 创建图片代理（此时不会加载图片）
+$image1 = new VirtualImageProxy('large_image_1.jpg');
+$image2 = new VirtualImageProxy('large_image_2.jpg');
+$image3 = new VirtualImageProxy('large_image_3.jpg');
+
+echo "Images created (but not loaded yet)\n";
+
+// 只有在实际使用时才会加载图片
+echo $image1->display(); // 此时才加载 large_image_1.jpg
+echo $image2->getSize(); // 此时才加载 large_image_2.jpg
+// image3 从未被使用，所以不会被加载
+```
+
+### 保护代理使用
+
+```php
+<?php
+
+// 普通用户
+$normalUser = ['id' => 1, 'role' => 'user'];
+$userProxy = new ProtectionUserProxy($normalUser);
+
+try {
+    // 可以读取用户信息
+    $userInfo = $userProxy->getUserInfo(1);
+    echo "User info: " . json_encode($userInfo) . "\n";
+    
+    // 可以更新自己的信息
+    $userProxy->updateUser(1, ['name' => 'New Name']);
+    
+    // 不能删除用户（会抛出异常）
+    $userProxy->deleteUser(1);
+} catch (\Exception $e) {
+    echo "Error: " . $e->getMessage() . "\n";
+}
+
+// 管理员用户
+$adminUser = ['id' => 2, 'role' => 'admin'];
+$adminProxy = new ProtectionUserProxy($adminUser);
+
+// 管理员可以执行所有操作
+$adminProxy->deleteUser(1); // 成功
+```
+
+### 缓存代理使用
+
+```php
+<?php
+
+$dataProxy = new CachingDataProxy(60); // 60秒TTL
+
+// 第一次请求（缓存未命中）
+$data1 = $dataProxy->getData('user:123');
+
+// 第二次请求相同数据（缓存命中）
+$data2 = $dataProxy->getData('user:123');
+
+// 更新数据
+$dataProxy->setData('user:123', ['name' => 'Updated Name']);
+
+// 清除缓存
+$dataProxy->clearCache('user:123');
+```
+
+### 远程代理使用
+
+```php
+<?php
+
+$apiProxy = new RemoteApiProxy(
+    'https://api.example.com',
+    ['Authorization' => 'Bearer token123'],
+    3, // 最大重试次数
+    2  // 重试延迟（秒）
+);
+
+try {
+    $result = $apiProxy->request('users', ['page' => 1, 'limit' => 10]);
+    echo "API Response: " . json_encode($result) . "\n";
+} catch (\Exception $e) {
+    echo "API Error: " . $e->getMessage() . "\n";
+}
+```
+
+## Laravel中的实际应用
+
+### 1. Eloquent关系的延迟加载
+
+```php
+<?php
+
+// Laravel的关系延迟加载就是虚拟代理模式
+class User extends Model
+{
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+}
+
+$user = User::find(1);
+// 此时posts关系还没有被加载（虚拟代理）
+
+$posts = $user->posts; 
+// 只有在访问时才会执行查询（代理模式的延迟加载）
+```
+
+### 2. 缓存系统
+
+```php
+<?php
+
+// Laravel的缓存系统使用了代理模式
+class CacheManager
+{
+    public function remember($key, $ttl, Closure $callback)
+    {
+        $value = $this->get($key);
+        
+        if ($value === null) {
+            $value = $callback();
+            $this->put($key, $value, $ttl);
+        }
+        
+        return $value;
+    }
+}
+
+// 使用示例
+$users = Cache::remember('users', 3600, function () {
+    return User::all(); // 只有缓存未命中时才执行
+});
+```
+
+### 3. 队列代理
+
+```php
+<?php
+
+// Laravel的队列系统也使用了代理模式
+class QueueProxy
+{
+    public function push($job)
+    {
+        // 代理实际的队列操作
+        return $this->connection->push($job);
+    }
+}
+
+// 使用示例
+Queue::push(new SendEmailJob($user));
+// 实际的邮件发送被代理到队列系统中
+```
+
+### 4. 门面模式（Facade）
+
+```php
+<?php
+
+// Laravel的Facade也是代理模式的应用
+class Cache extends Facade
+{
+    protected static function getFacadeAccessor()
+    {
+        return 'cache'; // 代理到实际的缓存服务
+    }
+}
+
+// 使用时看起来像静态调用，实际上是代理
+Cache::put('key', 'value', 3600);
+```
+
+## 时序图
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -99,1056 +628,58 @@ sequenceDiagram
     
     Client->>Proxy: request()
     Proxy->>Proxy: checkAccess()
-    alt 访问被允许
+    alt access granted
         Proxy->>RealSubject: request()
         RealSubject-->>Proxy: result
         Proxy->>Proxy: logAccess()
         Proxy-->>Client: result
-    else 访问被拒绝
-        Proxy-->>Client: access denied
+    else access denied
+        Proxy-->>Client: error
     end
-    
-    Note over Proxy: 代理控制访问和添加额外功能
 ```
 
-### Laravel 模型关联延迟加载流程
-```mermaid
-flowchart TD
-    A[访问模型关联] --> B{关联已加载?}
-    B -->|是| C[返回缓存数据]
-    B -->|否| D[创建关联查询]
-    D --> E[执行数据库查询]
-    E --> F[构建关联对象]
-    F --> G[缓存关联数据]
-    G --> H[返回关联对象]
-    C --> I[完成]
-    H --> I
-    
-    style D fill:#e1f5fe
-    style E fill:#fff3e0
-    style G fill:#e8f5e8
-```
+## 代理模式的类型
 
-### 缓存代理架构
-```mermaid
-classDiagram
-    class CacheProxy {
-        -target: Service
-        -cache: Cache
-        -ttl: int
-        +getData(key): mixed
-        +setData(key, value): bool
-        +invalidate(key): bool
-    }
-    
-    class DatabaseService {
-        -connection: Connection
-        +findUser(id): User
-        +findPost(id): Post
-        +getStatistics(): array
-    }
-    
-    class ApiService {
-        -client: HttpClient
-        +fetchUserData(id): array
-        +fetchWeatherData(location): array
-    }
-    
-    class FileService {
-        -filesystem: Filesystem
-        +readFile(path): string
-        +writeFile(path, content): bool
-    }
-    
-    CacheProxy --> DatabaseService : proxies
-    CacheProxy --> ApiService : proxies
-    CacheProxy --> FileService : proxies
-    
-    note for CacheProxy "缓存代理\n自动缓存服务调用结果"
-```
+### 1. 虚拟代理（Virtual Proxy）
+- 延迟创建昂贵的对象
+- 只有在真正需要时才创建实际对象
 
-### 权限代理模式
-```mermaid
-classDiagram
-    class AuthProxy {
-        -target: Controller
-        -auth: Auth
-        -permissions: array
-        +handle(request): Response
-        +checkPermission(action): bool
-        +logAccess(user, action): void
-    }
-    
-    class UserController {
-        +index(): Response
-        +show(id): Response
-        +store(request): Response
-        +update(id, request): Response
-        +destroy(id): Response
-    }
-    
-    class AdminController {
-        +dashboard(): Response
-        +users(): Response
-        +settings(): Response
-    }
-    
-    class ApiController {
-        +getData(): Response
-        +postData(request): Response
-    }
-    
-    AuthProxy --> UserController : protects
-    AuthProxy --> AdminController : protects
-    AuthProxy --> ApiController : protects
-    
-    note for AuthProxy "权限代理\n控制访问权限"
-```
+### 2. 保护代理（Protection Proxy）
+- 控制对原始对象的访问
+- 提供不同级别的访问权限
 
-### 虚拟代理模式
-```mermaid
-classDiagram
-    class ImageProxy {
-        -filename: string
-        -image: Image
-        -loaded: bool
-        +display(): void
-        +getSize(): array
-        +loadImage(): void
-    }
-    
-    class Image {
-        -data: binary
-        -width: int
-        -height: int
-        +display(): void
-        +getSize(): array
-        +resize(width, height): void
-    }
-    
-    class DocumentProxy {
-        -path: string
-        -document: Document
-        -loaded: bool
-        +getContent(): string
-        +getMetadata(): array
-        +loadDocument(): void
-    }
-    
-    class Document {
-        -content: string
-        -metadata: array
-        +getContent(): string
-        +getMetadata(): array
-        +parse(): void
-    }
-    
-    ImageProxy --> Image : loads on demand
-    DocumentProxy --> Document : loads on demand
-    
-    note for ImageProxy "图片虚拟代理\n延迟加载大图片"
-    note for DocumentProxy "文档虚拟代理\n延迟加载大文档"
-```
+### 3. 远程代理（Remote Proxy）
+- 为远程对象提供本地代表
+- 隐藏网络通信的复杂性
 
-### Laravel Gate 权限代理
-```mermaid
-flowchart TD
-    A[用户请求] --> B[Gate代理]
-    B --> C{检查权限}
-    C -->|有权限| D[执行原始操作]
-    C -->|无权限| E[抛出授权异常]
-    D --> F[记录访问日志]
-    F --> G[返回结果]
-    E --> H[返回403错误]
-    
-    I[权限检查流程]
-    C --> J[检查用户角色]
-    C --> K[检查资源权限]
-    C --> L[检查策略规则]
-    
-    style B fill:#e1f5fe
-    style D fill:#e8f5e8
-    style E fill:#ffebee
-```
+### 4. 缓存代理（Caching Proxy）
+- 缓存昂贵操作的结果
+- 提高系统性能
 
-## 设计意图
+## 优点
 
-- **访问控制**：控制对真实对象的访问权限
-- **延迟加载**：推迟昂贵对象的创建和初始化
-- **功能增强**：在不修改原对象的情况下添加额外功能
-- **保护代理**：保护真实对象不被非法访问
+1. **控制访问**：可以在不修改目标对象的情况下控制访问
+2. **延迟初始化**：可以延迟昂贵对象的创建
+3. **增强功能**：可以在访问对象时添加额外的功能
+4. **透明性**：客户端无需知道是否使用了代理
 
-## Laravel 中的实现
+## 缺点
 
-### 1. 延迟加载代理
+1. **增加复杂性**：引入了额外的抽象层
+2. **性能开销**：代理调用可能带来性能损失
+3. **间接性**：增加了系统的间接性
 
-Laravel 的 Eloquent ORM 使用了代理模式实现延迟加载：
+## 适用场景
 
-```php
-// Illuminate\Database\Eloquent\Relations\Relation.php
-abstract class Relation
-{
-    protected $parent;
-    protected $related;
-    protected $query;
-    protected $eagerLoad = [];
-    
-    public function __construct(Builder $query, Model $parent)
-    {
-        $this->query = $query;
-        $this->parent = $parent;
-        $this->related = $query->getModel();
-        
-        $this->addConstraints();
-    }
-    
-    // 代理模式：延迟加载关联数据
-    public function getResults()
-    {
-        return $this->query->get();
-    }
-    
-    // 代理到查询构建器的方法
-    public function __call($method, $parameters)
-    {
-        $result = $this->query->{$method}(...$parameters);
-        
-        if ($result === $this->query) {
-            return $this;
-        }
-        
-        return $result;
-    }
-}
-
-// 具体实现：一对一关联
-class HasOne extends Relation
-{
-    public function getResults()
-    {
-        if (is_null($this->getParentKey())) {
-            return null;
-        }
-        
-        // 代理到查询构建器获取结果
-        return $this->query->first() ?: $this->getDefaultFor($this->parent);
-    }
-    
-    public function addConstraints()
-    {
-        if (static::$constraints) {
-            $this->query->where(
-                $this->getForeignKeyName(), '=', $this->getParentKey()
-            );
-        }
-    }
-}
-```
-
-### 2. 缓存代理
-
-Laravel 的缓存系统使用代理模式：
-
-```php
-// Illuminate\Cache\Repository.php
-class Repository implements CacheContract
-{
-    protected $store;
-    protected $events;
-    protected $default = 60;
-    
-    public function __construct(Store $store)
-    {
-        $this->store = $store;
-    }
-    
-    // 代理模式：缓存数据访问
-    public function get($key, $default = null)
-    {
-        // 先尝试从缓存获取
-        $value = $this->store->get($this->itemKey($key));
-        
-        if (! is_null($value)) {
-            return $value;
-        }
-        
-        // 如果缓存不存在，执行回调函数并缓存结果
-        if ($default instanceof Closure) {
-            return $this->handleDefaultCallback($key, $default);
-        }
-        
-        return value($default);
-    }
-    
-    public function remember($key, $seconds, Closure $callback)
-    {
-        // 缓存代理：如果缓存存在直接返回，否则执行回调并缓存
-        $value = $this->get($key);
-        
-        if (! is_null($value)) {
-            return $value;
-        }
-        
-        $this->put($key, $value = $callback(), $seconds);
-        
-        return $value;
-    }
-    
-    public function rememberForever($key, Closure $callback)
-    {
-        // 永久缓存代理
-        $value = $this->get($key);
-        
-        if (! is_null($value)) {
-            return $value;
-        }
-        
-        $this->forever($key, $value = $callback());
-        
-        return $value;
-    }
-    
-    // 代理到存储引擎的方法
-    public function __call($method, $parameters)
-    {
-        return $this->store->$method(...$parameters);
-    }
-}
-```
-
-### 3. 门面代理
-
-Laravel 的门面系统是代理模式的典型应用：
-
-```php
-// Illuminate\Support\Facades\Facade.php
-abstract class Facade
-{
-    protected static $app;
-    protected static $resolvedInstance = [];
-    
-    // 代理模式：静态方法代理到实际对象
-    public static function __callStatic($method, $args)
-    {
-        $instance = static::getFacadeRoot();
-        
-        if (! $instance) {
-            throw new RuntimeException('A facade root has not been set.');
-        }
-        
-        return $instance->$method(...$args);
-    }
-    
-    public static function getFacadeRoot()
-    {
-        return static::resolveFacadeInstance(static::getFacadeAccessor());
-    }
-    
-    protected static function getFacadeAccessor()
-    {
-        throw new RuntimeException('Facade does not implement getFacadeAccessor method.');
-    }
-    
-    protected static function resolveFacadeInstance($name)
-    {
-        if (is_object($name)) {
-            return $name;
-        }
-        
-        if (isset(static::$resolvedInstance[$name])) {
-            return static::$resolvedInstance[$name];
-        }
-        
-        if (static::$app) {
-            return static::$resolvedInstance[$name] = static::$app[$name];
-        }
-    }
-}
-
-// 具体门面：缓存门面
-class Cache extends Facade
-{
-    protected static function getFacadeAccessor()
-    {
-        return 'cache';
-    }
-}
-
-// 使用示例：代理到实际的缓存对象
-Cache::get('key'); // 实际上调用的是 app('cache')->get('key')
-Cache::put('key', 'value', 3600); // 代理到缓存存储引擎
-```
-
-## 实际应用场景
-
-### 1. 图片加载代理
-
-实现图片的延迟加载和缓存代理：
-
-```php
-// 图片接口
-interface ImageInterface
-{
-    public function display();
-    public function getSize();
-    public function getMetadata();
-}
-
-// 真实图片对象（创建成本高）
-class HighResolutionImage implements ImageInterface
-{
-    private $filename;
-    private $metadata;
-    private $imageData;
-    
-    public function __construct($filename)
-    {
-        $this->filename = $filename;
-        $this->loadImage();
-    }
-    
-    private function loadImage()
-    {
-        // 模拟昂贵的图片加载操作
-        echo "Loading high resolution image: {$this->filename}\n";
-        sleep(2); // 模拟加载时间
-        
-        $this->metadata = [
-            'width' => 1920,
-            'height' => 1080,
-            'format' => 'JPEG',
-            'size' => filesize($this->filename)
-        ];
-        
-        $this->imageData = file_get_contents($this->filename);
-    }
-    
-    public function display()
-    {
-        return "Displaying image: {$this->filename}";
-    }
-    
-    public function getSize()
-    {
-        return $this->metadata['size'];
-    }
-    
-    public function getMetadata()
-    {
-        return $this->metadata;
-    }
-}
-
-// 图片代理（延迟加载和缓存）
-class ImageProxy implements ImageInterface
-{
-    private $filename;
-    private $realImage = null;
-    private $cache = [];
-    
-    public function __construct($filename)
-    {
-        $this->filename = $filename;
-    }
-    
-    public function display()
-    {
-        $this->loadImage();
-        return $this->realImage->display();
-    }
-    
-    public function getSize()
-    {
-        $this->loadImage();
-        return $this->realImage->getSize();
-    }
-    
-    public function getMetadata()
-    {
-        $this->loadImage();
-        return $this->realImage->getMetadata();
-    }
-    
-    private function loadImage()
-    {
-        if ($this->realImage === null) {
-            // 延迟加载真实图片
-            $this->realImage = new HighResolutionImage($this->filename);
-        }
-    }
-    
-    // 缓存代理功能
-    public function cache()
-    {
-        $cacheKey = md5($this->filename);
-        
-        if (!isset($this->cache[$cacheKey])) {
-            $this->cache[$cacheKey] = [
-                'display' => $this->display(),
-                'size' => $this->getSize(),
-                'metadata' => $this->getMetadata()
-            ];
-        }
-        
-        return $this->cache[$cacheKey];
-    }
-}
-
-// 图片查看器使用代理
-class ImageViewer
-{
-    private $images = [];
-    
-    public function addImage($filename)
-    {
-        $this->images[] = new ImageProxy($filename);
-    }
-    
-    public function displayAll()
-    {
-        $output = [];
-        foreach ($this->images as $image) {
-            $output[] = $image->display();
-        }
-        return $output;
-    }
-    
-    public function getTotalSize()
-    {
-        $total = 0;
-        foreach ($this->images as $image) {
-            $total += $image->getSize();
-        }
-        return $total;
-    }
-}
-```
-
-### 2. API 访问代理
-
-实现 API 访问的保护代理和缓存代理：
-
-```php
-// API 接口
-interface ApiClientInterface
-{
-    public function get($endpoint, $params = []);
-    public function post($endpoint, $data = []);
-    public function put($endpoint, $data = []);
-    public function delete($endpoint);
-}
-
-// 真实 API 客户端
-class RealApiClient implements ApiClientInterface
-{
-    private $baseUrl;
-    private $apiKey;
-    private $rateLimit = 100; // 每分钟请求限制
-    
-    public function __construct($baseUrl, $apiKey)
-    {
-        $this->baseUrl = $baseUrl;
-        $this->apiKey = $apiKey;
-    }
-    
-    public function get($endpoint, $params = [])
-    {
-        $url = $this->buildUrl($endpoint, $params);
-        return $this->makeRequest('GET', $url);
-    }
-    
-    public function post($endpoint, $data = [])
-    {
-        $url = $this->buildUrl($endpoint);
-        return $this->makeRequest('POST', $url, $data);
-    }
-    
-    private function buildUrl($endpoint, $params = [])
-    {
-        $url = $this->baseUrl . '/' . ltrim($endpoint, '/');
-        
-        if (!empty($params)) {
-            $url .= '?' . http_build_query($params);
-        }
-        
-        return $url;
-    }
-    
-    private function makeRequest($method, $url, $data = [])
-    {
-        // 模拟 API 请求
-        echo "Making {$method} request to: {$url}\n";
-        
-        $options = [
-            'http' => [
-                'method' => $method,
-                'header' => "Authorization: Bearer {$this->apiKey}\r\n",
-                'timeout' => 30
-            ]
-        ];
-        
-        if ($method === 'POST' || $method === 'PUT') {
-            $options['http']['header'] .= "Content-Type: application/json\r\n";
-            $options['http']['content'] = json_encode($data);
-        }
-        
-        $context = stream_context_create($options);
-        $response = file_get_contents($url, false, $context);
-        
-        return json_decode($response, true);
-    }
-}
-
-// API 访问代理（保护代理 + 缓存代理）
-class ApiProxy implements ApiClientInterface
-{
-    private $realClient;
-    private $cache = [];
-    private $requestCount = 0;
-    private $lastResetTime;
-    private $maxRequestsPerMinute = 60;
-    
-    public function __construct($baseUrl, $apiKey)
-    {
-        $this->realClient = new RealApiClient($baseUrl, $apiKey);
-        $this->lastResetTime = time();
-    }
-    
-    public function get($endpoint, $params = [])
-    {
-        // 保护代理：检查访问频率限制
-        $this->checkRateLimit();
-        
-        // 缓存代理：检查缓存
-        $cacheKey = $this->getCacheKey('GET', $endpoint, $params);
-        
-        if (isset($this->cache[$cacheKey])) {
-            echo "Returning cached response for: {$endpoint}\n";
-            return $this->cache[$cacheKey];
-        }
-        
-        // 执行真实请求
-        $response = $this->realClient->get($endpoint, $params);
-        
-        // 缓存结果
-        $this->cache[$cacheKey] = $response;
-        $this->requestCount++;
-        
-        return $response;
-    }
-    
-    public function post($endpoint, $data = [])
-    {
-        $this->checkRateLimit();
-        
-        // POST 请求通常不缓存
-        $response = $this->realClient->post($endpoint, $data);
-        $this->requestCount++;
-        
-        return $response;
-    }
-    
-    public function put($endpoint, $data = [])
-    {
-        $this->checkRateLimit();
-        $response = $this->realClient->put($endpoint, $data);
-        $this->requestCount++;
-        return $response;
-    }
-    
-    public function delete($endpoint)
-    {
-        $this->checkRateLimit();
-        $response = $this->realClient->delete($endpoint);
-        $this->requestCount++;
-        return $response;
-    }
-    
-    private function checkRateLimit()
-    {
-        $currentTime = time();
-        
-        // 每分钟重置计数器
-        if ($currentTime - $this->lastResetTime >= 60) {
-            $this->requestCount = 0;
-            $this->lastResetTime = $currentTime;
-        }
-        
-        if ($this->requestCount >= $this->maxRequestsPerMinute) {
-            throw new RateLimitException('API rate limit exceeded');
-        }
-    }
-    
-    private function getCacheKey($method, $endpoint, $params)
-    {
-        return md5($method . $endpoint . serialize($params));
-    }
-    
-    public function clearCache()
-    {
-        $this->cache = [];
-    }
-    
-    public function getRequestCount()
-    {
-        return $this->requestCount;
-    }
-}
-```
-
-## 源码分析要点
-
-### 1. 代理模式的核心结构
-
-```php
-// 主题接口
-interface Subject
-{
-    public function request();
-}
-
-// 真实主题
-class RealSubject implements Subject
-{
-    public function request()
-    {
-        return "RealSubject: Handling request.";
-    }
-}
-
-// 代理类
-class Proxy implements Subject
-{
-    private $realSubject;
-    
-    public function __construct(RealSubject $realSubject)
-    {
-        $this->realSubject = $realSubject;
-    }
-    
-    public function request()
-    {
-        if ($this->checkAccess()) {
-            $result = $this->realSubject->request();
-            $this->logAccess();
-            return $result;
-        }
-        
-        return "Proxy: Access denied";
-    }
-    
-    private function checkAccess()
-    {
-        echo "Proxy: Checking access prior to firing a real request.\n";
-        return true;
-    }
-    
-    private function logAccess()
-    {
-        echo "Proxy: Logging the time of request.\n";
-    }
-}
-```
-
-### 2. Laravel 中的代理应用
-
-Laravel 的服务容器使用代理模式实现延迟加载：
-
-```php
-// Illuminate\Container\Container.php
-class Container implements ContainerInterface
-{
-    protected $bindings = [];
-    protected $instances = [];
-    protected $resolved = [];
-    
-    public function bind($abstract, $concrete = null, $shared = false)
-    {
-        $this->bindings[$abstract] = compact('concrete', 'shared');
-    }
-    
-    public function singleton($abstract, $concrete = null)
-    {
-        $this->bind($abstract, $concrete, true);
-    }
-    
-    public function make($abstract, array $parameters = [])
-    {
-        // 如果已经解析过，直接返回实例
-        if (isset($this->instances[$abstract])) {
-            return $this->instances[$abstract];
-        }
-        
-        // 延迟解析服务
-        $object = $this->resolve($abstract, $parameters);
-        
-        // 如果是单例，缓存实例
-        if ($this->isShared($abstract)) {
-            $this->instances[$abstract] = $object;
-        }
-        
-        $this->resolved[$abstract] = true;
-        
-        return $object;
-    }
-    
-    protected function resolve($abstract, $parameters = [])
-    {
-        $concrete = $this->getConcrete($abstract);
-        
-        // 如果是闭包，执行闭包
-        if ($concrete instanceof Closure) {
-            return $concrete($this, $parameters);
-        }
-        
-        // 创建新的实例
-        return $this->build($concrete);
-    }
-}
-```
-
-## 最佳实践
-
-### 1. 合理使用代理模式
-
-**适用场景：**
-- 需要控制对象访问时（保护代理）
-- 需要延迟加载昂贵对象时（虚拟代理）
-- 需要添加额外功能而不修改原对象时（装饰代理）
-- 需要缓存对象结果时（缓存代理）
-
-**不适用场景：**
-- 对象创建成本不高时
-- 不需要访问控制时
-- 性能要求极高的场景
-
-### 2. Laravel 中的代理实践
-
-**数据库查询代理：**
-```php
-class QueryProxy
-{
-    private $query;
-    private $cache;
-    
-    public function __construct($query, $cache)
-    {
-        $this->query = $query;
-        $this->cache = $cache;
-    }
-    
-    public function get($columns = ['*'])
-    {
-        $cacheKey = $this->getCacheKey($columns);
-        
-        if ($this->cache->has($cacheKey)) {
-            return $this->cache->get($cacheKey);
-        }
-        
-        $results = $this->query->get($columns);
-        $this->cache->put($cacheKey, $results, 3600);
-        
-        return $results;
-    }
-    
-    private function getCacheKey($columns)
-    {
-        return md5($this->query->toSql() . serialize($this->query->getBindings()) . serialize($columns));
-    }
-}
-```
-
-**文件访问代理：**
-```php
-class FileAccessProxy
-{
-    private $realFile;
-    private $permissions;
-    
-    public function __construct($filename, $permissions)
-    {
-        $this->realFile = new RealFile($filename);
-        $this->permissions = $permissions;
-    }
-    
-    public function read()
-    {
-        if (!$this->checkPermission('read')) {
-            throw new AccessDeniedException('Read permission denied');
-        }
-        
-        return $this->realFile->read();
-    }
-    
-    public function write($content)
-    {
-        if (!$this->checkPermission('write')) {
-            throw new AccessDeniedException('Write permission denied');
-        }
-        
-        return $this->realFile->write($content);
-    }
-    
-    private function checkPermission($operation)
-    {
-        return in_array($operation, $this->permissions);
-    }
-}
-```
+1. **需要控制对象访问时**
+2. **需要延迟加载昂贵资源时**
+3. **需要为远程对象提供本地代理时**
+4. **需要添加访问日志或缓存时**
 
 ## 与其他模式的关系
 
-### 1. 与装饰器模式
+- **装饰器模式**：代理控制访问，装饰器增强功能
+- **适配器模式**：代理与目标对象接口相同，适配器改变接口
+- **外观模式**：代理代表单个对象，外观代表子系统
 
-代理模式控制访问，装饰器模式添加功能：
-
-```php
-// 代理模式：控制访问
-class ImageProxy 
-{
-    private $realImage;
-    
-    public function display() 
-    {
-        if ($this->checkAccess()) {
-            $this->realImage->display();
-        }
-    }
-    
-    private function checkAccess() 
-    {
-        return true; // 访问控制逻辑
-    }
-}
-
-// 装饰器模式：添加功能
-class ImageDecorator 
-{
-    private $image;
-    
-    public function __construct(Image $image) 
-    {
-        $this->image = $image;
-    }
-    
-    public function display() 
-    {
-        $this->addBorder();
-        $this->image->display();
-        $this->addWatermark();
-    }
-    
-    private function addBorder() {}
-    private function addWatermark() {}
-}
-```
-
-### 2. 与适配器模式
-
-代理模式控制访问，适配器模式转换接口：
-
-```php
-// 代理模式：控制访问
-class ServiceProxy 
-{
-    private $realService;
-    
-    public function request() 
-    {
-        $this->logRequest();
-        return $this->realService->request();
-    }
-}
-
-// 适配器模式：转换接口
-class ServiceAdapter 
-{
-    private $legacyService;
-    
-    public function request() 
-    {
-        return $this->legacyService->oldRequestMethod();
-    }
-}
-```
-
-## 性能考虑
-
-### 1. 代理开销
-
-代理模式会增加方法调用开销：
-
-```php
-// 优化：减少不必要的代理调用
-class OptimizedProxy
-{
-    private $realObject;
-    private $cache = [];
-    private $methodCallCount = [];
-    
-    public function __call($method, $args)
-    {
-        // 缓存频繁调用的方法结果
-        if ($this->isFrequentlyCalled($method)) {
-            $cacheKey = $this->getCacheKey($method, $args);
-            
-            if (isset($this->cache[$cacheKey])) {
-                return $this->cache[$cacheKey];
-            }
-            
-            $result = call_user_func_array([$this->realObject, $method], $args);
-            $this->cache[$cacheKey] = $result;
-            
-            return $result;
-        }
-        
-        return call_user_func_array([$this->realObject, $method], $args);
-    }
-    
-    private function isFrequentlyCalled($method)
-    {
-        return ($this->methodCallCount[$method] ?? 0) > 10;
-    }
-}
-```
-
-### 2. 内存使用优化
-
-代理对象可能增加内存使用：
-
-```php
-// 轻量级代理实现
-class LightweightProxy
-{
-    private $realObject;
-    private $lazyLoaded = false;
-    
-    public function __construct($className, $constructorArgs)
-    {
-        $this->className = $className;
-        $this->constructorArgs = $constructorArgs;
-    }
-    
-    public function __call($method, $args)
-    {
-        if (!$this->lazyLoaded) {
-            $this->realObject = new $this->className(...$this->constructorArgs);
-            $this->lazyLoaded = true;
-        }
-        
-        return call_user_func_array([$this->realObject, $method], $args);
-    }
-}
-```
-
-## 总结
-
-代理模式是 Laravel 框架中广泛使用的设计模式，它通过中介对象来控制对真实对象的访问。这种模式在 ORM 关联、缓存系统、门面系统等多个核心组件中都有体现。
-
-代理模式的优势在于：
-- **访问控制**：可以控制对真实对象的访问权限
-- **延迟加载**：推迟昂贵对象的创建和初始化
-- **功能增强**：可以添加额外的功能而不修改原对象
-- **保护机制**：保护真实对象不被非法访问
-
-在 Laravel 开发中，合理使用代理模式可以创建出更加安全、高效的系统，特别是在处理资源密集型操作和需要访问控制的场景时。
+代理模式在Laravel中应用非常广泛，是构建高性能、安全应用的重要设计模式。

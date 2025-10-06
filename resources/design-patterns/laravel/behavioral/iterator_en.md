@@ -11,32 +11,32 @@ The Iterator pattern provides a way to access the elements of an aggregate objec
 classDiagram
     class Iterator {
         <<interface>>
-        +hasNext(): boolean
-        +next(): mixed
-        +current(): mixed
-        +rewind(): void
+        +hasNext()ean
+        +next()
+        +current()
+        +rewind()
     }
     
     class ConcreteIterator {
         -collection: Collection
-        -position: int
-        +hasNext(): boolean
-        +next(): mixed
-        +current(): mixed
-        +rewind(): void
+        -position
+        +hasNext()ean
+        +next()
+        +current()
+        +rewind()
     }
     
     class Aggregate {
         <<interface>>
-        +createIterator(): Iterator
+        +createIterator()
     }
     
     class ConcreteAggregate {
-        -items: array
+        -items
         +createIterator(): Iterator
-        +add(item): void
-        +remove(item): void
-        +getItems(): array
+        +add(item)
+        +remove(item)
+        +getItems()
     }
     
     Iterator <|.. ConcreteIterator
@@ -50,22 +50,22 @@ classDiagram
 classDiagram
     class IteratorAggregate {
         <<interface>>
-        +getIterator(): Iterator
+        +getIterator()
     }
     
     class Collection {
-        -items: array
-        +getIterator(): ArrayIterator
-        +each(callback): Collection
-        +map(callback): Collection
-        +filter(callback): Collection
+        -items
+        +getIterator()
+        +each(callback)
+        +map(callback)
+        +filter(callback)
     }
     
     class LazyCollection {
-        -source: Generator
-        +getIterator(): Generator
-        +take(count): LazyCollection
-        +skip(count): LazyCollection
+        -source
+        +getIterator()
+        +take(count)
+        +skip(count)
     }
     
     IteratorAggregate <|.. Collection
@@ -83,10 +83,10 @@ namespace App\Patterns\Iterator;
 
 interface CustomIterator
 {
-    public function hasNext(): bool;
+    public function hasNext();
     public function next();
     public function current();
-    public function rewind(): void;
+    public function rewind();
     public function key();
 }
 ```
@@ -102,12 +102,12 @@ class UserCollection implements \IteratorAggregate, \Countable
 {
     private array $users = [];
     
-    public function addUser($user): void
+    public function addUser($user)
     {
         $this->users[] = $user;
     }
     
-    public function removeUser($user): bool
+    public function removeUser($user)
     {
         $key = array_search($user, $this->users, true);
         if ($key !== false) {
@@ -123,7 +123,7 @@ class UserCollection implements \IteratorAggregate, \Countable
         return new UserIterator($this->users);
     }
     
-    public function count(): int
+    public function count()
     {
         return count($this->users);
     }
@@ -133,7 +133,7 @@ class ProductCollection implements \IteratorAggregate
 {
     private array $products = [];
     
-    public function addProduct($product): void
+    public function addProduct($product)
     {
         $this->products[] = $product;
     }
@@ -171,7 +171,7 @@ class UserIterator implements CustomIterator
         $this->users = $users;
     }
     
-    public function hasNext(): bool
+    public function hasNext()
     {
         return $this->position < count($this->users);
     }
@@ -192,7 +192,7 @@ class UserIterator implements CustomIterator
         return $this->users[$this->position] ?? null;
     }
     
-    public function rewind(): void
+    public function rewind()
     {
         $this->position = 0;
     }
@@ -222,7 +222,7 @@ class ProductIterator implements CustomIterator
         $this->products = $products;
     }
     
-    public function hasNext(): bool
+    public function hasNext()
     {
         return $this->position < count($this->products);
     }
@@ -243,7 +243,7 @@ class ProductIterator implements CustomIterator
         return $this->products[$this->position] ?? null;
     }
     
-    public function rewind(): void
+    public function rewind()
     {
         $this->position = 0;
     }
@@ -294,7 +294,7 @@ class DataIteratorService
         return $collection;
     }
     
-    public function processUsers(callable $callback): array
+    public function processUsers(callable $callback)
     {
         $collection = $this->getUserCollection();
         $results = [];
@@ -306,7 +306,7 @@ class DataIteratorService
         return $results;
     }
     
-    public function generateUserReport(): array
+    public function generateUserReport()
     {
         $collection = $this->getUserCollection();
         $report = [
@@ -353,7 +353,7 @@ class DatabaseResultIterator implements \Iterator
         $this->batchSize = $batchSize;
     }
     
-    public function rewind(): void
+    public function rewind()
     {
         $this->currentIndex = 0;
         $this->batchIndex = 0;
@@ -370,7 +370,7 @@ class DatabaseResultIterator implements \Iterator
         return $this->batchIndex * $this->batchSize + $this->currentIndex;
     }
     
-    public function next(): void
+    public function next()
     {
         $this->currentIndex++;
         
@@ -381,12 +381,12 @@ class DatabaseResultIterator implements \Iterator
         }
     }
     
-    public function valid(): bool
+    public function valid()
     {
         return !empty($this->currentBatch) && $this->currentIndex < count($this->currentBatch);
     }
     
-    private function loadNextBatch(): void
+    private function loadNextBatch()
     {
         $offset = $this->batchIndex * $this->batchSize;
         $this->currentBatch = $this->query
@@ -413,7 +413,7 @@ class ProcessUsersCommand extends Command
     protected $signature = 'users:process {--role=} {--batch=100}';
     protected $description = 'Process users using iterator pattern';
     
-    public function handle(DataIteratorService $iteratorService): int
+    public function handle(DataIteratorService $iteratorService)
     {
         $this->info('Starting user processing...');
         
@@ -441,7 +441,7 @@ class ProcessUsersCommand extends Command
         return 0;
     }
     
-    private function processUser($user): void
+    private function processUser($user)
     {
         $user->last_processed_at = now();
         $user->save();

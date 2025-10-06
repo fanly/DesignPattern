@@ -12,27 +12,27 @@ classDiagram
     class Handler {
         <<abstract>>
         -successor: Handler
-        +setSuccessor(handler): void
-        +handleRequest(request): void
+        +setSuccessor(handler)
+        +handleRequest(request)
     }
     
     class ConcreteHandlerA {
-        +handleRequest(request): void
-        +canHandle(request): bool
+        +handleRequest(request)
+        +canHandle(request)
     }
     
     class ConcreteHandlerB {
-        +handleRequest(request): void
-        +canHandle(request): bool
+        +handleRequest(request)
+        +canHandle(request)
     }
     
     class ConcreteHandlerC {
-        +handleRequest(request): void
-        +canHandle(request): bool
+        +handleRequest(request)
+        +canHandle(request)
     }
     
     class Client {
-        +sendRequest(request): void
+        +sendRequest(request)
     }
     
     Handler <|-- ConcreteHandlerA
@@ -49,39 +49,39 @@ classDiagram
 ```mermaid
 classDiagram
     class Pipeline {
-        -pipes: array
-        -passable: mixed
+        -pipes
+        -passable
         +through(pipes): Pipeline
         +send(passable): Pipeline
-        +then(destination): mixed
+        +then(destination)
     }
     
     class Middleware {
         <<interface>>
-        +handle(request, next): Response
+        +handle(request, next)
     }
     
     class AuthMiddleware {
-        +handle(request, next): Response
-        +authenticate(request): void
+        +handle(request, next)
+        +authenticate(request)
     }
     
     class CorsMiddleware {
-        +handle(request, next): Response
-        +addCorsHeaders(response): Response
+        +handle(request, next)
+        +addCorsHeaders(response)
     }
     
     class ThrottleMiddleware {
         -limiter: RateLimiter
-        +handle(request, next): Response
-        +tooManyAttempts(request): bool
+        +handle(request, next)
+        +tooManyAttempts(request)
     }
     
     class Kernel {
-        -middleware: array
-        -routeMiddleware: array
-        +handle(request): Response
-        +sendRequestThroughRouter(request): Response
+        -middleware
+        -routeMiddleware
+        +handle(request)
+        +sendRequestThroughRouter(request)
     }
     
     Pipeline --> Middleware : processes
@@ -150,28 +150,28 @@ classDiagram
     class ExceptionHandler {
         <<abstract>>
         -nextHandler: ExceptionHandler
-        +handle(exception): void
-        +setNext(handler): void
+        +handle(exception)
+        +setNext(handler)
     }
     
     class ValidationExceptionHandler {
-        +handle(exception): void
-        +canHandle(exception): bool
+        +handle(exception)
+        +canHandle(exception)
     }
     
     class AuthenticationExceptionHandler {
-        +handle(exception): void
-        +canHandle(exception): bool
+        +handle(exception)
+        +canHandle(exception)
     }
     
     class ModelNotFoundExceptionHandler {
-        +handle(exception): void
-        +canHandle(exception): bool
+        +handle(exception)
+        +canHandle(exception)
     }
     
     class GeneralExceptionHandler {
-        +handle(exception): void
-        +canHandle(exception): bool
+        +handle(exception)
+        +canHandle(exception)
     }
     
     ExceptionHandler <|-- ValidationExceptionHandler

@@ -2,99 +2,653 @@
 
 ## 概述
 
-装饰器模式动态地给一个对象添加一些额外的职责，就增加功能来说，装饰器模式相比生成子类更为灵活。它通过创建一个包装对象来扩展功能，而不是通过继承。
+装饰器模式允许向一个现有的对象添加新的功能，同时又不改变其结构。这种类型的设计模式属于结构型模式，它是作为现有的类的一个包装。
 
-## 架构图
+## 问题场景
 
-### 装饰器模式类图
+在Laravel应用中，我们经常需要为对象动态地添加功能，如：
+- 为HTTP响应添加缓存、压缩、加密等功能
+- 为数据库查询添加日志记录、缓存、性能监控
+- 为文本添加格式化、验证、转换等处理
+- 为用户添加不同的权限、角色、功能
+
+## 解决方案
+
+装饰器模式通过创建一个装饰类，用来包装原有的类，并在保持类方法签名完整性的前提下，提供了额外的功能。
+
+## UML类图
+
 ```mermaid
 classDiagram
     class Component {
-        <<interface>>
-        +operation(): void
+        +operation()
     }
     
     class ConcreteComponent {
-        +operation(): void
+        +operation()
     }
     
     class Decorator {
-        <<abstract>>
-        -component: Component
-        +operation(): void
+        -component
+        +operation()
     }
     
     class ConcreteDecoratorA {
-        +operation(): void
-        +addedBehaviorA(): void
+        +operation()
+        +addedBehavior()
     }
     
     class ConcreteDecoratorB {
-        +operation(): void
-        +addedBehaviorB(): void
+        +operation()
+        +addedState
     }
     
-    Component <|.. ConcreteComponent
-    Component <|.. Decorator
+    Component <|-- ConcreteComponent
+    Component <|-- Decorator
     Decorator <|-- ConcreteDecoratorA
     Decorator <|-- ConcreteDecoratorB
-    Decorator --> Component : wraps
-    
-    note for Decorator "装饰器基类\n包装组件对象"
-    note for ConcreteDecoratorA "具体装饰器A\n添加特定功能"
+    Decorator --> Component
 ```
 
-### Laravel 中间件装饰器架构
-```mermaid
-classDiagram
-    class Kernel {
-        -middleware: array
-        -routeMiddleware: array
-        +handle(request): Response
-        +sendRequestThroughRouter(request): Response
+## Laravel实现
+
+### 1. HTTP响应装饰器示例
+
+```php
+<?php
+
+namespace App\Patterns\Decorator;
+
+// 响应组件接口
+interface ResponseComponent
+{
+    public function getContent(): string;
+    public function getHeaders(): array;
+}
+
+// 基础HTTP响应
+class HttpResponse implements ResponseComponent
+{
+    private string $content;
+    private array $headers;
+    
+    public function __construct(string $content, array $headers = [])
+    {
+        $this->content = $content;
+        $this->headers = $headers;
     }
     
-    class Pipeline {
-        -passable: Request
-        -middleware: array
-        +send(passable): Pipeline
-        +through(middleware): Pipeline
-        +then(destination): mixed
+    public function getContent(): string
+    {
+        return $this->content;
     }
     
-    class Middleware {
-        <<interface>>
-        +handle(request, next): Response
+    public function getHeaders(): array
+    {
+        return $this->headers;
+    }
+}
+
+// 响应装饰器基类
+abstract class ResponseDecorator implements ResponseComponent
+{
+    protected ResponseComponent $response;
+    
+    public function __construct(ResponseComponent $response)
+    {
+        $this->response = $response;
     }
     
-    class AuthMiddleware {
-        +handle(request, next): Response
+    public function getContent(): string
+    {
+        return $this->response->getContent();
     }
     
-    class CorsMiddleware {
-        +handle(request, next): Response
+    public function getHeaders(): array
+    {
+        return $this->response->getHeaders();
+    }
+}
+
+// 压缩装饰器
+class GzipResponseDecorator extends ResponseDecorator
+{
+    public function getContent(): string
+    {
+        return gzencode($this->response->getContent());
     }
     
-    class ThrottleMiddleware {
-        +handle(request, next): Response
+    public function getHeaders(): array
+    {
+        $headers = $this->response->getHeaders();
+        $headers['Content-Encoding'] = 'gzip';
+        return $headers;
+    }
+}
+
+// 缓存装饰器
+class CacheResponseDecorator extends ResponseDecorator
+{
+    private int $maxAge;
+    
+    public function __construct(ResponseComponent $response, int $maxAge = 3600)
+    {
+        parent::__construct($response);
+        $this->maxAge = $maxAge;
     }
     
-    class Controller {
-        +action(request): Response
+    public function getHeaders(): array
+    {
+        $headers = $this->response->getHeaders();
+        $headers['Cache-Control'] = "max-age={$this->maxAge}";
+        $headers['Expires'] = gmdate('D, d M Y H:i:s', time() + $this->maxAge) . ' GMT';
+        return $headers;
+    }
+}
+
+// JSON装饰器
+class JsonResponseDecorator extends ResponseDecorator
+{
+    public function getContent(): string
+    {
+        $content = $this->response->getContent();
+        
+        // 如果内容已经是JSON，直接返回
+        if (json_decode($content) !== null) {
+            return $content;
+        }
+        
+        // 否则转换为JSON
+        return json_encode(['data' => $content]);
     }
     
-    Kernel --> Pipeline : uses
-    Pipeline --> Middleware : processes
-    AuthMiddleware ..|> Middleware
-    CorsMiddleware ..|> Middleware
-    ThrottleMiddleware ..|> Middleware
-    Pipeline --> Controller : finally calls
+    public function getHeaders(): array
+    {
+        $headers = $this->response->getHeaders();
+        $headers['Content-Type'] = 'application/json';
+        return $headers;
+    }
+}
+
+// CORS装饰器
+class CorsResponseDecorator extends ResponseDecorator
+{
+    private array $allowedOrigins;
+    private array $allowedMethods;
     
-    note for Pipeline "中间件管道\n装饰器链"
-    note for Middleware "中间件接口"
+    public function __construct(
+        ResponseComponent $response,
+        array $allowedOrigins = ['*'],
+        array $allowedMethods = ['GET', 'POST', 'PUT', 'DELETE']
+    ) {
+        parent::__construct($response);
+        $this->allowedOrigins = $allowedOrigins;
+        $this->allowedMethods = $allowedMethods;
+    }
+    
+    public function getHeaders(): array
+    {
+        $headers = $this->response->getHeaders();
+        $headers['Access-Control-Allow-Origin'] = implode(', ', $this->allowedOrigins);
+        $headers['Access-Control-Allow-Methods'] = implode(', ', $this->allowedMethods);
+        $headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization';
+        return $headers;
+    }
+}
 ```
 
-### 装饰器模式时序图
+### 2. 数据库查询装饰器示例
+
+```php
+<?php
+
+namespace App\Patterns\Decorator;
+
+// 查询接口
+interface QueryInterface
+{
+    public function execute(): array;
+    public function getSql(): string;
+}
+
+// 基础查询类
+class DatabaseQuery implements QueryInterface
+{
+    private string $sql;
+    private array $bindings;
+    
+    public function __construct(string $sql, array $bindings = [])
+    {
+        $this->sql = $sql;
+        $this->bindings = $bindings;
+    }
+    
+    public function execute(): array
+    {
+        // 模拟数据库查询
+        return \DB::select($this->sql, $this->bindings);
+    }
+    
+    public function getSql(): string
+    {
+        return $this->sql;
+    }
+}
+
+// 查询装饰器基类
+abstract class QueryDecorator implements QueryInterface
+{
+    protected QueryInterface $query;
+    
+    public function __construct(QueryInterface $query)
+    {
+        $this->query = $query;
+    }
+    
+    public function execute(): array
+    {
+        return $this->query->execute();
+    }
+    
+    public function getSql(): string
+    {
+        return $this->query->getSql();
+    }
+}
+
+// 日志装饰器
+class LoggingQueryDecorator extends QueryDecorator
+{
+    public function execute(): array
+    {
+        $startTime = microtime(true);
+        $sql = $this->query->getSql();
+        
+        \Log::info("Executing query: {$sql}");
+        
+        try {
+            $result = $this->query->execute();
+            $executionTime = microtime(true) - $startTime;
+            
+            \Log::info("Query executed successfully", [
+                'sql' => $sql,
+                'execution_time' => $executionTime,
+                'result_count' => count($result)
+            ]);
+            
+            return $result;
+        } catch (\Exception $e) {
+            \Log::error("Query execution failed", [
+                'sql' => $sql,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+}
+
+// 缓存装饰器
+class CachingQueryDecorator extends QueryDecorator
+{
+    private int $ttl;
+    private string $cacheKey;
+    
+    public function __construct(QueryInterface $query, int $ttl = 3600, string $cacheKey = null)
+    {
+        parent::__construct($query);
+        $this->ttl = $ttl;
+        $this->cacheKey = $cacheKey ?: md5($query->getSql());
+    }
+    
+    public function execute(): array
+    {
+        // 尝试从缓存获取结果
+        $result = \Cache::get($this->cacheKey);
+        
+        if ($result !== null) {
+            \Log::debug("Query result retrieved from cache", ['cache_key' => $this->cacheKey]);
+            return $result;
+        }
+        
+        // 缓存未命中，执行查询
+        $result = $this->query->execute();
+        
+        // 将结果存储到缓存
+        \Cache::put($this->cacheKey, $result, $this->ttl);
+        \Log::debug("Query result cached", ['cache_key' => $this->cacheKey, 'ttl' => $this->ttl]);
+        
+        return $result;
+    }
+}
+
+// 性能监控装饰器
+class ProfilingQueryDecorator extends QueryDecorator
+{
+    public function execute(): array
+    {
+        $startTime = microtime(true);
+        $startMemory = memory_get_usage();
+        
+        $result = $this->query->execute();
+        
+        $executionTime = microtime(true) - $startTime;
+        $memoryUsage = memory_get_usage() - $startMemory;
+        
+        // 记录性能指标
+        \Log::info("Query performance metrics", [
+            'sql' => $this->query->getSql(),
+            'execution_time' => round($executionTime * 1000, 2) . 'ms',
+            'memory_usage' => round($memoryUsage / 1024, 2) . 'KB',
+            'result_count' => count($result)
+        ]);
+        
+        // 如果执行时间过长，发出警告
+        if ($executionTime > 1.0) {
+            \Log::warning("Slow query detected", [
+                'sql' => $this->query->getSql(),
+                'execution_time' => $executionTime
+            ]);
+        }
+        
+        return $result;
+    }
+}
+```
+
+### 3. 文本处理装饰器示例
+
+```php
+<?php
+
+namespace App\Patterns\Decorator;
+
+// 文本处理接口
+interface TextProcessor
+{
+    public function process(string $text): string;
+}
+
+// 基础文本处理器
+class PlainTextProcessor implements TextProcessor
+{
+    public function process(string $text): string
+    {
+        return $text;
+    }
+}
+
+// 文本装饰器基类
+abstract class TextDecorator implements TextProcessor
+{
+    protected TextProcessor $processor;
+    
+    public function __construct(TextProcessor $processor)
+    {
+        $this->processor = $processor;
+    }
+    
+    public function process(string $text): string
+    {
+        return $this->processor->process($text);
+    }
+}
+
+// HTML转义装饰器
+class HtmlEscapeDecorator extends TextDecorator
+{
+    public function process(string $text): string
+    {
+        $text = $this->processor->process($text);
+        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+    }
+}
+
+// Markdown装饰器
+class MarkdownDecorator extends TextDecorator
+{
+    public function process(string $text): string
+    {
+        $text = $this->processor->process($text);
+        
+        // 简单的Markdown处理
+        $text = preg_replace('/\*\*(.*?)\*\*/', '<strong>$1</strong>', $text);
+        $text = preg_replace('/\*(.*?)\*/', '<em>$1</em>', $text);
+        $text = preg_replace('/`(.*?)`/', '<code>$1</code>', $text);
+        $text = preg_replace('/\n\n/', '</p><p>', $text);
+        
+        return '<p>' . $text . '</p>';
+    }
+}
+
+// 链接转换装饰器
+class LinkifyDecorator extends TextDecorator
+{
+    public function process(string $text): string
+    {
+        $text = $this->processor->process($text);
+        
+        // 将URL转换为链接
+        $pattern = '/(https?:\/\/[^\s]+)/';
+        $replacement = '<a href="$1" target="_blank">$1</a>';
+        
+        return preg_replace($pattern, $replacement, $text);
+    }
+}
+
+// 敏感词过滤装饰器
+class ProfanityFilterDecorator extends TextDecorator
+{
+    private array $bannedWords;
+    
+    public function __construct(TextProcessor $processor, array $bannedWords = [])
+    {
+        parent::__construct($processor);
+        $this->bannedWords = $bannedWords ?: ['敏感词1', '敏感词2'];
+    }
+    
+    public function process(string $text): string
+    {
+        $text = $this->processor->process($text);
+        
+        foreach ($this->bannedWords as $word) {
+            $replacement = str_repeat('*', mb_strlen($word));
+            $text = str_replace($word, $replacement, $text);
+        }
+        
+        return $text;
+    }
+}
+
+// 字符限制装饰器
+class TruncateDecorator extends TextDecorator
+{
+    private int $maxLength;
+    private string $suffix;
+    
+    public function __construct(TextProcessor $processor, int $maxLength = 100, string $suffix = '...')
+    {
+        parent::__construct($processor);
+        $this->maxLength = $maxLength;
+        $this->suffix = $suffix;
+    }
+    
+    public function process(string $text): string
+    {
+        $text = $this->processor->process($text);
+        
+        if (mb_strlen($text) > $this->maxLength) {
+            return mb_substr($text, 0, $this->maxLength - mb_strlen($this->suffix)) . $this->suffix;
+        }
+        
+        return $text;
+    }
+}
+```
+
+## 使用示例
+
+### HTTP响应装饰器使用
+
+```php
+<?php
+
+// 创建基础响应
+$response = new HttpResponse('<h1>Hello World</h1>', ['Content-Type' => 'text/html']);
+
+// 添加多层装饰
+$decoratedResponse = new CorsResponseDecorator(
+    new CacheResponseDecorator(
+        new GzipResponseDecorator($response),
+        7200
+    ),
+    ['https://example.com'],
+    ['GET', 'POST']
+);
+
+// 获取最终内容和头部
+$content = $decoratedResponse->getContent();
+$headers = $decoratedResponse->getHeaders();
+
+// 输出响应
+foreach ($headers as $name => $value) {
+    header("{$name}: {$value}");
+}
+echo $content;
+```
+
+### 数据库查询装饰器使用
+
+```php
+<?php
+
+// 创建基础查询
+$query = new DatabaseQuery('SELECT * FROM users WHERE active = ?', [1]);
+
+// 添加装饰器
+$decoratedQuery = new ProfilingQueryDecorator(
+    new LoggingQueryDecorator(
+        new CachingQueryDecorator($query, 1800)
+    )
+);
+
+// 执行查询
+$results = $decoratedQuery->execute();
+```
+
+### 文本处理装饰器使用
+
+```php
+<?php
+
+// 创建基础处理器
+$processor = new PlainTextProcessor();
+
+// 添加多层装饰
+$decoratedProcessor = new TruncateDecorator(
+    new LinkifyDecorator(
+        new MarkdownDecorator(
+            new ProfanityFilterDecorator(
+                new HtmlEscapeDecorator($processor)
+            )
+        )
+    ),
+    200
+);
+
+// 处理文本
+$input = "这是一个**重要**的消息，访问 https://example.com 了解更多。";
+$output = $decoratedProcessor->process($input);
+echo $output;
+```
+
+## Laravel中的实际应用
+
+### 1. 中间件系统
+
+Laravel的中间件就是装饰器模式的典型应用：
+
+```php
+<?php
+
+// 中间件装饰HTTP请求处理
+class AuthMiddleware
+{
+    public function handle($request, Closure $next)
+    {
+        if (!auth()->check()) {
+            return redirect('login');
+        }
+        
+        return $next($request); // 装饰模式的核心
+    }
+}
+
+class CorsMiddleware
+{
+    public function handle($request, Closure $next)
+    {
+        $response = $next($request);
+        
+        $response->headers->set('Access-Control-Allow-Origin', '*');
+        
+        return $response;
+    }
+}
+```
+
+### 2. 缓存装饰器
+
+```php
+<?php
+
+// Laravel的缓存系统使用装饰器模式
+Cache::remember('users', 3600, function () {
+    return User::all();
+});
+
+// 等同于装饰器模式的实现
+class CacheDecorator
+{
+    private $store;
+    private $ttl;
+    
+    public function get($key, Closure $callback)
+    {
+        $result = $this->store->get($key);
+        
+        if ($result === null) {
+            $result = $callback();
+            $this->store->put($key, $result, $this->ttl);
+        }
+        
+        return $result;
+    }
+}
+```
+
+### 3. 事件装饰器
+
+```php
+<?php
+
+// 为模型操作添加事件装饰
+class EventDecorator
+{
+    private $model;
+    
+    public function save()
+    {
+        event('model.saving', $this->model);
+        $result = $this->model->save();
+        event('model.saved', $this->model);
+        
+        return $result;
+    }
+}
+```
+
+## 时序图
+
 ```mermaid
 sequenceDiagram
     participant Client
@@ -103,683 +657,39 @@ sequenceDiagram
     participant Component
     
     Client->>DecoratorA: operation()
-    Note over DecoratorA: 添加功能A
+    DecoratorA->>DecoratorA: addedBehaviorA()
     DecoratorA->>DecoratorB: operation()
-    Note over DecoratorB: 添加功能B
+    DecoratorB->>DecoratorB: addedBehaviorB()
     DecoratorB->>Component: operation()
     Component-->>DecoratorB: result
-    Note over DecoratorB: 处理结果B
     DecoratorB-->>DecoratorA: enhanced result
-    Note over DecoratorA: 处理结果A
     DecoratorA-->>Client: final result
-    
-    Note over Client: 获得经过多层装饰的结果
 ```
 
-### Laravel 中间件执行流程
-```mermaid
-flowchart TD
-    A[HTTP请求] --> B[Kernel]
-    B --> C[Pipeline创建]
-    C --> D[中间件栈]
-    D --> E[AuthMiddleware]
-    E --> F[CorsMiddleware]
-    F --> G[ThrottleMiddleware]
-    G --> H[路由处理]
-    H --> I[控制器方法]
-    I --> J[响应生成]
-    J --> K[ThrottleMiddleware后处理]
-    K --> L[CorsMiddleware后处理]
-    L --> M[AuthMiddleware后处理]
-    M --> N[最终响应]
-    
-    style D fill:#e1f5fe
-    style I fill:#e8f5e8
-    style N fill:#fff3e0
-```
+## 优点
 
-### 缓存装饰器架构
-```mermaid
-classDiagram
-    class CacheContract {
-        <<interface>>
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +forget(key): bool
-    }
-    
-    class Repository {
-        -store: Store
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +forget(key): bool
-    }
-    
-    class TaggedCache {
-        -store: Store
-        -tags: array
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +flush(): bool
-    }
-    
-    class RateLimitedCache {
-        -cache: CacheContract
-        -limiter: RateLimiter
-        +get(key): mixed
-        +put(key, value, ttl): bool
-    }
-    
-    class EncryptedCache {
-        -cache: CacheContract
-        -encrypter: Encrypter
-        +get(key): mixed
-        +put(key, value, ttl): bool
-    }
-    
-    Repository ..|> CacheContract
-    TaggedCache ..|> CacheContract
-    RateLimitedCache ..|> CacheContract
-    EncryptedCache ..|> CacheContract
-    
-    RateLimitedCache --> CacheContract : decorates
-    EncryptedCache --> CacheContract : decorates
-    TaggedCache --> Repository : decorates
-    
-    note for TaggedCache "标签缓存装饰器"
-    note for RateLimitedCache "限流缓存装饰器"
-    note for EncryptedCache "加密缓存装饰器"
-```
+1. **动态扩展功能**：可以在运行时为对象添加功能
+2. **遵循开闭原则**：对扩展开放，对修改关闭
+3. **灵活组合**：可以通过不同的装饰器组合创建不同的行为
+4. **单一职责**：每个装饰器只负责一个特定的功能
 
-### 日志装饰器模式
-```mermaid
-classDiagram
-    class LoggerInterface {
-        <<interface>>
-        +info(message): void
-        +error(message): void
-        +debug(message): void
-    }
-    
-    class Logger {
-        -handler: Handler
-        +info(message): void
-        +error(message): void
-        +debug(message): void
-    }
-    
-    class TimestampDecorator {
-        -logger: LoggerInterface
-        +info(message): void
-        +error(message): void
-        +debug(message): void
-    }
-    
-    class ContextDecorator {
-        -logger: LoggerInterface
-        -context: array
-        +info(message): void
-        +error(message): void
-        +debug(message): void
-    }
-    
-    class FilterDecorator {
-        -logger: LoggerInterface
-        -level: string
-        +info(message): void
-        +error(message): void
-        +debug(message): void
-    }
-    
-    Logger ..|> LoggerInterface
-    TimestampDecorator ..|> LoggerInterface
-    ContextDecorator ..|> LoggerInterface
-    FilterDecorator ..|> LoggerInterface
-    
-    TimestampDecorator --> LoggerInterface : decorates
-    ContextDecorator --> LoggerInterface : decorates
-    FilterDecorator --> LoggerInterface : decorates
-    
-    note for TimestampDecorator "添加时间戳"
-    note for ContextDecorator "添加上下文信息"
-    note for FilterDecorator "过滤日志级别"
-```
+## 缺点
 
-### 响应装饰器链
-```mermaid
-flowchart LR
-    A[基础响应] --> B[JsonResponse装饰器]
-    B --> C[CorsResponse装饰器]
-    C --> D[CacheResponse装饰器]
-    D --> E[CompressResponse装饰器]
-    E --> F[最终响应]
-    
-    G[装饰器功能]
-    B -.-> G1[JSON格式化]
-    C -.-> G2[CORS头部]
-    D -.-> G3[缓存控制]
-    E -.-> G4[内容压缩]
-    
-    style A fill:#e1f5fe
-    style F fill:#e8f5e8
-```
+1. **增加复杂性**：会产生很多小的装饰类
+2. **调试困难**：多层装饰可能使调试变得复杂
+3. **性能开销**：多层装饰会带来一定的性能损失
 
-## 设计意图
+## 适用场景
 
-- **动态扩展**：在运行时动态地给对象添加功能
-- **避免继承爆炸**：避免通过继承产生大量的子类
-- **单一职责**：每个装饰器只关注一个特定的功能
-- **灵活组合**：可以任意组合装饰器来创建复杂的行为
-
-## Laravel 中的实现
-
-### 1. 中间件装饰器
-
-Laravel 的中间件系统是装饰器模式的典型应用。每个中间件都是一个装饰器，包装HTTP请求处理过程：
-
-```php
-// Illuminate\Pipeline\Pipeline.php
-public function then(Closure $destination)
-{
-    $pipeline = array_reduce(
-        array_reverse($this->middleware),
-        $this->carry(),
-        $destination
-    );
-    
-    return $pipeline($this->passable);
-}
-
-protected function carry()
-{
-    return function ($stack, $pipe) {
-        return function ($passable) use ($stack, $pipe) {
-            // 装饰器模式：每个中间件包装下一个处理环节
-            if (is_callable($pipe)) {
-                return $pipe($passable, $stack);
-            }
-            
-            $middleware = $this->container->make($pipe);
-            
-            return $middleware->handle($passable, $stack);
-        };
-    };
-}
-```
-
-### 2. 响应装饰器
-
-Laravel 的响应对象支持装饰器模式，可以动态添加功能：
-
-```php
-// Illuminate\Http\Response.php
-class Response extends SymfonyResponse implements Responsable
-{
-    // 基础响应功能
-    
-    public function withCookie($cookie)
-    {
-        // 装饰器方法：添加Cookie功能
-        $this->headers->setCookie($cookie);
-        return $this;
-    }
-    
-    public function withHeaders(array $headers)
-    {
-        // 装饰器方法：添加头部信息
-        foreach ($headers as $key => $value) {
-            $this->headers->set($key, $value);
-        }
-        return $this;
-    }
-}
-```
-
-### 3. 查询构建器装饰器
-
-数据库查询构建器使用装饰器模式添加查询条件：
-
-```php
-// Illuminate\Database\Query\Builder.php
-class Builder
-{
-    public function where($column, $operator = null, $value = null, $boolean = 'and')
-    {
-        // 装饰器模式：添加WHERE条件
-        if ($column instanceof Closure) {
-            return $this->whereNested($column, $boolean);
-        }
-        
-        $this->wheres[] = compact('type', 'column', 'operator', 'value', 'boolean');
-        
-        return $this;
-    }
-    
-    public function orderBy($column, $direction = 'asc')
-    {
-        // 装饰器模式：添加排序条件
-        $this->orders[] = [
-            'column' => $column,
-            'direction' => strtolower($direction) == 'asc' ? 'asc' : 'desc',
-        ];
-        
-        return $this;
-    }
-}
-```
-
-## 实际应用场景
-
-### 1. 中间件装饰器链
-
-```php
-// 创建装饰器链：认证 -> 日志 -> 缓存 -> 最终处理
-$pipeline = new Pipeline($app);
-$response = $pipeline->send($request)
-    ->through([
-        Authenticate::class,      // 认证装饰器
-        LogRequest::class,        // 日志装饰器
-        AddCacheHeaders::class,   // 缓存装饰器
-    ])
-    ->then(function ($request) {
-        return $this->router->dispatch($request);
-    });
-```
-
-### 2. 响应装饰器组合
-
-```php
-// 基础响应
-$response = response('Hello World');
-
-// 装饰器链：添加Cookie -> 添加头部 -> 设置状态码
-$decoratedResponse = $response
-    ->withCookie(cookie('user', 'john', 60))
-    ->withHeaders(['X-Custom' => 'Value'])
-    ->setStatusCode(201);
-```
-
-### 3. 查询构建器装饰
-
-```php
-// 基础查询
-$query = DB::table('users');
-
-// 装饰器链：添加条件 -> 排序 -> 分页
-$decoratedQuery = $query
-    ->where('active', true)           // 条件装饰器
-    ->orderBy('name', 'asc')          // 排序装饰器
-    ->skip(10)->take(5);              // 分页装饰器
-
-// 继续装饰：添加关联和选择字段
-$finalQuery = $decoratedQuery
-    ->select('name', 'email')
-    ->with('posts');
-```
-
-## 源码分析要点
-
-### 1. 装饰器模式的结构
-
-在 Laravel 中，装饰器模式通常包含以下组件：
-
-**组件接口（Component Interface）：**
-```php
-interface Middleware
-{
-    public function handle($request, Closure $next);
-}
-```
-
-**具体组件（Concrete Component）：**
-```php
-class TerminateMiddleware implements Middleware
-{
-    public function handle($request, Closure $next)
-    {
-        $response = $next($request);
-        
-        // 终止中间件的具体逻辑
-        $this->terminate($request, $response);
-        
-        return $response;
-    }
-}
-```
-
-**装饰器基类（Decorator Base）：**
-```php
-abstract class MiddlewareDecorator implements Middleware
-{
-    protected $next;
-    
-    public function __construct(Closure $next)
-    {
-        $this->next = $next;
-    }
-    
-    abstract public function handle($request);
-}
-```
-
-**具体装饰器（Concrete Decorator）：**
-```php
-class Authenticate extends MiddlewareDecorator
-{
-    public function handle($request)
-    {
-        // 前置处理：认证逻辑
-        if (! $this->auth->check()) {
-            return redirect('login');
-        }
-        
-        // 调用下一个装饰器
-        $response = ($this->next)($request);
-        
-        // 后置处理（可选）
-        return $response;
-    }
-}
-```
-
-### 2. 装饰器链的构建
-
-Laravel 使用函数式编程的方式构建装饰器链：
-
-```php
-protected function carry()
-{
-    return function ($stack, $pipe) {
-        return function ($passable) use ($stack, $pipe) {
-            // 构建装饰器链：每个装饰器包装前一个装饰器
-            if (is_callable($pipe)) {
-                return $pipe($passable, $stack);
-            }
-            
-            $middleware = $this->container->make($pipe);
-            
-            return $middleware->handle($passable, $stack);
-        };
-    };
-}
-```
-
-### 3. 装饰器的执行顺序
-
-装饰器链的执行顺序是反向的：
-
-```php
-// 装饰器链：A -> B -> C -> 最终处理
-$pipeline = [
-    MiddlewareA::class,
-    MiddlewareB::class, 
-    MiddlewareC::class,
-];
-
-// 实际执行顺序：C -> B -> A -> 最终处理
-$finalHandler = array_reduce(
-    array_reverse($pipeline),
-    $this->carry(),
-    $finalDestination
-);
-```
-
-## 最佳实践
-
-### 1. 合理使用装饰器模式
-
-**适用场景：**
-- 需要动态、透明地给对象添加职责
-- 需要撤销已添加的职责
-- 通过继承扩展不现实（子类爆炸）
-- 需要组合多个功能
-
-**不适用场景：**
-- 装饰器链过长，影响性能
-- 装饰器之间的顺序依赖复杂
-- 需要修改对象的核心行为
-
-### 2. Laravel 中的装饰器实践
-
-**中间件装饰器的最佳实践：**
-```php
-class EnsureEmailIsVerified
-{
-    public function handle($request, Closure $next)
-    {
-        // 前置装饰：验证逻辑
-        if (! $request->user()->hasVerifiedEmail()) {
-            return redirect()->route('verification.notice');
-        }
-        
-        $response = $next($request);
-        
-        // 后置装饰：记录验证日志
-        Log::info('Email verified access', ['user' => $request->user()->id]);
-        
-        return $response;
-    }
-}
-```
-
-**响应装饰器的链式调用：**
-```php
-// 创建响应装饰器链
-public function createResponse($data)
-{
-    return response()
-        ->json($data)
-        ->withHeaders(['Cache-Control' => 'no-cache'])
-        ->setExpires(now()->addMinutes(5))
-        ->withCookie(cookie('session', $sessionId, 60));
-}
-```
-
-### 3. 测试中的装饰器
-
-**测试装饰器功能：**
-```php
-public function test_middleware_decorator_adds_functionality()
-{
-    $request = Request::create('/test');
-    $next = function ($req) {
-        return response('OK');
-    };
-    
-    $middleware = new AuthenticateMiddleware();
-    $response = $middleware->handle($request, $next);
-    
-    $this->assertEquals(200, $response->getStatusCode());
-}
-
-public function test_response_decorator_chain()
-{
-    $response = response('Hello')
-        ->withHeaders(['X-Test' => 'value'])
-        ->setStatusCode(201);
-    
-    $this->assertEquals('value', $response->headers->get('X-Test'));
-    $this->assertEquals(201, $response->getStatusCode());
-}
-```
+1. **需要动态地给对象添加功能**
+2. **不能通过继承来扩展功能**
+3. **需要撤销某些功能**
+4. **功能的组合需要灵活变化**
 
 ## 与其他模式的关系
 
-### 1. 与适配器模式
+- **适配器模式**：装饰器改变对象的行为，适配器改变对象的接口
+- **组合模式**：装饰器可以看作是只有一个组件的组合
+- **策略模式**：装饰器改变对象的外表，策略改变对象的内核
 
-装饰器模式改变对象的行为，而适配器模式改变对象的接口：
-
-```php
-// 装饰器：增强对象功能
-class LoggingDecorator implements CacheInterface
-{
-    public function __construct(CacheInterface $cache, Logger $logger)
-    {
-        $this->cache = $cache;
-        $this->logger = $logger;
-    }
-    
-    public function get($key)
-    {
-        $this->logger->info("Cache get: {$key}");
-        return $this->cache->get($key);
-    }
-}
-
-// 适配器：转换对象接口
-class RedisAdapter implements CacheInterface
-{
-    public function __construct(Redis $redis)
-    {
-        $this->redis = $redis;
-    }
-    
-    public function get($key)
-    {
-        // 适配Redis接口到Cache接口
-        return $this->redis->get($key);
-    }
-}
-```
-
-### 2. 与策略模式
-
-装饰器模式关注功能的叠加，策略模式关注算法的替换：
-
-```php
-// 装饰器：功能叠加
-$cachedLogger = new CachingDecorator(
-    new LoggingDecorator(
-        new BasicService()
-    )
-);
-
-// 策略模式：算法替换
-class PaymentContext
-{
-    public function __construct(PaymentStrategy $strategy)
-    {
-        $this->strategy = $strategy;
-    }
-    
-    public function pay($amount)
-    {
-        return $this->strategy->pay($amount);
-    }
-}
-```
-
-### 3. 与组合模式
-
-装饰器模式可以看作是只有一个组件的组合模式：
-
-```php
-// 装饰器：单个对象的包装
-$decorated = new Decorator(new ConcreteComponent());
-
-// 组合模式：多个对象的集合
-$composite = new Composite();
-$composite->add(new Leaf());
-$composite->add(new Leaf());
-```
-
-## 性能考虑
-
-### 1. 装饰器链的性能影响
-
-装饰器模式会引入一定的性能开销：
-
-- **方法调用开销**：每个装饰器都会增加一次方法调用
-- **对象创建开销**：需要创建多个装饰器对象
-- **内存占用**：装饰器链会占用更多内存
-
-### 2. 优化策略
-
-**对象复用：**
-```php
-// 复用装饰器实例
-class MiddlewareFactory
-{
-    protected $instances = [];
-    
-    public function make($middleware)
-    {
-        return $this->instances[$middleware] ??= app($middleware);
-    }
-}
-```
-
-**延迟装饰：**
-```php
-// 只有在需要时才应用装饰器
-class LazyDecorator
-{
-    protected $decorated;
-    
-    public function getDecorated()
-    {
-        if (!$this->decorated) {
-            $this->decorated = $this->createDecorated();
-        }
-        return $this->decorated;
-    }
-}
-```
-
-## Laravel 12 新特性
-
-### 1. 属性驱动的装饰器注册
-
-Laravel 12 引入了属性驱动的装饰器配置：
-
-```php
-use Illuminate\Http\Attributes\AsResponseDecorator;
-
-#[AsResponseDecorator('cache')]
-class CacheResponseDecorator
-{
-    public function decorate(Response $response): Response
-    {
-        return $response->withHeaders([
-            'Cache-Control' => 'public, max-age=3600'
-        ]);
-    }
-}
-```
-
-### 2. 基于接口的装饰器组合
-
-新的接口抽象让装饰器组合更加灵活：
-
-```php
-interface ResponseDecorator
-{
-    public function decorate(Response $response): Response;
-    public function getPriority(): int;
-}
-
-class DecoratorChain
-{
-    public function decorate(Response $response): Response
-    {
-        $decorators = $this->getSortedDecorators();
-        
-        foreach ($decorators as $decorator) {
-            $response = $decorator->decorate($response);
-        }
-        
-        return $response;
-    }
-}
-```
-
-## 总结
-
-装饰器模式是 Laravel 框架中实现功能扩展的核心技术。通过装饰器模式，Laravel 能够：
-
-1. **动态扩展功能**：在运行时灵活地添加或移除功能
-2. **保持代码简洁**：避免通过继承产生大量的子类
-3. **支持功能组合**：可以任意组合装饰器创建复杂行为
-4. **遵循开闭原则**：对扩展开放，对修改关闭
-
-装饰器模式在 Laravel 的中间件系统、响应处理、查询构建器等组件中都发挥着重要作用。理解这一模式对于掌握 Laravel 的架构设计和扩展机制至关重要。
+装饰器模式在Laravel中应用广泛，特别是中间件系统，为我们提供了灵活且强大的功能扩展机制。

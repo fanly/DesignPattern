@@ -12,7 +12,7 @@ classDiagram
     class Creator {
         <<abstract>>
         +factoryMethod(): Product
-        +operation(): void
+        +operation()
     }
     
     class ConcreteCreator {
@@ -21,11 +21,11 @@ classDiagram
     
     class Product {
         <<interface>>
-        +operation(): void
+        +operation()
     }
     
     class ConcreteProduct {
-        +operation(): void
+        +operation()
     }
     
     Creator --> Product : creates
@@ -40,7 +40,7 @@ classDiagram
 ```mermaid
 classDiagram
     class DatabaseManager {
-        -connections: array
+        -connections
         -factory: ConnectionFactory
         +connection(name): Connection
         +makeConnection(name): Connection
@@ -55,28 +55,28 @@ classDiagram
     
     class Connection {
         <<abstract>>
-        +select(query): array
-        +insert(query): bool
-        +update(query): int
-        +delete(query): int
+        +select(query)
+        +insert(query)
+        +update(query)
+        +delete(query)
     }
     
     class MySqlConnection {
         -pdo: PDO
-        +select(query): array
-        +insert(query): bool
+        +select(query)
+        +insert(query)
     }
     
     class PostgresConnection {
         -pdo: PDO
-        +select(query): array
-        +insert(query): bool
+        +select(query)
+        +insert(query)
     }
     
     class SqliteConnection {
         -pdo: PDO
-        +select(query): array
-        +insert(query): bool
+        +select(query)
+        +insert(query)
     }
     
     DatabaseManager --> ConnectionFactory
@@ -147,38 +147,38 @@ flowchart TD
 ```mermaid
 classDiagram
     class QueueManager {
-        -connections: array
+        -connections
         +connection(name): QueueContract
         +resolve(name): QueueContract
     }
     
     class QueueContract {
         <<interface>>
-        +push(job, data, queue): mixed
-        +later(delay, job, data, queue): mixed
+        +push(job, data, queue)
+        +later(delay, job, data, queue)
         +pop(queue): Job
     }
     
     class DatabaseQueue {
         -database: Connection
-        +push(job, data, queue): mixed
+        +push(job, data, queue)
         +pop(queue): Job
     }
     
     class RedisQueue {
         -redis: Redis
-        +push(job, data, queue): mixed
+        +push(job, data, queue)
         +pop(queue): Job
     }
     
     class SqsQueue {
         -sqs: SqsClient
-        +push(job, data, queue): mixed
+        +push(job, data, queue)
         +pop(queue): Job
     }
     
     class SyncQueue {
-        +push(job, data, queue): mixed
+        +push(job, data, queue)
         +pop(queue): Job
     }
     

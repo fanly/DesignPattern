@@ -12,26 +12,26 @@ Compose objects into tree structures to represent part-whole hierarchies. Compos
 classDiagram
     class Component {
         <<interface>>
-        +operation(): void
-        +add(component: Component): void
-        +remove(component: Component): void
-        +getChild(index: int): Component
+        +operation()
+        +add(component)
+        +remove(component)
+        +getChild(index)
     }
     
     class Leaf {
-        +operation(): void
+        +operation()
     }
     
     class Composite {
         -children: List~Component~
-        +operation(): void
-        +add(component: Component): void
-        +remove(component: Component): void
-        +getChild(index: int): Component
+        +operation()
+        +add(component)
+        +remove(component)
+        +getChild(index)
     }
     
     class Client {
-        +main(): void
+        +main()
     }
     
     Component <|.. Leaf : implements

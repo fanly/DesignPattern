@@ -11,30 +11,30 @@
 classDiagram
     class Mediator {
         <<interface>>
-        +notify(sender, event): void
+        +notify(sender, event)
     }
     
     class ConcreteMediator {
-        -componentA: ComponentA
-        -componentB: ComponentB
-        +notify(sender, event): void
-        +createComponents(): void
+        -componentAA
+        -componentBB
+        +notify(sender, event)
+        +createComponents()
     }
     
     class BaseComponent {
         <<abstract>>
         -mediator: Mediator
-        +setMediator(mediator): void
+        +setMediator(mediator)
     }
     
     class ComponentA {
-        +doA(): void
-        +doSomething(): void
+        +doA()
+        +doSomething()
     }
     
     class ComponentB {
-        +doB(): void
-        +doSomethingElse(): void
+        +doB()
+        +doSomethingElse()
     }
     
     Mediator <|.. ConcreteMediator
@@ -52,45 +52,45 @@ classDiagram
 ```mermaid
 classDiagram
     class EventDispatcher {
-        -listeners: array
-        -wildcards: array
-        +listen(event, listener): void
-        +dispatch(event, payload): array
-        +fire(event, payload): array
-        +forget(event): void
+        -listeners
+        -wildcards
+        +listen(event, listener)
+        +dispatch(event, payload)
+        +fire(event, payload)
+        +forget(event)
     }
     
     class Event {
         <<abstract>>
-        +broadcastOn(): array
-        +broadcastWith(): array
+        +broadcastOn()
+        +broadcastWith()
     }
     
     class UserRegistered {
         +user: User
-        +broadcastOn(): array
+        +broadcastOn()
     }
     
     class OrderPlaced {
         +order: Order
-        +broadcastOn(): array
+        +broadcastOn()
     }
     
     class Listener {
         <<interface>>
-        +handle(event): void
+        +handle(event)
     }
     
     class SendWelcomeEmail {
-        +handle(UserRegistered): void
+        +handle(UserRegistered)
     }
     
     class UpdateUserStats {
-        +handle(UserRegistered): void
+        +handle(UserRegistered)
     }
     
     class ProcessPayment {
-        +handle(OrderPlaced): void
+        +handle(OrderPlaced)
     }
     
     EventDispatcher --> Event : dispatches
@@ -128,21 +128,21 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class Container {
-        -bindings: array
-        -instances: array
-        -aliases: array
-        +bind(abstract, concrete): void
-        +singleton(abstract, concrete): void
-        +make(abstract): mixed
-        +resolve(abstract): mixed
+        -bindings
+        -instances
+        -aliases
+        +bind(abstract, concrete)
+        +singleton(abstract, concrete)
+        +make(abstract)
+        +resolve(abstract)
     }
     
     class ServiceProvider {
         <<abstract>>
         -app: Container
-        +register(): void
-        +boot(): void
-        +provides(): array
+        +register()
+        +boot()
+        +provides()
     }
     
     class UserService {
@@ -160,8 +160,8 @@ classDiagram
     
     class UserController {
         -userService: UserService
-        +store(request): Response
-        +update(id, request): Response
+        +store(request)
+        +update(id, request)
     }
     
     Container --> ServiceProvider : manages
@@ -179,7 +179,7 @@ classDiagram
 ```mermaid
 classDiagram
     class BroadcastManager {
-        -drivers: array
+        -drivers
         -app: Application
         +driver(name): Broadcaster
         +event(event): PendingBroadcast
@@ -187,37 +187,37 @@ classDiagram
     
     class Broadcaster {
         <<interface>>
-        +broadcast(channels, event, payload): void
-        +auth(request): mixed
+        +broadcast(channels, event, payload)
+        +auth(request)
     }
     
     class PusherBroadcaster {
         -pusher: Pusher
-        +broadcast(channels, event, payload): void
-        +auth(request): mixed
+        +broadcast(channels, event, payload)
+        +auth(request)
     }
     
     class RedisBroadcaster {
         -redis: Redis
-        +broadcast(channels, event, payload): void
-        +auth(request): mixed
+        +broadcast(channels, event, payload)
+        +auth(request)
     }
     
     class Channel {
-        -name: string
-        +getName(): string
-        +broadcastOn(): array
+        -name
+        +getName()
+        +broadcastOn()
     }
     
     class PrivateChannel {
-        +broadcastOn(): array
-        +authorize(user): bool
+        +broadcastOn()
+        +authorize(user)
     }
     
     class PresenceChannel {
-        +broadcastOn(): array
-        +authorize(user): bool
-        +getUserInfo(user): array
+        +broadcastOn()
+        +authorize(user)
+        +getUserInfo(user)
     }
     
     BroadcastManager --> Broadcaster : manages
@@ -235,43 +235,43 @@ classDiagram
 ```mermaid
 classDiagram
     class QueueManager {
-        -connections: array
+        -connections
         -app: Application
         +connection(name): Queue
-        +push(job, data, queue): mixed
-        +later(delay, job, data, queue): mixed
+        +push(job, data, queue)
+        +later(delay, job, data, queue)
     }
     
     class Queue {
         <<interface>>
-        +push(job, data, queue): mixed
-        +pushOn(queue, job, data): mixed
-        +later(delay, job, data, queue): mixed
+        +push(job, data, queue)
+        +pushOn(queue, job, data)
+        +later(delay, job, data, queue)
         +pop(queue): Job
     }
     
     class DatabaseQueue {
         -database: Connection
-        +push(job, data, queue): mixed
+        +push(job, data, queue)
         +pop(queue): Job
     }
     
     class RedisQueue {
         -redis: Redis
-        +push(job, data, queue): mixed
+        +push(job, data, queue)
         +pop(queue): Job
     }
     
     class SqsQueue {
         -sqs: SqsClient
-        +push(job, data, queue): mixed
+        +push(job, data, queue)
         +pop(queue): Job
     }
     
     class Worker {
         -manager: QueueManager
-        +daemon(): void
-        +runNextJob(): void
+        +daemon()
+        +runNextJob()
     }
     
     QueueManager --> Queue : manages

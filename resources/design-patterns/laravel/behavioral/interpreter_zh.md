@@ -11,28 +11,28 @@
 classDiagram
     class AbstractExpression {
         <<abstract>>
-        +interpret(context): mixed
+        +interpret(context)
     }
     
     class TerminalExpression {
-        +interpret(context): mixed
+        +interpret(context)
     }
     
     class NonTerminalExpression {
-        -expressions: array
-        +interpret(context): mixed
-        +addExpression(expr): void
+        -expressions
+        +interpret(context)
+        +addExpression(expr)
     }
     
     class Context {
         -variables: Map
-        +getValue(name): mixed
-        +setValue(name, value): void
+        +getValue(name)
+        +setValue(name, value)
     }
     
     class Client {
         +buildSyntaxTree(): AbstractExpression
-        +interpret(expression, context): mixed
+        +interpret(expression, context)
     }
     
     AbstractExpression <|-- TerminalExpression
@@ -49,49 +49,49 @@ classDiagram
 ```mermaid
 classDiagram
     class BladeCompiler {
-        -customDirectives: array
-        -extensions: array
-        +compile(path): string
-        +compileString(value): string
-        +directive(name, handler): void
+        -customDirectives
+        -extensions
+        +compile(path)
+        +compileString(value)
+        +directive(name, handler)
     }
     
     class Expression {
         <<abstract>>
-        +compile(compiler): string
+        +compile(compiler)
     }
     
     class DirectiveExpression {
-        -name: string
-        -parameters: string
-        +compile(compiler): string
+        -name
+        -parameters
+        +compile(compiler)
     }
     
     class EchoExpression {
-        -expression: string
-        -escaped: bool
-        +compile(compiler): string
+        -expression
+        -escaped
+        +compile(compiler)
     }
     
     class ConditionalExpression {
-        -condition: string
+        -condition
         -trueExpression: Expression
         -falseExpression: Expression
-        +compile(compiler): string
+        +compile(compiler)
     }
     
     class LoopExpression {
-        -iterable: string
-        -variable: string
+        -iterable
+        -variable
         -body: Expression
-        +compile(compiler): string
+        +compile(compiler)
     }
     
     class CompilerContext {
-        -variables: array
-        -path: string
-        +getVariable(name): mixed
-        +setVariable(name, value): void
+        -variables
+        -path
+        +getVariable(name)
+        +setVariable(name, value)
     }
     
     BladeCompiler --> Expression : compiles
@@ -115,13 +115,13 @@ sequenceDiagram
     participant Terminal2
     
     Client->>Context: 设置变量
-    Client->>NonTerminal: interpret(context)
-    NonTerminal->>Terminal1: interpret(context)
+    Client->>NonTerminalerpret(context)
+    NonTerminal->>Terminal1erpret(context)
     Terminal1->>Context: getValue(var1)
     Context-->>Terminal1: value1
     Terminal1-->>NonTerminal: result1
     
-    NonTerminal->>Terminal2: interpret(context)
+    NonTerminal->>Terminal2erpret(context)
     Terminal2->>Context: getValue(var2)
     Context-->>Terminal2: value2
     Terminal2-->>NonTerminal: result2
@@ -142,38 +142,38 @@ classDiagram
     }
     
     class WhereExpression {
-        -column: string
-        -operator: string
-        -value: mixed
+        -column
+        -operator
+        -value
         +interpret(builder): Builder
     }
     
     class JoinExpression {
-        -table: string
-        -first: string
-        -operator: string
-        -second: string
+        -table
+        -first
+        -operator
+        -second
         +interpret(builder): Builder
     }
     
     class OrderExpression {
-        -column: string
-        -direction: string
+        -column
+        -direction
         +interpret(builder): Builder
     }
     
     class LimitExpression {
-        -count: int
+        -count
         +interpret(builder): Builder
     }
     
     class QueryBuilder {
-        -expressions: array
+        -expressions
         +where(column, operator, value): QueryBuilder
         +join(table, first, operator, second): QueryBuilder
         +orderBy(column, direction): QueryBuilder
         +limit(count): QueryBuilder
-        +toSql(): string
+        +toSql()
     }
     
     QueryExpression <|-- WhereExpression
@@ -191,42 +191,42 @@ classDiagram
 classDiagram
     class ValidationRule {
         <<abstract>>
-        +interpret(value, parameters): bool
-        +message(): string
+        +interpret(value, parameters)
+        +message()
     }
     
     class RequiredRule {
-        +interpret(value, parameters): bool
-        +message(): string
+        +interpret(value, parameters)
+        +message()
     }
     
     class EmailRule {
-        +interpret(value, parameters): bool
-        +message(): string
+        +interpret(value, parameters)
+        +message()
     }
     
     class MinRule {
-        +interpret(value, parameters): bool
-        +message(): string
+        +interpret(value, parameters)
+        +message()
     }
     
     class MaxRule {
-        +interpret(value, parameters): bool
-        +message(): string
+        +interpret(value, parameters)
+        +message()
     }
     
     class CompositeRule {
-        -rules: array
-        -operator: string
-        +interpret(value, parameters): bool
-        +addRule(rule): void
+        -rules
+        -operator
+        +interpret(value, parameters)
+        +addRule(rule)
     }
     
     class ValidationContext {
-        -data: array
-        -rules: array
-        +getValue(field): mixed
-        +getRule(field): string
+        -data
+        -rules
+        +getValue(field)
+        +getRule(field)
     }
     
     ValidationRule <|-- RequiredRule

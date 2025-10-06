@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'dashboard' => '管理员仪表板',
+    'welcome_message' => '欢迎来到设计模式电子书后台管理系统',
+    'total_patterns' => '设计模式总数',
+    'total_categories' => '分类总数',
+    'recent_updates' => '最近更新',
+    'quick_actions' => '快速操作',
+    'create_new_pattern' => '创建新设计模式',
+    'create_new_category' => '创建新分类',
+    'change_password' => '修改密码',
+    'recent_patterns' => '最近的设计模式',
+    'no_patterns' => '暂无设计模式',
+    'admin_menu' => '管理菜单',
+    'view_website' => '查看网站',
+    'back_to_frontend' => '返回前台首页',
+    'pattern_management' => '设计模式管理',
+    'pattern_management_desc' => '创建和编辑设计模式',
+    'category_management' => '分类管理',
+    'password_management' => '修改密码',
+    'edit_category' => '编辑分类',
+    'edit_pattern' => '编辑设计模式',
+    'edit' => '编辑',
+    'confirm_delete_category' => '您确定要删除这个分类吗？',
+    'confirm_delete_pattern' => '您确定要删除这个设计模式吗？',
+];

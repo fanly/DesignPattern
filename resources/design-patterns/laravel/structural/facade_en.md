@@ -11,27 +11,27 @@ Provide a unified interface to a set of interfaces in a subsystem. Facade define
 ```mermaid
 classDiagram
     class Facade {
-        +operation1(): void
-        +operation2(): void
+        +operation1()
+        +operation2()
     }
     
     class SubsystemA {
-        +operationA1(): void
-        +operationA2(): void
+        +operationA1()
+        +operationA2()
     }
     
     class SubsystemB {
-        +operationB1(): void
-        +operationB2(): void
+        +operationB1()
+        +operationB2()
     }
     
     class SubsystemC {
-        +operationC1(): void
-        +operationC2(): void
+        +operationC1()
+        +operationC2()
     }
     
     class Client {
-        +main(): void
+        +main()
     }
     
     Client --> Facade : uses

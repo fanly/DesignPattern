@@ -12,28 +12,28 @@ classDiagram
     class FlyweightFactory {
         -flyweights: Map
         +getFlyweight(key): Flyweight
-        +getCreatedFlyweights(): int
+        +getCreatedFlyweights()
     }
     
     class Flyweight {
         <<interface>>
-        +operation(extrinsicState): void
+        +operation(extrinsicState)
     }
     
     class ConcreteFlyweight {
         -intrinsicState: any
-        +operation(extrinsicState): void
+        +operation(extrinsicState)
     }
     
     class UnsharedConcreteFlyweight {
         -allState: any
-        +operation(extrinsicState): void
+        +operation(extrinsicState)
     }
     
     class Context {
         -flyweight: Flyweight
         -extrinsicState: any
-        +operation(): void
+        +operation()
     }
     
     FlyweightFactory --> Flyweight : creates and manages
@@ -49,31 +49,31 @@ classDiagram
 ```mermaid
 classDiagram
     class ConfigRepository {
-        -items: array
-        -loadedConfigurations: array
-        +get(key): mixed
-        +set(key, value): void
-        +has(key): bool
+        -items
+        -loadedConfigurations
+        +get(key)
+        +set(key, value)
+        +has(key)
     }
     
     class ConfigLoader {
         -files: Filesystem
-        -defaultPath: string
-        +load(name): array
-        +exists(name): bool
+        -defaultPath
+        +load(name)
+        +exists(name)
     }
     
     class ConfigCache {
-        -cached: array
-        +get(key): mixed
-        +put(key, value): void
-        +forget(key): void
+        -cached
+        +get(key)
+        +put(key, value)
+        +forget(key)
     }
     
     class Application {
         -config: ConfigRepository
-        +config(key): mixed
-        +make(abstract): mixed
+        +config(key)
+        +make(abstract)
     }
     
     ConfigRepository --> ConfigLoader : loads configs
@@ -116,34 +116,34 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class ViewFactory {
-        -engines: array
-        -finder: ViewFinder
-        -shared: array
-        +make(view, data): View
-        +exists(view): bool
-        +share(key, value): void
+        -engines
+        -finderFinder
+        -shared
+        +make(view, data)
+        +exists(view)
+        +share(key, value)
     }
     
     class View {
-        -factory: ViewFactory
-        -engine: Engine
-        -view: string
-        -data: array
-        +render(): string
-        +with(key, value): View
+        -factoryFactory
+        -engine
+        -view
+        -data
+        +render()
+        +with(key, value)
     }
     
     class BladeEngine {
         -compiler: BladeCompiler
         -files: Filesystem
-        +get(path, data): string
+        +get(path, data)
     }
     
     class ViewFinder {
         -files: Filesystem
-        -paths: array
-        -views: array
-        +find(name): string
+        -paths
+        -views
+        +find(name)
     }
     
     ViewFactory --> ViewFinder : finds views

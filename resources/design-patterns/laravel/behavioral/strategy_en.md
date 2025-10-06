@@ -12,25 +12,25 @@ Define a family of algorithms, encapsulate each one, and make them interchangeab
 classDiagram
     class Context {
         -strategy: Strategy
-        +setStrategy(strategy: Strategy): void
-        +executeStrategy(): void
+        +setStrategy(strategy)
+        +executeStrategy()
     }
     
     class Strategy {
         <<interface>>
-        +execute(): void
+        +execute()
     }
     
     class ConcreteStrategyA {
-        +execute(): void
+        +execute()
     }
     
     class ConcreteStrategyB {
-        +execute(): void
+        +execute()
     }
     
     class ConcreteStrategyC {
-        +execute(): void
+        +execute()
     }
     
     Context --> Strategy : uses

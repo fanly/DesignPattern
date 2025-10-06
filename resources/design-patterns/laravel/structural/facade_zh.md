@@ -10,95 +10,62 @@
 ```mermaid
 classDiagram
     class Facade {
-        +operation1(): void
-        +operation2(): void
-        +complexOperation(): void
+        +operation1()
+        +operation2()
     }
     
     class SubsystemA {
-        +operationA1(): void
-        +operationA2(): void
+        +operationA()
     }
     
     class SubsystemB {
-        +operationB1(): void
-        +operationB2(): void
-    }
-    
-    class SubsystemC {
-        +operationC1(): void
-        +operationC2(): void
+        +operationB()
     }
     
     class Client {
-        +main(): void
+        +main()
     }
     
     Client --> Facade
     Facade --> SubsystemA
     Facade --> SubsystemB
-    Facade --> SubsystemC
-    
-    note for Facade "提供简化的统一接口\n隐藏子系统复杂性"
 ```
 
 ### Laravel Facade 系统架构
 ```mermaid
 classDiagram
     class Facade {
-        <<abstract>>
-        -static app: Application
-        -static resolvedInstance: array
-        +static __callStatic(method, args): mixed
-        +static getFacadeRoot(): object
-        +static getFacadeAccessor(): string
+        +getFacadeRoot()
+        +getFacadeAccessor()
     }
     
     class DB {
-        +static getFacadeAccessor(): string
+        +getFacadeAccessor()
     }
     
     class Cache {
-        +static getFacadeAccessor(): string
-    }
-    
-    class Log {
-        +static getFacadeAccessor(): string
+        +getFacadeAccessor()
     }
     
     class DatabaseManager {
-        +connection(): Connection
-        +table(table): Builder
-        +select(query): array
+        +connection()
+        +table()
     }
     
     class CacheManager {
-        +store(): Repository
-        +get(key): mixed
-        +put(key, value): bool
-    }
-    
-    class LogManager {
-        +channel(): Logger
-        +info(message): void
-        +error(message): void
+        +store()
+        +get()
     }
     
     class Application {
-        +make(abstract): object
-        +singleton(abstract, concrete): void
+        +make()
     }
     
     DB --|> Facade
     Cache --|> Facade
-    Log --|> Facade
-    
-    Facade --> Application : resolves services
-    DB ..> DatabaseManager : facades
-    Cache ..> CacheManager : facades
-    Log ..> LogManager : facades
-    
-    note for Facade "Laravel Facade基类\n提供静态代理功能"
+    Facade --> Application
+    DB --> DatabaseManager
+    Cache --> CacheManager
 ```
 
 ### Facade 调用时序图
@@ -109,116 +76,21 @@ sequenceDiagram
     participant Application
     participant Service
     
-    Client->>Facade: DB::table('users')
-    Facade->>Facade: __callStatic('table', ['users'])
-    Facade->>Facade: getFacadeRoot()
-    Facade->>Application: make('db')
-    Application-->>Facade: DatabaseManager实例
-    Facade->>Service: table('users')
-    Service-->>Facade: QueryBuilder实例
-    Facade-->>Client: QueryBuilder实例
-    
-    Note over Facade: 静态调用转换为实例调用
+    Client->>Facade: call method
+    Facade->>Application: resolve service
+    Application-->>Facade: service instance
+    Facade->>Service: call method
+    Service-->>Client: result
 ```
 
 ### Laravel Facade 工作流程
 ```mermaid
 flowchart TD
-    A[静态方法调用] --> B[__callStatic魔术方法]
+    A[Static Method Call] --> B[__callStatic]
     B --> C[getFacadeRoot]
-    C --> D[getFacadeAccessor]
-    D --> E[获取服务标识符]
-    E --> F[从容器解析服务]
-    F --> G{服务已缓存?}
-    G -->|是| H[返回缓存实例]
-    G -->|否| I[创建新实例]
-    I --> J[缓存实例]
-    J --> K[调用实际方法]
-    H --> K
-    K --> L[返回结果]
-    
-    style B fill:#e1f5fe
-    style F fill:#fff3e0
-    style K fill:#e8f5e8
-```
-
-### 复杂子系统外观示例
-```mermaid
-classDiagram
-    class PaymentFacade {
-        +processPayment(order, method): PaymentResult
-        +refundPayment(transaction): RefundResult
-        +getPaymentStatus(id): PaymentStatus
-    }
-    
-    class PaymentValidator {
-        +validatePaymentData(data): bool
-        +validateAmount(amount): bool
-        +validateMethod(method): bool
-    }
-    
-    class PaymentProcessor {
-        +processCredit(data): Result
-        +processDebit(data): Result
-        +processPaypal(data): Result
-    }
-    
-    class PaymentLogger {
-        +logTransaction(transaction): void
-        +logError(error): void
-        +logRefund(refund): void
-    }
-    
-    class NotificationService {
-        +sendPaymentConfirmation(user): void
-        +sendPaymentFailure(user): void
-        +sendRefundNotification(user): void
-    }
-    
-    class InventoryManager {
-        +reserveItems(order): bool
-        +releaseItems(order): void
-        +updateStock(items): void
-    }
-    
-    PaymentFacade --> PaymentValidator
-    PaymentFacade --> PaymentProcessor
-    PaymentFacade --> PaymentLogger
-    PaymentFacade --> NotificationService
-    PaymentFacade --> InventoryManager
-    
-    note for PaymentFacade "简化复杂的支付处理流程"
-```
-
-### Laravel 核心 Facades 架构
-```mermaid
-flowchart LR
-    A[Client Code] --> B[Facade Layer]
-    
-    B --> C[DB Facade]
-    B --> D[Cache Facade]
-    B --> E[Log Facade]
-    B --> F[Mail Facade]
-    B --> G[Queue Facade]
-    
-    C --> H[DatabaseManager]
-    D --> I[CacheManager]
-    E --> J[LogManager]
-    F --> K[MailManager]
-    G --> L[QueueManager]
-    
-    H --> M[Connection Pool]
-    I --> N[Cache Stores]
-    J --> O[Log Channels]
-    K --> P[Mail Transports]
-    L --> Q[Queue Drivers]
-    
-    style B fill:#e1f5fe
-    style H fill:#e8f5e8
-    style I fill:#e8f5e8
-    style J fill:#e8f5e8
-    style K fill:#e8f5e8
-    style L fill:#e8f5e8
+    C --> D[Resolve Service]
+    D --> E[Call Method]
+    E --> F[Return Result]
 ```
 
 ## 设计意图

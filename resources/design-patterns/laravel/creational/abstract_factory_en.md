@@ -28,28 +28,28 @@ classDiagram
     
     class AbstractProductA {
         <<interface>>
-        +operation(): void
+        +operation()
     }
     
     class AbstractProductB {
         <<interface>>
-        +operation(): void
+        +operation()
     }
     
     class ProductA1 {
-        +operation(): void
+        +operation()
     }
     
     class ProductA2 {
-        +operation(): void
+        +operation()
     }
     
     class ProductB1 {
-        +operation(): void
+        +operation()
     }
     
     class ProductB2 {
-        +operation(): void
+        +operation()
     }
     
     AbstractFactory <|.. ConcreteFactory1 : implements

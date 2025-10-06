@@ -17,18 +17,18 @@ classDiagram
     
     class Flyweight {
         <<interface>>
-        +operation(extrinsicState): void
+        +operation(extrinsicState)
     }
     
     class ConcreteFlyweight {
         -intrinsicState: State
-        +operation(extrinsicState): void
+        +operation(extrinsicState)
     }
     
     class Context {
         -extrinsicState: State
         -flyweight: Flyweight
-        +operation(): void
+        +operation()
     }
     
     FlyweightFactory --> Flyweight : creates/manages

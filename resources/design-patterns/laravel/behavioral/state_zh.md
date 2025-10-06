@@ -11,30 +11,30 @@
 classDiagram
     class Context {
         -state: State
-        +setState(state): void
-        +request(): void
+        +setState(state)
+        +request()
         +getState(): State
     }
     
     class State {
         <<interface>>
-        +handle(context): void
-        +canTransitionTo(state): bool
+        +handle(context)
+        +canTransitionTo(state)
     }
     
     class ConcreteStateA {
-        +handle(context): void
-        +canTransitionTo(state): bool
+        +handle(context)
+        +canTransitionTo(state)
     }
     
     class ConcreteStateB {
-        +handle(context): void
-        +canTransitionTo(state): bool
+        +handle(context)
+        +canTransitionTo(state)
     }
     
     class ConcreteStateC {
-        +handle(context): void
-        +canTransitionTo(state): bool
+        +handle(context)
+        +canTransitionTo(state)
     }
     
     Context --> State : current state
@@ -51,41 +51,41 @@ classDiagram
 classDiagram
     class WorkflowContext {
         -currentState: WorkflowState
-        -data: array
-        +transitionTo(state): void
-        +process(): void
-        +canTransitionTo(state): bool
+        -data
+        +transitionTo(state)
+        +process()
+        +canTransitionTo(state)
     }
     
     class WorkflowState {
         <<interface>>
-        +process(context): void
-        +canTransitionTo(state): bool
-        +getName(): string
+        +process(context)
+        +canTransitionTo(state)
+        +getName()
     }
     
     class DraftState {
-        +process(context): void
-        +canTransitionTo(state): bool
-        +getName(): string
+        +process(context)
+        +canTransitionTo(state)
+        +getName()
     }
     
     class PendingReviewState {
-        +process(context): void
-        +canTransitionTo(state): bool
-        +getName(): string
+        +process(context)
+        +canTransitionTo(state)
+        +getName()
     }
     
     class ApprovedState {
-        +process(context): void
-        +canTransitionTo(state): bool
-        +getName(): string
+        +process(context)
+        +canTransitionTo(state)
+        +getName()
     }
     
     class RejectedState {
-        +process(context): void
-        +canTransitionTo(state): bool
-        +getName(): string
+        +process(context)
+        +canTransitionTo(state)
+        +getName()
     }
     
     WorkflowContext --> WorkflowState : current state
@@ -128,55 +128,55 @@ stateDiagram-v2
 classDiagram
     class Order {
         -state: OrderState
-        -items: array
+        -items
         -total: decimal
-        +setState(state): void
-        +process(): void
-        +cancel(): void
-        +ship(): void
+        +setState(state)
+        +process()
+        +cancel()
+        +ship()
     }
     
     class OrderState {
         <<interface>>
-        +process(order): void
-        +cancel(order): void
-        +ship(order): void
-        +getStatus(): string
+        +process(order)
+        +cancel(order)
+        +ship(order)
+        +getStatus()
     }
     
     class PendingState {
-        +process(order): void
-        +cancel(order): void
-        +ship(order): void
-        +getStatus(): string
+        +process(order)
+        +cancel(order)
+        +ship(order)
+        +getStatus()
     }
     
     class ProcessingState {
-        +process(order): void
-        +cancel(order): void
-        +ship(order): void
-        +getStatus(): string
+        +process(order)
+        +cancel(order)
+        +ship(order)
+        +getStatus()
     }
     
     class ShippedState {
-        +process(order): void
-        +cancel(order): void
-        +ship(order): void
-        +getStatus(): string
+        +process(order)
+        +cancel(order)
+        +ship(order)
+        +getStatus()
     }
     
     class DeliveredState {
-        +process(order): void
-        +cancel(order): void
-        +ship(order): void
-        +getStatus(): string
+        +process(order)
+        +cancel(order)
+        +ship(order)
+        +getStatus()
     }
     
     class CancelledState {
-        +process(order): void
-        +cancel(order): void
-        +ship(order): void
-        +getStatus(): string
+        +process(order)
+        +cancel(order)
+        +ship(order)
+        +getStatus()
     }
     
     Order --> OrderState : current state

@@ -12,29 +12,29 @@ Encapsulate a request as an object, thereby letting you parameterize clients wit
 classDiagram
     class Command {
         <<interface>>
-        +execute(): void
-        +undo(): void
+        +execute()
+        +undo()
     }
     
     class ConcreteCommand {
         -receiver: Receiver
-        -state: State
-        +execute(): void
-        +undo(): void
+        -state
+        +execute()
+        +undo()
     }
     
     class Receiver {
-        +action(): void
+        +action()
     }
     
     class Invoker {
-        -command: Command
-        +setCommand(command: Command): void
-        +executeCommand(): void
+        -command
+        +setCommand(command)
+        +executeCommand()
     }
     
     class Client {
-        +main(): void
+        +main()
     }
     
     Command <|.. ConcreteCommand : implements

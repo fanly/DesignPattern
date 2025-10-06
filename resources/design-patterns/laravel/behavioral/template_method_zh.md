@@ -11,21 +11,21 @@
 classDiagram
     class AbstractClass {
         <<abstract>>
-        +templateMethod(): void
-        +primitiveOperation1(): void
-        +primitiveOperation2(): void
-        +hook(): void
+        +templateMethod()
+        +primitiveOperation1()
+        +primitiveOperation2()
+        +hook()
     }
     
     class ConcreteClassA {
-        +primitiveOperation1(): void
-        +primitiveOperation2(): void
-        +hook(): void
+        +primitiveOperation1()
+        +primitiveOperation2()
+        +hook()
     }
     
     class ConcreteClassB {
-        +primitiveOperation1(): void
-        +primitiveOperation2(): void
+        +primitiveOperation1()
+        +primitiveOperation2()
     }
     
     AbstractClass <|-- ConcreteClassA
@@ -41,32 +41,32 @@ classDiagram
 classDiagram
     class Controller {
         <<abstract>>
-        +callAction(method, parameters): mixed
-        +setupLayout(): void
-        +cleanupLayout(): void
-        +middleware(): array
+        +callAction(method, parameters)
+        +setupLayout()
+        +cleanupLayout()
+        +middleware()
     }
     
     class ResourceController {
-        +index(): Response
-        +create(): Response
-        +store(request): Response
-        +show(id): Response
-        +edit(id): Response
-        +update(id, request): Response
-        +destroy(id): Response
+        +index()
+        +create()
+        +store(request)
+        +show(id)
+        +edit(id)
+        +update(id, request)
+        +destroy(id)
     }
     
     class UserController {
-        +setupLayout(): void
-        +middleware(): array
-        +index(): Response
-        +store(request): Response
+        +setupLayout()
+        +middleware()
+        +index()
+        +store(request)
     }
     
     class ApiController {
-        +setupLayout(): void
-        +cleanupLayout(): void
+        +setupLayout()
+        +cleanupLayout()
         +respondWithSuccess(data): JsonResponse
         +respondWithError(message): JsonResponse
     }
@@ -106,36 +106,36 @@ classDiagram
     class Guard {
         <<abstract>>
         +user(): User
-        +check(): bool
-        +guest(): bool
+        +check()
+        +guest()
         +authenticate(): User
-        +login(user): void
-        +logout(): void
+        +login(user)
+        +logout()
     }
     
     class SessionGuard {
         -session: Session
         -provider: UserProvider
         +user(): User
-        +attempt(credentials): bool
-        +login(user): void
-        +logout(): void
+        +attempt(credentials)
+        +login(user)
+        +logout()
     }
     
     class TokenGuard {
         -request: Request
         -provider: UserProvider
         +user(): User
-        +validate(credentials): bool
-        +setRequest(request): void
+        +validate(credentials)
+        +setRequest(request)
     }
     
     class JwtGuard {
         -jwt: JwtManager
         -provider: UserProvider
         +user(): User
-        +attempt(credentials): bool
-        +refresh(): string
+        +attempt(credentials)
+        +refresh()
     }
     
     Guard <|-- SessionGuard
@@ -152,26 +152,26 @@ classDiagram
 classDiagram
     class Middleware {
         <<interface>>
-        +handle(request, next): Response
+        +handle(request, next)
     }
     
     class AuthMiddleware {
-        +handle(request, next): Response
-        +authenticate(request): void
-        +redirectTo(request): string
+        +handle(request, next)
+        +authenticate(request)
+        +redirectTo(request)
     }
     
     class ThrottleMiddleware {
         -limiter: RateLimiter
-        +handle(request, next): Response
-        +resolveRequestSignature(request): string
-        +buildResponse(key, maxAttempts): Response
+        +handle(request, next)
+        +resolveRequestSignature(request)
+        +buildResponse(key, maxAttempts)
     }
     
     class CorsMiddleware {
-        +handle(request, next): Response
-        +addHeaders(response): Response
-        +isPreflightRequest(request): bool
+        +handle(request, next)
+        +addHeaders(response)
+        +isPreflightRequest(request)
     }
     
     AuthMiddleware ..|> Middleware
@@ -187,28 +187,28 @@ classDiagram
 classDiagram
     class Validator {
         <<abstract>>
-        -data: array
-        -rules: array
-        -messages: array
-        +validate(): bool
-        +passes(): bool
-        +fails(): bool
-        +validateAttribute(attribute, rule): bool
+        -data
+        -rules
+        -messages
+        +validate()
+        +passes()
+        +fails()
+        +validateAttribute(attribute, rule)
     }
     
     class FormRequestValidator {
-        +authorize(): bool
-        +rules(): array
-        +messages(): array
-        +attributes(): array
-        +withValidator(validator): void
+        +authorize()
+        +rules()
+        +messages()
+        +attributes()
+        +withValidator(validator)
     }
     
     class ApiValidator {
-        +rules(): array
-        +messages(): array
-        +failedValidation(validator): void
-        +passedValidation(): void
+        +rules()
+        +messages()
+        +failedValidation(validator)
+        +passedValidation()
     }
     
     Validator <|-- FormRequestValidator
@@ -228,13 +228,13 @@ sequenceDiagram
     
     Client->>Validator: validate()
     Validator->>ConcreteValidator: authorize()
-    ConcreteValidator-->>Validator: bool
+    ConcreteValidator-->>Validator
     alt 授权通过
         Validator->>ConcreteValidator: rules()
-        ConcreteValidator-->>Validator: array
+        ConcreteValidator-->>Validator
         Validator->>Validator: validateAttributes()
         Validator->>ConcreteValidator: messages()
-        ConcreteValidator-->>Validator: array
+        ConcreteValidator-->>Validator
         Validator-->>Client: validation result
     else 授权失败
         Validator-->>Client: authorization failed

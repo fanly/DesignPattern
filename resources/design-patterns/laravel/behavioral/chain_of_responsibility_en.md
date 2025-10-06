@@ -12,25 +12,25 @@ classDiagram
     class Handler {
         <<abstract>>
         -successor: Handler
-        +setSuccessor(handler): void
-        +handleRequest(request): void
-        #processRequest(request): boolean
+        +setSuccessor(handler)
+        +handleRequest(request)
+        #processRequest(request)ean
     }
     
     class ConcreteHandlerA {
-        #processRequest(request): boolean
+        #processRequest(request)ean
     }
     
     class ConcreteHandlerB {
-        #processRequest(request): boolean
+        #processRequest(request)ean
     }
     
     class ConcreteHandlerC {
-        #processRequest(request): boolean
+        #processRequest(request)ean
     }
     
     class Client {
-        +makeRequest(): void
+        +makeRequest()
     }
     
     Handler <|-- ConcreteHandlerA
@@ -81,7 +81,7 @@ classDiagram
     class Middleware {
         <<abstract>>
         +handle(request, next): response
-        #process(request): boolean
+        #process(request)ean
     }
     
     class AuthMiddleware {
@@ -158,7 +158,7 @@ abstract class RequestHandler
         throw new \Exception('No handler found for request: ' . get_class($request));
     }
     
-    abstract protected function canHandle($request): bool;
+    abstract protected function canHandle($request);
     abstract protected function processRequest($request);
 }
 ```
@@ -183,12 +183,12 @@ class PaymentRequest
         return $this->amount;
     }
     
-    public function getMethod(): string
+    public function getMethod()
     {
         return $this->method;
     }
     
-    public function getDetails(): array
+    public function getDetails()
     {
         return $this->details;
     }
@@ -202,7 +202,7 @@ class RefundRequest
         public string $reason = ''
     ) {}
     
-    public function getTransactionId(): string
+    public function getTransactionId()
     {
         return $this->transactionId;
     }
@@ -212,7 +212,7 @@ class RefundRequest
         return $this->amount;
     }
     
-    public function getReason(): string
+    public function getReason()
     {
         return $this->reason;
     }
@@ -226,17 +226,17 @@ class AuthorizationRequest
         public string $action
     ) {}
     
-    public function getUserId(): int
+    public function getUserId()
     {
         return $this->userId;
     }
     
-    public function getResource(): string
+    public function getResource()
     {
         return $this->resource;
     }
     
-    public function getAction(): string
+    public function getAction()
     {
         return $this->action;
     }
@@ -255,7 +255,7 @@ use App\Patterns\ChainOfResponsibility\Requests\PaymentRequest;
 
 class CreditCardHandler extends RequestHandler
 {
-    protected function canHandle($request): bool
+    protected function canHandle($request)
     {
         return $request instanceof PaymentRequest && 
                $request->getMethod() === 'credit_card';
@@ -281,7 +281,7 @@ class CreditCardHandler extends RequestHandler
         ];
     }
     
-    private function validateCreditCard(array $details): bool
+    private function validateCreditCard(array $details)
     {
         return isset($details['card_number']) && 
                isset($details['expiry_date']) && 
@@ -291,7 +291,7 @@ class CreditCardHandler extends RequestHandler
 
 class PayPalHandler extends RequestHandler
 {
-    protected function canHandle($request): bool
+    protected function canHandle($request)
     {
         return $request instanceof PaymentRequest && 
                $request->getMethod() === 'paypal';
@@ -317,7 +317,7 @@ class PayPalHandler extends RequestHandler
         ];
     }
     
-    private function validatePayPal(array $details): bool
+    private function validatePayPal(array $details)
     {
         return isset($details['email']) && 
                filter_var($details['email'], FILTER_VALIDATE_EMAIL);
@@ -326,7 +326,7 @@ class PayPalHandler extends RequestHandler
 
 class BankTransferHandler extends RequestHandler
 {
-    protected function canHandle($request): bool
+    protected function canHandle($request)
     {
         return $request instanceof PaymentRequest && 
                $request->getMethod() === 'bank_transfer';
@@ -353,7 +353,7 @@ class BankTransferHandler extends RequestHandler
         ];
     }
     
-    private function validateBankTransfer(array $details): bool
+    private function validateBankTransfer(array $details)
     {
         return isset($details['account_number']) && 
                isset($details['routing_number']) && 
@@ -397,13 +397,13 @@ abstract class ChainableMiddleware
         return $next($request);
     }
     
-    abstract protected function shouldProcess(Request $request): bool;
+    abstract protected function shouldProcess(Request $request);
     abstract protected function process(Request $request);
 }
 
 class ApiKeyValidationMiddleware extends ChainableMiddleware
 {
-    protected function shouldProcess(Request $request): bool
+    protected function shouldProcess(Request $request)
     {
         return $request->is('api/*');
     }
@@ -423,7 +423,7 @@ class ApiKeyValidationMiddleware extends ChainableMiddleware
         return true;
     }
     
-    private function isValidApiKey(string $key): bool
+    private function isValidApiKey(string $key)
     {
         return \App\Models\ApiKey::where('key', $key)
                                 ->where('is_active', true)
@@ -433,7 +433,7 @@ class ApiKeyValidationMiddleware extends ChainableMiddleware
 
 class RateLimitMiddleware extends ChainableMiddleware
 {
-    protected function shouldProcess(Request $request): bool
+    protected function shouldProcess(Request $request)
     {
         return true; // Apply to all requests
     }
@@ -456,12 +456,12 @@ class RateLimitMiddleware extends ChainableMiddleware
         return true;
     }
     
-    private function getRateLimitKey(Request $request): string
+    private function getRateLimitKey(Request $request)
     {
         return 'rate_limit:' . $request->ip() . ':' . now()->format('Y-m-d-H-i');
     }
     
-    private function getRateLimit(Request $request): int
+    private function getRateLimit(Request $request)
     {
         return $request->is('api/*') ? 100 : 1000; // Different limits for API vs web
     }

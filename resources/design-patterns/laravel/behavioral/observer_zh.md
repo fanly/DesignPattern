@@ -2,800 +2,502 @@
 
 ## 概述
 
-定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。
+观察者模式定义了对象间的一对多依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都会得到通知并自动更新。这种模式也被称为发布-订阅模式。
 
-## 架构图
+## 问题场景
 
-### 观察者模式类图
+在Laravel应用中，我们经常需要：
+- 用户注册后发送欢迎邮件
+- 订单状态变化时通知相关方
+- 模型数据变化时更新缓存
+- 系统事件的多重处理
+- 日志记录和监控
+
+## 解决方案
+
+观察者模式通过定义主题（被观察者）和观察者接口，实现松耦合的事件通知机制。
+
+## UML类图
+
 ```mermaid
 classDiagram
     class Subject {
-        <<abstract>>
-        -observers: List~Observer~
-        +attach(observer): void
-        +detach(observer): void
-        +notify(): void
-    }
-    
-    class ConcreteSubject {
-        -state: State
-        +getState(): State
-        +setState(state): void
+        -observers: List
+        +attach(Observer): void
+        +detach(Observer): void
         +notify(): void
     }
     
     class Observer {
-        <<interface>>
-        +update(subject): void
+        +update(Subject): void
+    }
+    
+    class ConcreteSubject {
+        -state
+        +getState()
+        +setState()
+        +notify(): void
     }
     
     class ConcreteObserver {
-        -observerState: State
-        +update(subject): void
+        -subject: Subject
+        +update(Subject): void
     }
     
-    Subject --> Observer : notifies
-    ConcreteSubject --|> Subject
-    ConcreteObserver ..|> Observer
-    ConcreteObserver --> ConcreteSubject : observes
-    
-    note for Subject "维护观察者列表\n通知所有观察者"
+    Subject <|-- ConcreteSubject
+    Observer <|-- ConcreteObserver
+    Subject --> Observer
+    ConcreteObserver --> ConcreteSubject
 ```
 
-### Laravel 事件系统架构
-```mermaid
-classDiagram
-    class EventDispatcher {
-        -listeners: array
-        -wildcards: array
-        +listen(event, listener): void
-        +dispatch(event, payload): array
-        +getListeners(event): array
-    }
-    
-    class Event {
-        <<abstract>>
-        +broadcastOn(): Channel
-        +broadcastWith(): array
-    }
-    
-    class Listener {
-        <<interface>>
-        +handle(event): void
-    }
-    
-    class OrderShipped {
-        +order: Order
-        +__construct(order): void
-    }
-    
-    class SendShipmentNotification {
-        +handle(event): void
-    }
-    
-    class UpdateInventory {
-        +handle(event): void
-    }
-    
-    class LogOrderActivity {
-        +handle(event): void
-    }
-    
-    EventDispatcher --> Event : dispatches
-    EventDispatcher --> Listener : notifies
-    OrderShipped --|> Event
-    SendShipmentNotification ..|> Listener
-    UpdateInventory ..|> Listener
-    LogOrderActivity ..|> Listener
-    
-    note for EventDispatcher "Laravel事件调度器\n管理事件和监听器"
-```
+## Laravel实现
 
-### 观察者模式时序图
-```mermaid
-sequenceDiagram
-    participant Subject
-    participant Observer1
-    participant Observer2
-    participant Observer3
-    
-    Note over Subject: 状态发生变化
-    Subject->>Subject: setState(newState)
-    Subject->>Observer1: update()
-    Subject->>Observer2: update()
-    Subject->>Observer3: update()
-    
-    Observer1->>Subject: getState()
-    Observer2->>Subject: getState()
-    Observer3->>Subject: getState()
-    
-    Note over Observer1,Observer3: 所有观察者同步更新
-```
-
-### Laravel 事件处理流程
-```mermaid
-flowchart TD
-    A[事件触发] --> B[EventDispatcher]
-    B --> C[解析事件名称]
-    C --> D[获取监听器列表]
-    D --> E{有监听器?}
-    E -->|否| F[结束]
-    E -->|是| G[遍历监听器]
-    G --> H[创建监听器实例]
-    H --> I{是否队列监听器?}
-    I -->|是| J[推送到队列]
-    I -->|否| K[立即执行]
-    J --> L[队列处理器]
-    K --> M[调用handle方法]
-    L --> M
-    M --> N{返回false?}
-    N -->|是| O[停止传播]
-    N -->|否| P[继续下一个监听器]
-    P --> G
-    O --> F
-    
-    style B fill:#e1f5fe
-    style J fill:#fff3e0
-    style M fill:#e8f5e8
-```
-
-### 模型事件观察者架构
-```mermaid
-classDiagram
-    class Model {
-        -static dispatcher: EventDispatcher
-        +static creating(callback): void
-        +static created(callback): void
-        +static updating(callback): void
-        +static updated(callback): void
-        +static deleting(callback): void
-        +static deleted(callback): void
-        -fireModelEvent(event): mixed
-    }
-    
-    class UserObserver {
-        +creating(user): void
-        +created(user): void
-        +updating(user): void
-        +updated(user): void
-        +deleting(user): void
-        +deleted(user): void
-    }
-    
-    class User {
-        +name: string
-        +email: string
-        +save(): bool
-        +delete(): bool
-    }
-    
-    class AuditLog {
-        +log(action, model): void
-    }
-    
-    class CacheManager {
-        +invalidate(tags): void
-    }
-    
-    Model --> EventDispatcher : uses
-    User --|> Model
-    UserObserver --> User : observes
-    UserObserver --> AuditLog : creates
-    UserObserver --> CacheManager : invalidates
-    
-    note for UserObserver "监听User模型的所有事件"
-```
-
-### 事件广播架构
-```mermaid
-flowchart TD
-    A[事件触发] --> B[事件调度器]
-    B --> C{实现ShouldBroadcast?}
-    C -->|否| D[仅本地处理]
-    C -->|是| E[广播队列]
-    E --> F[广播驱动]
-    F --> G{选择驱动}
-    G -->|Pusher| H[Pusher服务]
-    G -->|Redis| I[Redis发布订阅]
-    G -->|Socket.IO| J[Socket.IO服务器]
-    
-    H --> K[WebSocket连接]
-    I --> L[WebSocket连接]
-    J --> M[WebSocket连接]
-    
-    K --> N[前端应用]
-    L --> N
-    M --> N
-    
-    D --> O[本地监听器]
-    
-    style E fill:#fff3e0
-    style N fill:#e8f5e8
-```
-
-## 设计意图
-
-- **松耦合**：减少主题和观察者之间的依赖关系
-- **动态关系**：允许在运行时添加和移除观察者
-- **事件驱动架构**：支持基于事件的通信
-- **广播通知**：实现一对多的通信模式
-
-## Laravel 中的实现
-
-### 1. Laravel 事件系统
-
-Laravel 的事件系统是观察者模式的复杂实现：
+### 1. 基础观察者模式
 
 ```php
-// Illuminate\Events\Dispatcher.php
-class Dispatcher implements EventDispatcher
+<?php
+
+namespace App\Patterns\Observer;
+
+// 观察者接口
+interface ObserverInterface
 {
-    protected $listeners = [];
-    protected $wildcards = [];
+    public function update(SubjectInterface $subject, string $event, array $data = []): void;
+}
+
+// 主题接口
+interface SubjectInterface
+{
+    public function attach(ObserverInterface $observer): void;
+    public function detach(ObserverInterface $observer): void;
+    public function notify(string $event, array $data = []): void;
+}
+
+// 抽象主题类
+abstract class Subject implements SubjectInterface
+{
+    protected array $observers = [];
     
-    public function listen($events, $listener)
+    public function attach(ObserverInterface $observer): void
     {
-        foreach ((array) $events as $event) {
-            if (str_contains($event, '*')) {
-                $this->setupWildcardListen($event, $listener);
-            } else {
-                $this->listeners[$event][] = $this->makeListener($listener);
-            }
+        $hash = spl_object_hash($observer);
+        $this->observers[$hash] = $observer;
+    }
+    
+    public function detach(ObserverInterface $observer): void
+    {
+        $hash = spl_object_hash($observer);
+        unset($this->observers[$hash]);
+    }
+    
+    public function notify(string $event, array $data = []): void
+    {
+        foreach ($this->observers as $observer) {
+            $observer->update($this, $event, $data);
         }
     }
     
-    public function dispatch($event, $payload = [], $halt = false)
+    public function getObservers(): array
     {
-        // 当给定的事件是对象时，我们假设它是事件对象并使用类名作为事件名称
-        [$event, $payload] = $this->parseEventAndPayload($event, $payload);
+        return array_values($this->observers);
+    }
+    
+    public function countObservers(): int
+    {
+        return count($this->observers);
+    }
+}
+```
+
+### 2. 用户管理系统实现
+
+```php
+<?php
+
+namespace App\Patterns\Observer;
+
+// 用户主题
+class UserSubject extends Subject
+{
+    private int $id;
+    private string $name;
+    private string $email;
+    private string $status;
+    private array $data = [];
+    
+    public function __construct(int $id, string $name, string $email, string $status = 'active')
+    {
+        $this->id = $id;
+        $this->name = $name;
+        $this->email = $email;
+        $this->status = $status;
+        $this->data = compact('id', 'name', 'email', 'status');
+    }
+    
+    public function setName(string $name): void
+    {
+        $oldName = $this->name;
+        $this->name = $name;
+        $this->data['name'] = $name;
         
-        $responses = [];
+        $this->notify('name_changed', [
+            'old_name' => $oldName,
+            'new_name' => $name,
+            'user_id' => $this->id
+        ]);
+    }
+    
+    public function setEmail(string $email): void
+    {
+        $oldEmail = $this->email;
+        $this->email = $email;
+        $this->data['email'] = $email;
         
-        foreach ($this->getListeners($event) as $listener) {
-            $response = $listener($event, $payload);
-            
-            // 如果从监听器返回了响应并且启用了事件停止
-            if ($halt && ! is_null($response)) {
-                return $response;
-            }
-            
-            // 如果监听器返回 false，停止传播
-            if ($response === false) {
+        $this->notify('email_changed', [
+            'old_email' => $oldEmail,
+            'new_email' => $email,
+            'user_id' => $this->id
+        ]);
+    }
+    
+    public function setStatus(string $status): void
+    {
+        $oldStatus = $this->status;
+        $this->status = $status;
+        $this->data['status'] = $status;
+        
+        $this->notify('status_changed', [
+            'old_status' => $oldStatus,
+            'new_status' => $status,
+            'user_id' => $this->id
+        ]);
+    }
+    
+    public function register(): void
+    {
+        $this->notify('user_registered', [
+            'user_id' => $this->id,
+            'name' => $this->name,
+            'email' => $this->email
+        ]);
+    }
+    
+    public function login(): void
+    {
+        $this->notify('user_logged_in', [
+            'user_id' => $this->id,
+            'timestamp' => time()
+        ]);
+    }
+    
+    public function logout(): void
+    {
+        $this->notify('user_logged_out', [
+            'user_id' => $this->id,
+            'timestamp' => time()
+        ]);
+    }
+    
+    // Getters
+    public function getId(): int { return $this->id; }
+    public function getName(): string { return $this->name; }
+    public function getEmail(): string { return $this->email; }
+    public function getStatus(): string { return $this->status; }
+    public function getData(): array { return $this->data; }
+}
+
+// 邮件通知观察者
+class EmailNotificationObserver implements ObserverInterface
+{
+    private string $name;
+    
+    public function __construct(string $name = 'EmailNotification')
+    {
+        $this->name = $name;
+    }
+    
+    public function update(SubjectInterface $subject, string $event, array $data = []): void
+    {
+        if (!$subject instanceof UserSubject) {
+            return;
+        }
+        
+        switch ($event) {
+            case 'user_registered':
+                $this->sendWelcomeEmail($data);
                 break;
-            }
-            
-            $responses[] = $response;
+            case 'email_changed':
+                $this->sendEmailChangeNotification($data);
+                break;
+            case 'status_changed':
+                $this->sendStatusChangeNotification($data);
+                break;
         }
-        
-        return $halt ? null : $responses;
     }
     
-    protected function makeListener($listener)
+    private function sendWelcomeEmail(array $data): void
     {
-        if (is_string($listener)) {
-            return $this->createClassListener($listener);
+        echo "[{$this->name}] 发送欢迎邮件到: {$data['email']} (用户: {$data['name']})\n";
+    }
+    
+    private function sendEmailChangeNotification(array $data): void
+    {
+        echo "[{$this->name}] 邮箱变更通知: {$data['old_email']} -> {$data['new_email']}\n";
+    }
+    
+    private function sendStatusChangeNotification(array $data): void
+    {
+        echo "[{$this->name}] 状态变更通知: {$data['old_status']} -> {$data['new_status']}\n";
+    }
+    
+    public function getName(): string
+    {
+        return $this->name;
+    }
+}
+
+// 日志记录观察者
+class LoggingObserver implements ObserverInterface
+{
+    private string $logFile;
+    
+    public function __construct(string $logFile = 'user_activity.log')
+    {
+        $this->logFile = $logFile;
+    }
+    
+    public function update(SubjectInterface $subject, string $event, array $data = []): void
+    {
+        $timestamp = date('Y-m-d H:i:s');
+        $logEntry = "[{$timestamp}] {$event}: " . json_encode($data) . "\n";
+        
+        // 模拟写入日志文件
+        echo "[日志记录] {$logEntry}";
+    }
+    
+    public function getLogFile(): string
+    {
+        return $this->logFile;
+    }
+}
+
+// 缓存更新观察者
+class CacheUpdateObserver implements ObserverInterface
+{
+    private array $cache = [];
+    
+    public function update(SubjectInterface $subject, string $event, array $data = []): void
+    {
+        if (!$subject instanceof UserSubject) {
+            return;
         }
         
-        return function ($event, $payload) use ($listener) {
-            return $listener(...array_values($payload));
-        };
+        $userId = $data['user_id'] ?? $subject->getId();
+        
+        switch ($event) {
+            case 'user_registered':
+            case 'name_changed':
+            case 'email_changed':
+            case 'status_changed':
+                $this->updateUserCache($userId, $subject->getData());
+                break;
+            case 'user_logged_in':
+                $this->updateLoginCache($userId, $data['timestamp']);
+                break;
+        }
+    }
+    
+    private function updateUserCache(int $userId, array $userData): void
+    {
+        $this->cache["user:{$userId}"] = $userData;
+        echo "[缓存更新] 更新用户缓存: user:{$userId}\n";
+    }
+    
+    private function updateLoginCache(int $userId, int $timestamp): void
+    {
+        $this->cache["user:{$userId}:last_login"] = $timestamp;
+        echo "[缓存更新] 更新登录时间缓存: user:{$userId}:last_login\n";
+    }
+    
+    public function getCache(): array
+    {
+        return $this->cache;
+    }
+    
+    public function clearCache(): void
+    {
+        $this->cache = [];
     }
 }
 ```
 
-### 2. 事件类示例
+## 使用示例
+
+### 用户管理系统使用
 
 ```php
-// 示例事件类
-class OrderShipped extends Event
+<?php
+
+// 创建用户主题
+$user = new UserSubject(1, '张三', 'zhangsan@example.com');
+
+// 创建观察者
+$emailObserver = new EmailNotificationObserver();
+$loggingObserver = new LoggingObserver();
+$cacheObserver = new CacheUpdateObserver();
+
+// 注册观察者
+$user->attach($emailObserver);
+$user->attach($loggingObserver);
+$user->attach($cacheObserver);
+
+// 触发事件
+echo "=== 用户注册 ===\n";
+$user->register();
+
+echo "\n=== 修改邮箱 ===\n";
+$user->setEmail('zhangsan_new@example.com');
+
+echo "\n=== 修改状态 ===\n";
+$user->setStatus('inactive');
+
+echo "\n=== 用户登录 ===\n";
+$user->login();
+```
+
+## Laravel中的实际应用
+
+### 1. Eloquent模型观察者
+
+```php
+<?php
+
+// 定义模型观察者
+class UserObserver
 {
-    use SerializesModels;
-    
-    public $order;
-    
-    public function __construct(Order $order)
+    public function creating(User $user)
     {
-        $this->order = $order;
+        $user->uuid = Str::uuid();
+    }
+    
+    public function created(User $user)
+    {
+        // 发送欢迎邮件
+        Mail::to($user->email)->send(new WelcomeEmail($user));
+    }
+    
+    public function updated(User $user)
+    {
+        // 清除相关缓存
+        Cache::forget("user.{$user->id}");
+    }
+    
+    public function deleting(User $user)
+    {
+        // 删除相关数据
+        $user->posts()->delete();
     }
 }
 
-// 对应的监听器
-class SendShipmentNotification implements ShouldQueue
+// 注册观察者
+class AppServiceProvider extends ServiceProvider
 {
-    public function handle(OrderShipped $event)
+    public function boot()
     {
-        // 向客户发送通知
-        $event->order->user->notify(new ShipmentNotification($event->order));
+        User::observe(UserObserver::class);
     }
 }
 ```
 
-### 3. 模型事件
-
-Laravel 模型也通过事件实现观察者模式：
+### 2. 事件系统
 
 ```php
-// Illuminate\Database\Eloquent\Model.php
-class Model
-{
-    protected static $dispatcher;
-    
-    public static function boot()
-    {
-        static::bootTraits();
-        
-        foreach (static::getObservableEvents() as $event) {
-            static::registerModelEvent($event, function ($model) use ($event) {
-                if (static::$dispatcher) {
-                    return static::$dispatcher->dispatch("eloquent.{$event}: ".get_class($model), $model);
-                }
-            });
-        }
-    }
-    
-    public static function creating($callback)
-    {
-        static::registerModelEvent('creating', $callback);
-    }
-    
-    public static function created($callback)
-    {
-        static::registerModelEvent('created', $callback);
-    }
-    
-    public static function updating($callback)
-    {
-        static::registerModelEvent('updating', $callback);
-    }
-    
-    public static function updated($callback)
-    {
-        static::registerModelEvent('updated', $callback);
-    }
-}
-```
+<?php
 
-## 实际应用场景
-
-### 1. 用户活动跟踪
-
-```php
-// 事件：用户执行了某个操作
-class UserActivityPerformed extends Event
+// 定义事件
+class UserRegistered
 {
     public $user;
-    public $activity;
-    public $timestamp;
     
-    public function __construct(User $user, string $activity)
+    public function __construct(User $user)
     {
         $this->user = $user;
-        $this->activity = $activity;
-        $this->timestamp = now();
     }
 }
 
-// 观察者/监听器
-class LogUserActivity implements ShouldQueue
+// 定义监听器
+class SendWelcomeEmail
 {
-    public function handle(UserActivityPerformed $event)
+    public function handle(UserRegistered $event)
     {
-        ActivityLog::create([
-            'user_id' => $event->user->id,
-            'activity' => $event->activity,
-            'performed_at' => $event->timestamp,
-        ]);
+        Mail::to($event->user->email)->send(new WelcomeEmail($event->user));
     }
 }
 
-class UpdateUserStatistics implements ShouldQueue
+class LogUserRegistration
 {
-    public function handle(UserActivityPerformed $event)
+    public function handle(UserRegistered $event)
     {
-        $stats = UserStatistics::firstOrCreate(['user_id' => $event->user->id]);
-        $stats->increment('total_activities');
-        $stats->last_activity = $event->timestamp;
-        $stats->save();
+        Log::info('User registered', ['user_id' => $event->user->id]);
     }
 }
 
-class SendRealTimeNotification
-{
-    public function handle(UserActivityPerformed $event)
-    {
-        // 向管理仪表板发送实时通知
-        broadcast(new UserActivityEvent($event->user, $event->activity));
-    }
-}
-
-// 使用
-event(new UserActivityPerformed($user, 'logged_in'));
-```
-
-### 2. 电商订单处理
-
-```php
-// 订单状态变更事件
-class OrderStatusChanged extends Event
-{
-    public $order;
-    public $oldStatus;
-    public $newStatus;
-    
-    public function __construct(Order $order, string $oldStatus, string $newStatus)
-    {
-        $this->order = $order;
-        $this->oldStatus = $oldStatus;
-        $this->newStatus = $newStatus;
-    }
-}
-
-// 订单状态变更的多个观察者
-class SendOrderStatusNotification
-{
-    public function handle(OrderStatusChanged $event)
-    {
-        // 向客户发送邮件/SMS通知
-        $event->order->user->notify(new OrderStatusUpdated(
-            $event->order, 
-            $event->newStatus
-        ));
-    }
-}
-
-class UpdateInventory implements ShouldQueue
-{
-    public function handle(OrderStatusChanged $event)
-    {
-        if ($event->newStatus === 'shipped') {
-            // 减少已发货商品的库存
-            foreach ($event->order->items as $item) {
-                $item->product->decrement('stock', $item->quantity);
-            }
-        }
-    }
-}
-
-class TriggerFulfillmentProcess
-{
-    public function handle(OrderStatusChanged $event)
-    {
-        if ($event->newStatus === 'paid') {
-            // 启动履行流程
-            FulfillmentService::process($event->order);
-        }
-    }
-}
-
-class UpdateAnalytics
-{
-    public function handle(OrderStatusChanged $event)
-    {
-        // 更新业务分析
-        Analytics::track('order_status_change', [
-            'order_id' => $event->order->id,
-            'from_status' => $event->oldStatus,
-            'to_status' => $event->newStatus,
-        ]);
-    }
-}
-```
-
-### 3. 缓存失效系统
-
-```php
-// 缓存失效事件
-class CacheInvalidated extends Event
-{
-    public $tags;
-    public $keys;
-    public $reason;
-    
-    public function __construct(array $tags = [], array $keys = [], string $reason = '')
-    {
-        $this->tags = $tags;
-        $this->keys = $keys;
-        $this->reason = $reason;
-    }
-}
-
-// 缓存观察者
-class ClearTaggedCache
-{
-    public function handle(CacheInvalidated $event)
-    {
-        if (!empty($event->tags)) {
-            Cache::tags($event->tags)->flush();
-        }
-    }
-}
-
-class ClearSpecificKeys
-{
-    public function handle(CacheInvalidated $event)
-    {
-        foreach ($event->keys as $key) {
-            Cache::forget($key);
-        }
-    }
-}
-
-class LogCacheInvalidation
-{
-    public function handle(CacheInvalidated $event)
-    {
-        Log::info('缓存已失效', [
-            'tags' => $event->tags,
-            'keys' => $event->keys,
-            'reason' => $event->reason,
-        ]);
-    }
-}
-
-class WarmRelatedCache
-{
-    public function handle(CacheInvalidated $event)
-    {
-        // 预热相关缓存条目
-        if (in_array('products', $event->tags)) {
-            CacheWarmingService::warmProductCache();
-        }
-    }
-}
-```
-
-## 源码分析要点
-
-### 1. 观察者模式实现细节
-
-Laravel 的事件系统展示了观察者模式的几个高级特性：
-
-```php
-// 事件服务提供者注册
+// 注册事件监听器
 class EventServiceProvider extends ServiceProvider
 {
     protected $listen = [
-        Registered::class => [
-            SendEmailVerificationNotification::class,
-        ],
-        OrderShipped::class => [
-            SendShipmentNotification::class,
-            UpdateInventory::class,
+        UserRegistered::class => [
+            SendWelcomeEmail::class,
+            LogUserRegistration::class,
         ],
     ];
-    
-    protected $subscribe = [
-        UserEventSubscriber::class,
-    ];
 }
 
-// 事件订阅者示例
-class UserEventSubscriber
-{
-    public function handleUserLogin($event) {}
-    
-    public function handleUserLogout($event) {}
-    
-    public function subscribe($events)
-    {
-        $events->listen(
-            'Illuminate\Auth\Events\Login',
-            [UserEventSubscriber::class, 'handleUserLogin']
-        );
-        
-        $events->listen(
-            'Illuminate\Auth\Events\Logout', 
-            [UserEventSubscriber::class, 'handleUserLogout']
-        );
-    }
-}
+// 触发事件
+event(new UserRegistered($user));
 ```
 
-### 2. 队列事件监听器
+## 时序图
 
-Laravel 支持队列事件监听器以提高性能：
-
-```php
-class ProcessPayment implements ShouldQueue
-{
-    public $queue = 'payments';
-    public $delay = 60;
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Subject
+    participant Observer1
+    participant Observer2
     
-    public function handle(PaymentProcessed $event)
-    {
-        // 繁重的支付处理逻辑
-        PaymentProcessor::process($event->payment);
-    }
-    
-    public function failed(PaymentProcessed $event, $exception)
-    {
-        // 处理失败
-        $event->payment->update(['status' => 'failed']);
-    }
-}
+    Client->>Subject: attach(Observer1)
+    Client->>Subject: attach(Observer2)
+    Client->>Subject: setState()
+    Subject->>Observer1: update()
+    Subject->>Observer2: update()
+    Observer1-->>Subject: acknowledged
+    Observer2-->>Subject: acknowledged
 ```
 
-### 3. 事件广播
+## 优点
 
-Laravel 可以将事件广播到前端应用：
+1. **松耦合**：主题和观察者之间松耦合
+2. **动态关系**：可以在运行时建立对象间的联系
+3. **广播通信**：支持一对多的通信
+4. **开闭原则**：可以独立地扩展主题和观察者
 
-```php
-class OrderStatusChanged implements ShouldBroadcast
-{
-    use InteractsWithSockets, SerializesModels;
-    
-    public $order;
-    
-    public function __construct(Order $order)
-    {
-        $this->order = $order;
-    }
-    
-    public function broadcastOn()
-    {
-        return new Channel('orders.' . $this->order->id);
-    }
-    
-    public function broadcastWith()
-    {
-        return [
-            'status' => $this->order->status,
-            'updated_at' => $this->order->updated_at->toISOString(),
-        ];
-    }
-}
-```
+## 缺点
 
-## 最佳实践
+1. **性能问题**：观察者过多时通知开销大
+2. **循环依赖**：可能导致循环调用
+3. **内存泄漏**：观察者未正确移除可能导致内存泄漏
 
-### 1. 何时使用观察者模式
+## 适用场景
 
-**适用场景：**
-- 当对象间需要一对多关系时
-- 当一个对象的变更需要引起其他对象变更时
-- 用于实现事件驱动架构
-- 当想要减少组件间耦合度时
+1. **事件处理系统**
+2. **模型-视图架构**
+3. **发布-订阅系统**
+4. **状态变化通知**
 
-**不适用场景：**
-- 当主题只有很少的观察者时
-- 当观察者需要了解太多关于主题的信息时
-- 对于简单的回调机制
+## 与其他模式的关系
 
-### 2. Laravel 事件最佳实践
+- **中介者模式**：观察者分布式通信，中介者集中式通信
+- **单例模式**：主题通常实现为单例
 
-**使用事件处理横切关注点：**
-```php
-// 良好：使用事件分离关注点
-class UserController
-{
-    public function register(UserRegistrationRequest $request)
-    {
-        $user = User::create($request->validated());
-        
-        // 触发事件而不是在控制器中处理所有事情
-        event(new UserRegistered($user));
-        
-        return response()->json($user, 201);
-    }
-}
-
-// 避免：把所有事情放在控制器中
-class UserController
-{
-    public function register(UserRegistrationRequest $request)
-    {
-        $user = User::create($request->validated());
-        
-        // 不要这样做 - 职责过多
-        Mail::to($user)->send(new WelcomeEmail($user));
-        Analytics::track('user_registered', $user);
-        Cache::forget('users_count');
-        // ... 更多逻辑
-        
-        return response()->json($user, 201);
-    }
-}
-```
-
-**事件命名约定：**
-```php
-// 对已经发生的事件使用过去式
-UserRegistered::class      // 良好
-RegisterUser::class        // 避免 - 听起来像命令
-
-OrderShipped::class        // 良好
-ShipOrder::class           // 避免
-```
-
-### 3. 测试事件驱动系统
-
-**测试事件监听器：**
-```php
-class OrderProcessingTest extends TestCase
-{
-    use RefreshDatabase;
-    
-    public function test_order_shipped_event_triggers_notification()
-    {
-        Event::fake();
-        
-        $order = Order::factory()->create();
-        
-        // 执行应该触发事件的操作
-        $order->update(['status' => 'shipped']);
-        
-        // 断言事件已分发
-        Event::assertDispatched(OrderShipped::class, function ($event) use ($order) {
-            return $event->order->id === $order->id;
-        });
-    }
-    
-    public function test_listener_handles_event_correctly()
-    {
-        $order = Order::factory()->create();
-        $listener = new SendShipmentNotification();
-        
-        $listener->handle(new OrderShipped($order));
-        
-        // 断言通知已发送
-        Notification::assertSentTo(
-            $order->user, 
-            ShipmentNotification::class
-        );
-    }
-}
-```
-
-## 性能考虑
-
-### 1. 事件系统性能
-
-Laravel 的事件系统针对性能进行了优化：
-
-```php
-// 事件被缓存以获得更好的性能
-protected function getListeners($eventName)
-{
-    if (isset($this->listeners[$eventName])) {
-        return $this->listeners[$eventName];
-    }
-    
-    // 通配符匹配逻辑...
-}
-```
-
-### 2. 队列监听器
-
-对于性能密集型的监听器，使用队列：
-
-```php
-class ProcessLargeDataset implements ShouldQueue
-{
-    public $tries = 3;
-    public $timeout = 300;
-    
-    public function handle(LargeDatasetProcessed $event)
-    {
-        // 在后台进行繁重处理
-        DataProcessor::process($event->dataset);
-    }
-}
-```
-
-### 3. 事件缓存
-
-Laravel 缓存事件监听器以提高性能：
-
-```php
-// 事件发现被缓存
-php artisan event:cache
-
-// 需要时清除事件缓存
-php artisan event:clear
-```
-
-## 总结
-
-观察者模式通过 Laravel 的事件系统深度集成到 Laravel 架构中。这种实现提供了一种强大、灵活的方式来构建解耦的事件驱动应用，同时保持了优异的性能特性。
-
-Laravel 的事件系统展示了观察者模式如何从简单的本地事件扩展到具有队列监听器和实时广播的复杂分布式系统。
+观察者模式在Laravel中有广泛应用，特别是在事件系统和模型观察者中。

@@ -2,687 +2,939 @@
 
 ## 概述
 
-原型模式用原型实例指定创建对象的种类，并且通过拷贝这些原型创建新的对象。它允许通过复制现有对象来创建新对象，而不是通过实例化类。
+原型模式通过复制现有的实例来创建新的实例，而不是通过实例化类。这种模式特别适用于创建复杂对象的成本较高，或者需要避免创建对象时的复杂初始化过程的场景。
 
-## 架构图
+## 问题场景
 
-### 原型模式类图
+在Laravel应用中，我们经常需要：
+- 复制复杂的配置对象
+- 克隆数据库记录
+- 复制表单模板
+- 创建相似的模型实例
+- 克隆复杂的查询构建器
+
+## 解决方案
+
+原型模式通过实现克隆接口，允许对象复制自身，创建新的实例。
+
+## UML类图
+
 ```mermaid
 classDiagram
     class Prototype {
-        <<interface>>
         +clone(): Prototype
+        +operation()
     }
     
-    class ConcretePrototype {
-        -field1: string
-        -field2: int
-        +clone(): ConcretePrototype
-        +setField1(value): void
-        +setField2(value): void
+    class ConcretePrototype1 {
+        -field1
+        +clone(): ConcretePrototype1
+        +operation()
+    }
+    
+    class ConcretePrototype2 {
+        -field2
+        +clone(): ConcretePrototype2
+        +operation()
     }
     
     class Client {
-        -prototype: Prototype
-        +operation(): void
+        -prototype
+        +operation()
     }
     
-    Client --> Prototype : uses
-    ConcretePrototype ..|> Prototype
-    ConcretePrototype ..> ConcretePrototype : clones
-    
-    note for ConcretePrototype "实现克隆方法\n复制自身状态"
+    Prototype <|-- ConcretePrototype1
+    Prototype <|-- ConcretePrototype2
+    Client --> Prototype
 ```
 
-### Laravel 模型原型架构
-```mermaid
-classDiagram
-    class Model {
-        <<abstract>>
-        -attributes: array
-        -relations: array
-        -original: array
-        +replicate(except): Model
-        +duplicate(): Model
-        +clone(): void
-        +setRawAttributes(attributes): void
-        +setRelations(relations): void
-    }
-    
-    class User {
-        +name: string
-        +email: string
-        +password: string
-        +replicate(except): User
-    }
-    
-    class Post {
-        +title: string
-        +content: string
-        +author_id: int
-        +replicate(except): Post
-    }
-    
-    class Order {
-        +customer_id: int
-        +total: decimal
-        +status: string
-        +replicate(except): Order
-    }
-    
-    User --|> Model
-    Post --|> Model
-    Order --|> Model
-    
-    User ..> User : replicates
-    Post ..> Post : replicates
-    Order ..> Order : replicates
-    
-    note for Model "提供复制功能的基类"
-    note for User "用户模型原型"
-```
+## Laravel实现
 
-### 原型模式时序图
-```mermaid
-sequenceDiagram
-    participant Client
-    participant OriginalObject
-    participant ClonedObject
-    
-    Note over OriginalObject: 原型对象已存在
-    Client->>OriginalObject: clone()
-    OriginalObject->>ClonedObject: new ClonedObject()
-    OriginalObject->>ClonedObject: 复制属性和状态
-    ClonedObject-->>OriginalObject: 克隆完成
-    OriginalObject-->>Client: ClonedObject
-    
-    Note over Client: 获得原型的副本
-    Client->>ClonedObject: 修改副本属性
-    
-    Note over OriginalObject, ClonedObject: 两个独立的对象实例
-```
-
-### Laravel 模型复制流程
-```mermaid
-flowchart TD
-    A[现有模型实例] --> B[调用replicate方法]
-    B --> C[获取当前属性]
-    C --> D[排除指定字段]
-    D --> E{排除默认字段}
-    E --> F[主键ID]
-    E --> G[created_at]
-    E --> H[updated_at]
-    
-    F --> I[创建新模型实例]
-    G --> I
-    H --> I
-    
-    I --> J[设置原始属性]
-    J --> K[复制关联关系]
-    K --> L[返回新实例]
-    
-    L --> M[可选：修改属性]
-    M --> N[保存到数据库]
-    
-    style B fill:#e1f5fe
-    style I fill:#e8f5e8
-    style L fill:#fff3e0
-```
-
-### 配置原型模式
-```mermaid
-classDiagram
-    class ConfigRepository {
-        -items: array
-        +get(key): mixed
-        +set(key, value): void
-        +all(): array
-        +clone(): ConfigRepository
-    }
-    
-    class CacheConfig {
-        -stores: array
-        -default: string
-        +getStores(): array
-        +getDefault(): string
-        +clone(): CacheConfig
-    }
-    
-    class DatabaseConfig {
-        -connections: array
-        -default: string
-        +getConnections(): array
-        +getDefault(): string
-        +clone(): DatabaseConfig
-    }
-    
-    class MailConfig {
-        -mailers: array
-        -default: string
-        +getMailers(): array
-        +getDefault(): string
-        +clone(): MailConfig
-    }
-    
-    ConfigRepository --> CacheConfig : manages
-    ConfigRepository --> DatabaseConfig : manages
-    ConfigRepository --> MailConfig : manages
-    
-    CacheConfig ..> CacheConfig : clones
-    DatabaseConfig ..> DatabaseConfig : clones
-    MailConfig ..> MailConfig : clones
-    
-    note for ConfigRepository "配置管理器"
-    note for CacheConfig "缓存配置原型"
-```
-
-### 请求原型模式
-```mermaid
-classDiagram
-    class Request {
-        -attributes: array
-        -query: array
-        -request: array
-        -headers: array
-        +duplicate(): Request
-        +clone(): void
-        +merge(input): Request
-    }
-    
-    class FormRequest {
-        -validator: Validator
-        -rules: array
-        +duplicate(): FormRequest
-        +rules(): array
-        +authorize(): bool
-    }
-    
-    class ApiRequest {
-        -token: string
-        -apiVersion: string
-        +duplicate(): ApiRequest
-        +getToken(): string
-        +getVersion(): string
-    }
-    
-    FormRequest --|> Request
-    ApiRequest --|> Request
-    
-    Request ..> Request : duplicates
-    FormRequest ..> FormRequest : duplicates
-    ApiRequest ..> ApiRequest : duplicates
-    
-    note for Request "HTTP请求原型"
-```
-
-### 集合原型模式
-```mermaid
-flowchart TD
-    A[原始集合] --> B[Collection实例]
-    B --> C[包含多个模型]
-    C --> D[调用replicate方法]
-    D --> E[遍历集合项目]
-    E --> F[复制每个模型]
-    F --> G[创建新集合]
-    G --> H{需要修改?}
-    
-    H -->|是| I[批量修改属性]
-    H -->|否| J[保持原样]
-    
-    I --> K[返回新集合]
-    J --> K
-    
-    K --> L[可选：批量保存]
-    
-    style B fill:#e1f5fe
-    style F fill:#e8f5e8
-    style G fill:#fff3e0
-```
-
-## 设计意图
-
-- **对象复制**：通过复制现有对象来创建新对象
-- **性能优化**：避免昂贵的对象创建过程
-- **灵活性**：运行时动态创建对象
-- **配置简化**：通过复制预配置的对象来创建新对象
-
-## Laravel 中的实现
-
-### 1. 模型原型复制
-
-Laravel 的 Eloquent 模型支持原型模式，可以通过复制现有模型实例来创建新对象：
+### 1. 基础原型接口
 
 ```php
-// Illuminate\Database\Eloquent\Model.php
-class Model implements ArrayAccess, Jsonable, JsonSerializable
+<?php
+
+namespace App\Patterns\Prototype;
+
+// 原型接口
+interface PrototypeInterface
 {
-    // 原型模式：复制模型实例
-    public function replicate(array $except = null)
-    {
-        $defaults = [
-            $this->getKeyName(),
-            $this->getCreatedAtColumn(),
-            $this->getUpdatedAtColumn(),
-        ];
-        
-        $attributes = Arr::except(
-            $this->attributes,
-            $except ? array_unique(array_merge($except, $defaults)) : $defaults
-        );
-        
-        return tap(new static, function ($instance) use ($attributes) {
-            $instance->setRawAttributes($attributes);
-            $instance->setRelations($this->relations);
-        });
-    }
-}
-```
-
-### 2. 配置原型复制
-
-Laravel 的配置系统使用了原型模式来复制配置实例：
-
-```php
-// Illuminate\Config\Repository.php
-class Repository implements ArrayAccess
-{
-    protected $items = [];
-    
-    // 原型模式：复制配置实例
-    public function copy()
-    {
-        $copy = new static;
-        $copy->items = $this->items;
-        return $copy;
-    }
-    
-    public function withOverride(array $overrides)
-    {
-        $copy = $this->copy();
-        $copy->set($overrides);
-        return $copy;
-    }
-}
-```
-
-### 3. 请求原型复制
-
-HTTP 请求对象也支持原型模式：
-
-```php
-// Illuminate\Http\Request.php
-class Request extends SymfonyRequest implements Arrayable, ArrayAccess
-{
-    // 原型模式：复制请求对象
-    public function duplicate(array $query = null, array $request = null, array $attributes = null, array $cookies = null, array $files = null, array $server = null)
-    {
-        return parent::duplicate($query, $request, $attributes, $cookies, $files, $server);
-    }
-    
-    public function withHeaders(array $headers)
-    {
-        $new = $this->duplicate();
-        $new->headers->add($headers);
-        return $new;
-    }
-}
-```
-
-## 实际应用场景
-
-### 1. 表单请求原型
-
-表单请求处理中的原型模式应用：
-
-```php
-// 自定义表单请求类
-class CreateUserRequest extends FormRequest
-{
-    public function rules()
-    {
-        return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
-            'password' => 'required|min:8',
-        ];
-    }
-    
-    // 原型模式：创建修改后的请求副本
-    public function withAdditionalRules(array $additionalRules)
-    {
-        $newRequest = $this->duplicate();
-        $newRequest->merge(['_additional_rules' => $additionalRules]);
-        return $newRequest;
-    }
+    public function clone(): self;
 }
 
-// 使用示例
-$request = new CreateUserRequest();
-$modifiedRequest = $request->withAdditionalRules([
-    'phone' => 'required|phone'
-]);
-```
-
-### 2. 视图组件原型
-
-Blade 组件中的原型模式应用：
-
-```php
-// Illuminate\View\Component.php
-class Component
+// 抽象原型类
+abstract class Prototype implements PrototypeInterface
 {
-    protected $data;
+    protected array $data = [];
     
-    // 原型模式：复制组件实例
-    public function with(array $data)
-    {
-        $clone = clone $this;
-        $clone->data = array_merge($this->data, $data);
-        return $clone;
-    }
-    
-    public function render()
-    {
-        return view('components.'.$this->componentName, $this->data);
-    }
-}
-
-// 使用示例
-$button = new ButtonComponent(['type' => 'primary']);
-$secondaryButton = $button->with(['type' => 'secondary']);
-```
-
-### 3. 数据库连接原型
-
-数据库连接配置的原型模式：
-
-```php
-// Illuminate\Database\Connectors\ConnectionFactory.php
-class ConnectionFactory
-{
-    // 原型模式：基于现有连接创建新连接
-    public function createFromExisting(Connection $existing, array $newConfig)
-    {
-        $config = array_merge($existing->getConfig(), $newConfig);
-        return $this->make($config);
-    }
-}
-```
-
-## 源码分析要点
-
-### 1. 浅拷贝与深拷贝
-
-Laravel 中的原型模式需要注意拷贝的深度：
-
-```php
-// 浅拷贝示例
-public function shallowCopy()
-{
-    $copy = clone $this;
-    return $copy;
-}
-
-// 深拷贝示例  
-public function deepCopy()
-{
-    $copy = clone $this;
-    $copy->relations = unserialize(serialize($this->relations));
-    return $copy;
-}
-```
-
-### 2. clone 关键字的使用
-
-PHP 的 `clone` 关键字是原型模式的核心：
-
-```php
-class PrototypeExample
-{
-    public function createCopy()
-    {
-        // 使用 clone 创建对象副本
-        return clone $this;
-    }
-    
-    // __clone 魔术方法，在克隆时调用
-    public function __clone()
-    {
-        // 深拷贝需要的资源
-        $this->resource = clone $this->resource;
-    }
-}
-```
-
-### 3. 配置保留与排除
-
-原型复制时通常需要排除某些属性：
-
-```php
-public function replicate(array $except = [])
-{
-    $defaultExcept = ['id', 'created_at', 'updated_at'];
-    $attributesToExclude = array_merge($defaultExcept, $except);
-    
-    $copy = clone $this;
-    foreach ($attributesToExclude as $attribute) {
-        unset($copy->$attribute);
-    }
-    
-    return $copy;
-}
-```
-
-## 最佳实践
-
-### 1. 合理使用原型模式
-
-**适用场景：**
-- 对象创建成本高昂
-- 需要创建相似但略有不同的对象
-- 系统需要动态创建对象
-- 对象配置复杂，希望通过复制简化
-
-**不适用场景：**
-- 对象结构简单，直接实例化即可
-- 对象差异很大，复制没有意义
-
-### 2. Laravel 中的原型实践
-
-**利用模型复制：**
-```php
-// 创建用户模型的副本
-$user = User::find(1);
-$newUser = $user->replicate();
-$newUser->email = 'new@example.com';
-$newUser->save();
-```
-
-**配置对象复制：**
-```php
-// 复制配置对象并修改
-$config = config('database.connections.mysql');
-$newConfig = array_merge($config, [
-    'database' => 'new_database',
-    'username' => 'new_user'
-]);
-```
-
-**请求对象复制：**
-```php
-// 复制请求对象并添加头部
-$newRequest = $request->duplicate()->headers->add([
-    'X-Custom-Header' => 'value'
-]);
-```
-
-### 3. 测试原型模式
-
-**测试对象复制：**
-```php
-public function test_prototype_replication()
-{
-    $original = new Product(['name' => 'Original', 'price' => 100]);
-    $copy = $original->replicate();
-    
-    $this->assertEquals($original->name, $copy->name);
-    $this->assertNull($copy->id); // ID 应该被排除
-    $this->assertNotSame($original, $copy);
-}
-```
-
-**测试深拷贝：**
-```php
-public function test_deep_copy_creates_new_references()
-{
-    $original = new Container(['items' => new Collection([1, 2, 3])]);
-    $copy = $original->deepCopy();
-    
-    $this->assertNotSame($original->items, $copy->items);
-}
-```
-
-## 与其他模式的关系
-
-### 1. 与工厂模式
-
-原型模式关注对象复制，工厂模式关注对象创建：
-
-```php
-// 工厂模式：通过类创建对象
-class Factory 
-{
-    public function create($type) 
-    {
-        return new $type();
-    }
-}
-
-// 原型模式：通过复制创建对象
-class PrototypeRegistry 
-{
-    protected $prototypes = [];
-    
-    public function getCopy($key) 
-    {
-        return clone $this->prototypes[$key];
-    }
-}
-```
-
-### 2. 与单例模式
-
-原型模式与单例模式可以结合使用：
-
-```php
-class PrototypeSingleton 
-{
-    private static $instance;
-    
-    private function __construct() {}
-    
-    public static function getInstance() 
-    {
-        if (self::$instance === null) {
-            self::$instance = new self();
-        }
-        return clone self::$instance; // 返回副本而不是单例
-    }
-}
-```
-
-### 3. 与备忘录模式
-
-原型模式可以用于实现备忘录模式：
-
-```php
-class Originator 
-{
-    private $state;
-    
-    public function save() 
-    {
-        return clone $this; // 创建状态副本
-    }
-    
-    public function restore(Originator $memento) 
-    {
-        $this->state = $memento->state;
-    }
-}
-```
-
-## 性能考虑
-
-### 1. 复制开销
-
-原型模式的对象复制可能有性能开销：
-
-```php
-// 优化：延迟复制
-class LazyPrototype 
-{
-    protected $original;
-    protected $modified = [];
-    
-    public function __construct($original) 
-    {
-        $this->original = $original;
-    }
-    
-    public function __get($property) 
-    {
-        return $this->modified[$property] ?? $this->original->$property;
-    }
-    
-    public function __set($property, $value) 
-    {
-        $this->modified[$property] = $value;
-    }
-    
-    public function build() 
-    {
-        // 只在需要时创建完整副本
-        $copy = clone $this->original;
-        foreach ($this->modified as $property => $value) {
-            $copy->$property = $value;
-        }
-        return $copy;
-    }
-}
-```
-
-### 2. 内存使用
-
-原型模式可能增加内存使用：
-
-```php
-// 使用轻量级原型
-class LightweightPrototype 
-{
-    protected $data;
-    
-    public function __construct(array $data) 
+    public function __construct(array $data = [])
     {
         $this->data = $data;
     }
     
-    public function copy() 
+    public function clone(): self
     {
-        // 只复制必要的数据
-        return new static($this->data);
+        return clone $this;
+    }
+    
+    public function setData(string $key, $value): void
+    {
+        $this->data[$key] = $value;
+    }
+    
+    public function getData(string $key = null)
+    {
+        if ($key === null) {
+            return $this->data;
+        }
+        
+        return $this->data[$key] ?? null;
     }
 }
 ```
 
-## 总结
+### 2. 用户原型实现
 
-原型模式在 Laravel 框架中有着重要的应用，特别是在模型复制、配置管理和请求处理等场景。它通过对象复制的方式创建新对象，避免了昂贵的对象创建过程，提高了系统性能。
+```php
+<?php
 
-原型模式的优势在于：
-- **性能优化**：避免重复的对象初始化
-- **灵活性**：动态创建配置不同的对象
-- **简化配置**：通过复制预配置对象简化新对象创建
-- **一致性**：确保新对象与原型具有相同的状态
+namespace App\Patterns\Prototype;
 
-在 Laravel 开发中，合理使用原型模式可以优化对象创建过程，特别是在需要创建相似对象或需要对象配置复用的场景中。
+// 用户原型类
+class UserPrototype extends Prototype
+{
+    private string $name;
+    private string $email;
+    private array $permissions = [];
+    private array $preferences = [];
+    
+    public function __construct(string $name, string $email, array $permissions = [], array $preferences = [])
+    {
+        $this->name = $name;
+        $this->email = $email;
+        $this->permissions = $permissions;
+        $this->preferences = $preferences;
+        
+        parent::__construct([
+            'name' => $name,
+            'email' => $email,
+            'permissions' => $permissions,
+            'preferences' => $preferences,
+        ]);
+    }
+    
+    public function clone(): self
+    {
+        $cloned = new self(
+            $this->name,
+            $this->email,
+            $this->permissions,
+            $this->preferences
+        );
+        
+        // 深拷贝复杂属性
+        $cloned->permissions = array_merge([], $this->permissions);
+        $cloned->preferences = array_merge([], $this->preferences);
+        
+        return $cloned;
+    }
+    
+    public function setName(string $name): void
+    {
+        $this->name = $name;
+        $this->data['name'] = $name;
+    }
+    
+    public function getName(): string
+    {
+        return $this->name;
+    }
+    
+    public function setEmail(string $email): void
+    {
+        $this->email = $email;
+        $this->data['email'] = $email;
+    }
+    
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+    
+    public function addPermission(string $permission): void
+    {
+        if (!in_array($permission, $this->permissions)) {
+            $this->permissions[] = $permission;
+            $this->data['permissions'] = $this->permissions;
+        }
+    }
+    
+    public function removePermission(string $permission): void
+    {
+        $key = array_search($permission, $this->permissions);
+        if ($key !== false) {
+            unset($this->permissions[$key]);
+            $this->permissions = array_values($this->permissions);
+            $this->data['permissions'] = $this->permissions;
+        }
+    }
+    
+    public function getPermissions(): array
+    {
+        return $this->permissions;
+    }
+    
+    public function setPreference(string $key, $value): void
+    {
+        $this->preferences[$key] = $value;
+        $this->data['preferences'] = $this->preferences;
+    }
+    
+    public function getPreference(string $key, $default = null)
+    {
+        return $this->preferences[$key] ?? $default;
+    }
+    
+    public function getPreferences(): array
+    {
+        return $this->preferences;
+    }
+    
+    public function toArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'email' => $this->email,
+            'permissions' => $this->permissions,
+            'preferences' => $this->preferences,
+        ];
+    }
+}
+```
+
+### 3. 文档原型实现
+
+```php
+<?php
+
+namespace App\Patterns\Prototype;
+
+// 文档原型类
+class DocumentPrototype extends Prototype
+{
+    private string $title;
+    private string $content;
+    private array $metadata = [];
+    private array $sections = [];
+    private string $template;
+    
+    public function __construct(
+        string $title = '',
+        string $content = '',
+        array $metadata = [],
+        array $sections = [],
+        string $template = 'default'
+    ) {
+        $this->title = $title;
+        $this->content = $content;
+        $this->metadata = $metadata;
+        $this->sections = $sections;
+        $this->template = $template;
+        
+        parent::__construct([
+            'title' => $title,
+            'content' => $content,
+            'metadata' => $metadata,
+            'sections' => $sections,
+            'template' => $template,
+        ]);
+    }
+    
+    public function clone(): self
+    {
+        $cloned = new self(
+            $this->title,
+            $this->content,
+            $this->metadata,
+            $this->sections,
+            $this->template
+        );
+        
+        // 深拷贝复杂属性
+        $cloned->metadata = $this->deepCopy($this->metadata);
+        $cloned->sections = $this->deepCopy($this->sections);
+        
+        return $cloned;
+    }
+    
+    private function deepCopy(array $array): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result[$key] = $this->deepCopy($value);
+            } elseif (is_object($value)) {
+                $result[$key] = clone $value;
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
+    
+    public function setTitle(string $title): void
+    {
+        $this->title = $title;
+        $this->data['title'] = $title;
+    }
+    
+    public function getTitle(): string
+    {
+        return $this->title;
+    }
+    
+    public function setContent(string $content): void
+    {
+        $this->content = $content;
+        $this->data['content'] = $content;
+    }
+    
+    public function getContent(): string
+    {
+        return $this->content;
+    }
+    
+    public function setMetadata(string $key, $value): void
+    {
+        $this->metadata[$key] = $value;
+        $this->data['metadata'] = $this->metadata;
+    }
+    
+    public function getMetadata(string $key = null)
+    {
+        if ($key === null) {
+            return $this->metadata;
+        }
+        
+        return $this->metadata[$key] ?? null;
+    }
+    
+    public function addSection(string $title, string $content): void
+    {
+        $this->sections[] = [
+            'title' => $title,
+            'content' => $content,
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+        $this->data['sections'] = $this->sections;
+    }
+    
+    public function getSections(): array
+    {
+        return $this->sections;
+    }
+    
+    public function setTemplate(string $template): void
+    {
+        $this->template = $template;
+        $this->data['template'] = $template;
+    }
+    
+    public function getTemplate(): string
+    {
+        return $this->template;
+    }
+    
+    public function render(): string
+    {
+        $output = "=== {$this->title} ===\n\n";
+        $output .= "模板: {$this->template}\n";
+        $output .= "内容: {$this->content}\n\n";
+        
+        if (!empty($this->sections)) {
+            $output .= "章节:\n";
+            foreach ($this->sections as $index => $section) {
+                $output .= ($index + 1) . ". {$section['title']}\n";
+                $output .= "   {$section['content']}\n";
+            }
+        }
+        
+        if (!empty($this->metadata)) {
+            $output .= "\n元数据:\n";
+            foreach ($this->metadata as $key => $value) {
+                $output .= "- {$key}: {$value}\n";
+            }
+        }
+        
+        return $output;
+    }
+}
+```
+
+### 4. 查询原型实现
+
+```php
+<?php
+
+namespace App\Patterns\Prototype;
+
+use Illuminate\Database\Query\Builder;
+
+// 查询原型类
+class QueryPrototype extends Prototype
+{
+    private string $table;
+    private array $select = ['*'];
+    private array $where = [];
+    private array $joins = [];
+    private array $orderBy = [];
+    private ?int $limit = null;
+    private ?int $offset = null;
+    
+    public function __construct(string $table)
+    {
+        $this->table = $table;
+        
+        parent::__construct([
+            'table' => $table,
+            'select' => $this->select,
+            'where' => $this->where,
+            'joins' => $this->joins,
+            'orderBy' => $this->orderBy,
+            'limit' => $this->limit,
+            'offset' => $this->offset,
+        ]);
+    }
+    
+    public function clone(): self
+    {
+        $cloned = new self($this->table);
+        $cloned->select = array_merge([], $this->select);
+        $cloned->where = array_merge([], $this->where);
+        $cloned->joins = array_merge([], $this->joins);
+        $cloned->orderBy = array_merge([], $this->orderBy);
+        $cloned->limit = $this->limit;
+        $cloned->offset = $this->offset;
+        
+        return $cloned;
+    }
+    
+    public function select(array $columns): self
+    {
+        $this->select = $columns;
+        $this->data['select'] = $this->select;
+        return $this;
+    }
+    
+    public function where(string $column, string $operator, $value): self
+    {
+        $this->where[] = [$column, $operator, $value];
+        $this->data['where'] = $this->where;
+        return $this;
+    }
+    
+    public function join(string $table, string $first, string $operator, string $second): self
+    {
+        $this->joins[] = ['table' => $table, 'first' => $first, 'operator' => $operator, 'second' => $second];
+        $this->data['joins'] = $this->joins;
+        return $this;
+    }
+    
+    public function orderBy(string $column, string $direction = 'asc'): self
+    {
+        $this->orderBy[] = [$column, $direction];
+        $this->data['orderBy'] = $this->orderBy;
+        return $this;
+    }
+    
+    public function limit(int $limit): self
+    {
+        $this->limit = $limit;
+        $this->data['limit'] = $this->limit;
+        return $this;
+    }
+    
+    public function offset(int $offset): self
+    {
+        $this->offset = $offset;
+        $this->data['offset'] = $this->offset;
+        return $this;
+    }
+    
+    public function toSql(): string
+    {
+        $sql = 'SELECT ' . implode(', ', $this->select);
+        $sql .= " FROM {$this->table}";
+        
+        foreach ($this->joins as $join) {
+            $sql .= " JOIN {$join['table']} ON {$join['first']} {$join['operator']} {$join['second']}";
+        }
+        
+        if (!empty($this->where)) {
+            $conditions = [];
+            foreach ($this->where as $condition) {
+                $value = is_string($condition[2]) ? "'{$condition[2]}'" : $condition[2];
+                $conditions[] = "{$condition[0]} {$condition[1]} {$value}";
+            }
+            $sql .= ' WHERE ' . implode(' AND ', $conditions);
+        }
+        
+        if (!empty($this->orderBy)) {
+            $orders = [];
+            foreach ($this->orderBy as $order) {
+                $orders[] = "{$order[0]} {$order[1]}";
+            }
+            $sql .= ' ORDER BY ' . implode(', ', $orders);
+        }
+        
+        if ($this->limit !== null) {
+            $sql .= " LIMIT {$this->limit}";
+        }
+        
+        if ($this->offset !== null) {
+            $sql .= " OFFSET {$this->offset}";
+        }
+        
+        return $sql;
+    }
+    
+    public function getTable(): string
+    {
+        return $this->table;
+    }
+}
+```
+
+### 5. 原型管理器
+
+```php
+<?php
+
+namespace App\Patterns\Prototype;
+
+// 原型管理器
+class PrototypeManager
+{
+    private array $prototypes = [];
+    
+    public function addPrototype(string $name, PrototypeInterface $prototype): void
+    {
+        $this->prototypes[$name] = $prototype;
+    }
+    
+    public function getPrototype(string $name): ?PrototypeInterface
+    {
+        return $this->prototypes[$name] ?? null;
+    }
+    
+    public function createFromPrototype(string $name): ?PrototypeInterface
+    {
+        $prototype = $this->getPrototype($name);
+        
+        if ($prototype === null) {
+            return null;
+        }
+        
+        return $prototype->clone();
+    }
+    
+    public function removePrototype(string $name): void
+    {
+        unset($this->prototypes[$name]);
+    }
+    
+    public function hasPrototype(string $name): bool
+    {
+        return isset($this->prototypes[$name]);
+    }
+    
+    public function listPrototypes(): array
+    {
+        return array_keys($this->prototypes);
+    }
+    
+    public function clearPrototypes(): void
+    {
+        $this->prototypes = [];
+    }
+}
+```
+
+### 6. Laravel模型原型
+
+```php
+<?php
+
+namespace App\Patterns\Prototype;
+
+use Illuminate\Database\Eloquent\Model;
+
+// Laravel模型原型特征
+trait PrototypeTrait
+{
+    public function createPrototype(): self
+    {
+        $attributes = $this->getAttributes();
+        
+        // 移除主键和时间戳
+        unset($attributes['id']);
+        unset($attributes['created_at']);
+        unset($attributes['updated_at']);
+        
+        return new static($attributes);
+    }
+    
+    public function cloneWithRelations(array $relations = []): self
+    {
+        $clone = $this->createPrototype();
+        
+        foreach ($relations as $relation) {
+            if ($this->relationLoaded($relation)) {
+                $relationData = $this->getRelation($relation);
+                
+                if ($relationData instanceof \Illuminate\Database\Eloquent\Collection) {
+                    $clonedRelation = $relationData->map(function ($item) {
+                        return $item->createPrototype();
+                    });
+                    $clone->setRelation($relation, $clonedRelation);
+                } elseif ($relationData instanceof Model) {
+                    $clone->setRelation($relation, $relationData->createPrototype());
+                }
+            }
+        }
+        
+        return $clone;
+    }
+}
+
+// 示例用户模型
+class User extends Model
+{
+    use PrototypeTrait;
+    
+    protected $fillable = ['name', 'email', 'status', 'role'];
+    
+    public function profile()
+    {
+        return $this->hasOne(UserProfile::class);
+    }
+    
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+}
+
+// 示例用户资料模型
+class UserProfile extends Model
+{
+    use PrototypeTrait;
+    
+    protected $fillable = ['user_id', 'bio', 'avatar', 'preferences'];
+    
+    protected $casts = [
+        'preferences' => 'array',
+    ];
+}
+
+// 示例文章模型
+class Post extends Model
+{
+    use PrototypeTrait;
+    
+    protected $fillable = ['user_id', 'title', 'content', 'status'];
+}
+```
+
+## 使用示例
+
+### 用户原型使用
+
+```php
+<?php
+
+// 创建原始用户
+$originalUser = new UserPrototype(
+    '张三',
+    'zhangsan@example.com',
+    ['read', 'write'],
+    ['theme' => 'dark', 'language' => 'zh']
+);
+
+// 克隆用户并修改
+$clonedUser = $originalUser->clone();
+$clonedUser->setName('李四');
+$clonedUser->setEmail('lisi@example.com');
+$clonedUser->addPermission('admin');
+$clonedUser->setPreference('theme', 'light');
+
+echo "原始用户: " . $originalUser->getName() . "\n";
+echo "克隆用户: " . $clonedUser->getName() . "\n";
+echo "原始用户权限: " . implode(', ', $originalUser->getPermissions()) . "\n";
+echo "克隆用户权限: " . implode(', ', $clonedUser->getPermissions()) . "\n";
+```
+
+### 文档原型使用
+
+```php
+<?php
+
+// 创建文档模板
+$template = new DocumentPrototype(
+    '项目文档模板',
+    '这是一个项目文档的模板内容。',
+    ['author' => '系统', 'version' => '1.0'],
+    [],
+    'project'
+);
+$template->addSection('概述', '项目概述内容');
+$template->addSection('功能', '功能描述内容');
+
+// 基于模板创建新文档
+$projectDoc = $template->clone();
+$projectDoc->setTitle('Laravel设计模式项目文档');
+$projectDoc->setContent('这是Laravel设计模式项目的详细文档。');
+$projectDoc->setMetadata('author', '开发团队');
+$projectDoc->setMetadata('project', 'Laravel DP');
+$projectDoc->addSection('安装', '安装步骤说明');
+
+echo $projectDoc->render();
+```
+
+### 查询原型使用
+
+```php
+<?php
+
+// 创建基础查询模板
+$baseQuery = new QueryPrototype('users');
+$baseQuery->select(['id', 'name', 'email'])
+          ->where('status', '=', 'active')
+          ->orderBy('created_at', 'desc');
+
+// 基于模板创建具体查询
+$adminQuery = $baseQuery->clone();
+$adminQuery->where('role', '=', 'admin')
+           ->limit(10);
+
+$recentQuery = $baseQuery->clone();
+$recentQuery->where('created_at', '>', '2023-01-01')
+            ->limit(20);
+
+echo "管理员查询: " . $adminQuery->toSql() . "\n";
+echo "最近用户查询: " . $recentQuery->toSql() . "\n";
+```
+
+### 原型管理器使用
+
+```php
+<?php
+
+$manager = new PrototypeManager();
+
+// 注册原型
+$manager->addPrototype('admin_user', new UserPrototype(
+    '管理员',
+    'admin@example.com',
+    ['read', 'write', 'admin'],
+    ['theme' => 'dark']
+));
+
+$manager->addPrototype('guest_user', new UserPrototype(
+    '访客',
+    'guest@example.com',
+    ['read'],
+    ['theme' => 'light']
+));
+
+// 从原型创建实例
+$newAdmin = $manager->createFromPrototype('admin_user');
+$newAdmin->setName('新管理员');
+$newAdmin->setEmail('newadmin@example.com');
+
+$newGuest = $manager->createFromPrototype('guest_user');
+$newGuest->setName('新访客');
+
+echo "创建的管理员: " . $newAdmin->getName() . "\n";
+echo "创建的访客: " . $newGuest->getName() . "\n";
+```
+
+### Laravel模型原型使用
+
+```php
+<?php
+
+// 创建用户模板
+$userTemplate = new User([
+    'name' => '模板用户',
+    'email' => 'template@example.com',
+    'status' => 'active',
+    'role' => 'user'
+]);
+
+// 创建用户资料
+$userTemplate->profile()->create([
+    'bio' => '这是用户简介模板',
+    'preferences' => ['theme' => 'default', 'notifications' => true]
+]);
+
+// 基于模板创建新用户
+$newUser = $userTemplate->createPrototype();
+$newUser->name = '实际用户';
+$newUser->email = 'real@example.com';
+$newUser->save();
+
+// 克隆包含关联的用户
+$userWithRelations = User::with('profile', 'posts')->find(1);
+$clonedUser = $userWithRelations->cloneWithRelations(['profile', 'posts']);
+$clonedUser->name = '克隆用户';
+$clonedUser->email = 'cloned@example.com';
+$clonedUser->save();
+```
+
+## Laravel中的实际应用
+
+### 1. 模型复制
+
+```php
+<?php
+
+// Laravel的replicate方法就是原型模式的应用
+$user = User::find(1);
+$newUser = $user->replicate();
+$newUser->email = 'new@example.com';
+$newUser->save();
+
+// 复制包含关联的模型
+$post = Post::with('comments')->find(1);
+$newPost = $post->replicate();
+$newPost->title = '复制的文章';
+$newPost->save();
+
+// 复制关联
+foreach ($post->comments as $comment) {
+    $newComment = $comment->replicate();
+    $newComment->post_id = $newPost->id;
+    $newComment->save();
+}
+```
+
+### 2. 配置复制
+
+```php
+<?php
+
+// 配置数组的深拷贝
+$defaultConfig = config('app');
+$customConfig = array_merge_recursive($defaultConfig, [
+    'name' => 'Custom App',
+    'debug' => true,
+]);
+
+// 使用配置原型
+class ConfigPrototype
+{
+    private array $config;
+    
+    public function __construct(array $config)
+    {
+        $this->config = $config;
+    }
+    
+    public function clone(): self
+    {
+        return new self($this->deepCopy($this->config));
+    }
+    
+    private function deepCopy(array $array): array
+    {
+        return json_decode(json_encode($array), true);
+    }
+}
+```
+
+### 3. 请求复制
+
+```php
+<?php
+
+// 复制HTTP请求
+class RequestPrototype
+{
+    private array $data;
+    private array $headers;
+    
+    public function __construct(Request $request)
+    {
+        $this->data = $request->all();
+        $this->headers = $request->headers->all();
+    }
+    
+    public function clone(): Request
+    {
+        $newRequest = new Request($this->data);
+        
+        foreach ($this->headers as $key => $value) {
+            $newRequest->headers->set($key, $value);
+        }
+        
+        return $newRequest;
+    }
+}
+```
+
+## 时序图
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant PrototypeManager
+    participant ConcretePrototype
+    participant ClonedObject
+    
+    Client->>PrototypeManager: createFromPrototype(name)
+    PrototypeManager->>ConcretePrototype: clone()
+    ConcretePrototype->>ClonedObject: new ClonedObject()
+    ClonedObject-->>ConcretePrototype: instance
+    ConcretePrototype-->>PrototypeManager: cloned instance
+    PrototypeManager-->>Client: cloned instance
+    
+    Client->>ClonedObject: modify()
+    ClonedObject-->>Client: modified
+```
+
+## 优点
+
+1. **性能提升**：避免重复的初始化过程
+2. **简化对象创建**：通过克隆而不是构造创建对象
+3. **动态配置**：运行时添加和移除原型
+4. **减少子类**：避免工厂方法模式的类爆炸
+
+## 缺点
+
+1. **复杂对象克隆困难**：深拷贝复杂对象可能很困难
+2. **循环引用问题**：对象间的循环引用可能导致问题
+3. **克隆方法维护**：需要维护clone方法的正确性
+
+## 适用场景
+
+1. **创建成本高的对象**
+2. **需要避免复杂初始化的场景**
+3. **需要创建大量相似对象时**
+4. **系统需要独立于产品创建、构成和表示时**
+
+## 与其他模式的关系
+
+- **工厂方法模式**：原型可以替代工厂方法
+- **备忘录模式**：原型可以实现备忘录的功能
+- **装饰器模式**：装饰器可以被克隆
+
+## 最佳实践
+
+1. **实现深拷贝**：确保复杂对象的正确克隆
+2. **处理循环引用**：避免克隆时的无限递归
+3. **优化克隆性能**：对于大对象考虑懒加载克隆
+4. **使用原型管理器**：集中管理原型实例
+
+原型模式在需要创建大量相似对象或避免复杂初始化过程时非常有用，Laravel的模型复制功能就是很好的应用实例。

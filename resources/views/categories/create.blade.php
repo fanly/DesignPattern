@@ -1,7 +1,7 @@
 <x-layouts.app>
     <x-slot name="header">
         <h2 class="text-xl font-semibold leading-tight text-gray-800">
-            {{ __('创建设计模式分类') }}
+            {{ __('admin.create_category') }}
         </h2>
     </x-slot>
 
@@ -13,7 +13,7 @@
                         @csrf
 
                         <div class="mb-4">
-                            <label for="name_zh" class="block text-sm font-medium text-gray-700">{{ __('中文名称') }}</label>
+                            <label for="name_zh" class="block text-sm font-medium text-gray-700">{{ __('forms.name_zh') }}</label>
                             <input type="text" name="name_zh" id="name_zh" value="{{ old('name_zh') }}" required
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                             @error('name_zh')
@@ -22,7 +22,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="description" class="block text-sm font-medium text-gray-700">{{ __('描述') }}</label>
+                            <label for="description" class="block text-sm font-medium text-gray-700">{{ __('forms.description') }}</label>
                             <textarea name="description" id="description" rows="3"
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">{{ old('description') }}</textarea>
                             @error('description')
@@ -31,7 +31,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label for="sort_order" class="block text-sm font-medium text-gray-700">{{ __('排序') }}</label>
+                            <label for="sort_order" class="block text-sm font-medium text-gray-700">{{ __('forms.sort_order') }}</label>
                             <input type="number" name="sort_order" id="sort_order" value="{{ old('sort_order', 0) }}"
                                 class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50">
                             @error('sort_order')
@@ -41,11 +41,11 @@
 
                         <div class="flex items-center justify-end mt-6">
                             <a href="{{ route('categories.index') }}" class="text-sm text-gray-600 underline hover:text-gray-900">
-                                {{ __('取消') }}
+                                {{ __('forms.cancel') }}
                             </a>
 
                             <button type="submit" class="px-4 py-2 ml-4 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                {{ __('创建') }}
+                                {{ __('forms.create') }}
                             </button>
                         </div>
                     </form>

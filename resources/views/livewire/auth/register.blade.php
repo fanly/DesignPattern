@@ -45,7 +45,7 @@ new #[Layout('components.layouts.auth')] class extends Component {
 }; ?>
 
 <div class="flex flex-col gap-6">
-    <x-auth-header :title="__('创建账户')" :description="__('请输入您的详细信息来创建账户')" />
+    <x-auth-header :title="__('auth.register_title')" :description="__('auth.register_description')" />
 
     <!-- Session Status -->
     <x-auth-session-status class="text-center" :status="session('status')" />
@@ -54,18 +54,18 @@ new #[Layout('components.layouts.auth')] class extends Component {
         <!-- Name -->
         <flux:input
             wire:model="name"
-            :label="__('姓名')"
+            :label="__('forms.name')"
             type="text"
             required
             autofocus
             autocomplete="name"
-            :placeholder="__('姓名')"
+            :placeholder="__('forms.name')"
         />
 
         <!-- Email Address -->
         <flux:input
             wire:model="email"
-            :label="__('邮箱地址')"
+            :label="__('forms.email')"
             type="email"
             required
             autocomplete="email"
@@ -75,34 +75,34 @@ new #[Layout('components.layouts.auth')] class extends Component {
         <!-- Password -->
         <flux:input
             wire:model="password"
-            :label="__('密码')"
+            :label="__('forms.password')"
             type="password"
             required
             autocomplete="new-password"
-            :placeholder="__('密码')"
+            :placeholder="__('forms.password')"
             viewable
         />
 
         <!-- Confirm Password -->
         <flux:input
             wire:model="password_confirmation"
-            :label="__('确认密码')"
+            :label="__('forms.password_confirmation')"
             type="password"
             required
             autocomplete="new-password"
-            :placeholder="__('确认密码')"
+            :placeholder="__('forms.password_confirmation')"
             viewable
         />
 
         <div class="flex items-center justify-end">
             <flux:button type="submit" variant="primary" class="w-full" data-test="register-user-button">
-                {{ __('创建账户') }}
+                {{ __('auth.register') }}
             </flux:button>
         </div>
     </form>
 
     <div class="space-x-1 rtl:space-x-reverse text-center text-sm text-zinc-600 dark:text-zinc-400">
-        <span>{{ __('已有账户？') }}</span>
-        <flux:link :href="route('login')" wire:navigate>{{ __('登录') }}</flux:link>
+        <span>{{ __('auth.already_have_account') }}</span>
+        <flux:link :href="route('login')" wire:navigate>{{ __('auth.login') }}</flux:link>
     </div>
 </div>

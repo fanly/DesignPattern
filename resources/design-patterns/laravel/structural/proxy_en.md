@@ -12,28 +12,28 @@ Provide a surrogate or placeholder for another object to control access to it. T
 classDiagram
     class Subject {
         <<interface>>
-        +request(): void
+        +request()
     }
     
     class RealSubject {
-        +request(): void
+        +request()
     }
     
     class Proxy {
         -realSubject: RealSubject
-        +request(): void
-        +checkAccess(): boolean
-        +logAccess(): void
+        +request()
+        +checkAccess()
+        +logAccess()
     }
     
     class Client {
-        +main(): void
+        +main()
     }
     
-    Subject <|.. RealSubject : implements
-    Subject <|.. Proxy : implements
-    Proxy --> RealSubject : controls access to
-    Client --> Subject : uses
+    Subject <|.. RealSubject
+    Subject <|.. Proxy
+    Proxy --> RealSubject
+    Client --> Subject
     
     note for Proxy "Controls access to RealSubject"
     note for RealSubject "Does the real work"

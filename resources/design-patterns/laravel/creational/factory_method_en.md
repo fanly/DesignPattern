@@ -13,7 +13,7 @@ classDiagram
     class Creator {
         <<abstract>>
         +factoryMethod(): Product
-        +operation(): void
+        +operation()
     }
     
     class ConcreteCreator {
@@ -22,11 +22,11 @@ classDiagram
     
     class Product {
         <<interface>>
-        +operation(): void
+        +operation()
     }
     
     class ConcreteProduct {
-        +operation(): void
+        +operation()
     }
     
     Creator <|-- ConcreteCreator : extends
@@ -77,7 +77,7 @@ sequenceDiagram
     RedisFactory-->>CacheManager: driver instance
     CacheManager-->>Client: cache store
     
-    note over RedisFactory: Factory method creates specific driver
+    note over RedisFactory method creates specific driver
 ```
 
 ## Implementation in Laravel

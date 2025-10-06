@@ -10,27 +10,27 @@ The Memento pattern captures and externalizes an object's internal state without
 ```mermaid
 classDiagram
     class Originator {
-        -state: string
-        +setState(state): void
-        +getState(): string
+        -state
+        +setState(state)
+        +getState()
         +createMemento(): Memento
-        +restoreFromMemento(memento): void
+        +restoreFromMemento(memento)
     }
     
     class Memento {
-        -state: string
+        -state
         -timestamp: DateTime
-        +getState(): string
+        +getState()
         +getTimestamp(): DateTime
     }
     
     class Caretaker {
-        -mementos: array
-        +addMemento(memento): void
+        -mementos
+        +addMemento(memento)
         +getMemento(index): Memento
         +undo(): Memento
         +redo(): Memento
-        +getHistory(): array
+        +getHistory()
     }
     
     Originator --> Memento : creates
@@ -67,30 +67,30 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class Model {
-        -attributes: array
-        +save(): bool
-        +update(data): bool
+        -attributes
+        +save()
+        +update(data)
         +createSnapshot(): ModelSnapshot
-        +restoreFromSnapshot(snapshot): void
+        +restoreFromSnapshot(snapshot)
     }
     
     class ModelSnapshot {
-        -modelType: string
-        -modelId: int
-        -attributes: array
+        -modelType
+        -modelId
+        -attributes
         -timestamp: DateTime
-        +getAttributes(): array
-        +getModelType(): string
-        +getModelId(): int
+        +getAttributes()
+        +getModelType()
+        +getModelId()
     }
     
     class HistoryManager {
         -snapshots: Collection
-        +saveSnapshot(model): void
-        +restoreModel(model, version): void
+        +saveSnapshot(model)
+        +restoreModel(model, version)
         +getHistory(model): Collection
-        +undo(model): bool
-        +redo(model): bool
+        +undo(model)
+        +redo(model)
     }
     
     Model --> ModelSnapshot : creates
@@ -120,7 +120,7 @@ class Memento
         $this->description = $description;
     }
     
-    public function getState(): array
+    public function getState()
     {
         return $this->state;
     }
@@ -130,12 +130,12 @@ class Memento
         return $this->timestamp;
     }
     
-    public function getDescription(): string
+    public function getDescription()
     {
         return $this->description;
     }
     
-    public function getSize(): int
+    public function getSize()
     {
         return strlen(serialize($this->state));
     }
@@ -147,7 +147,7 @@ class MementoCaretaker
     private int $currentIndex = -1;
     private int $maxHistory = 50;
     
-    public function save(Memento $memento): void
+    public function save(Memento $memento)
     {
         // Remove any mementos after current index (for redo functionality)
         $this->mementos = array_slice($this->mementos, 0, $this->currentIndex + 1);
@@ -188,7 +188,7 @@ class MementoCaretaker
         return $this->mementos[$this->currentIndex] ?? null;
     }
     
-    public function getHistory(): array
+    public function getHistory()
     {
         return array_map(function ($memento, $index) {
             return [
@@ -201,17 +201,17 @@ class MementoCaretaker
         }, $this->mementos, array_keys($this->mementos));
     }
     
-    public function canUndo(): bool
+    public function canUndo()
     {
         return $this->currentIndex > 0;
     }
     
-    public function canRedo(): bool
+    public function canRedo()
     {
         return $this->currentIndex < count($this->mementos) - 1;
     }
     
-    public function clear(): void
+    public function clear()
     {
         $this->mementos = [];
         $this->currentIndex = -1;
@@ -239,37 +239,37 @@ class DocumentEditor
         $this->saveState('Initial state');
     }
     
-    public function setContent(string $content): void
+    public function setContent(string $content)
     {
         $this->content = $content;
     }
     
-    public function getContent(): string
+    public function getContent()
     {
         return $this->content;
     }
     
-    public function setTitle(string $title): void
+    public function setTitle(string $title)
     {
         $this->title = $title;
     }
     
-    public function getTitle(): string
+    public function getTitle()
     {
         return $this->title;
     }
     
-    public function setMetadata(array $metadata): void
+    public function setMetadata(array $metadata)
     {
         $this->metadata = $metadata;
     }
     
-    public function getMetadata(): array
+    public function getMetadata()
     {
         return $this->metadata;
     }
     
-    public function saveState(string $description = ''): void
+    public function saveState(string $description = '')
     {
         $state = [
             'content' => $this->content,
@@ -281,7 +281,7 @@ class DocumentEditor
         $this->caretaker->save($memento);
     }
     
-    public function undo(): bool
+    public function undo()
     {
         $memento = $this->caretaker->undo();
         
@@ -293,7 +293,7 @@ class DocumentEditor
         return false;
     }
     
-    public function redo(): bool
+    public function redo()
     {
         $memento = $this->caretaker->redo();
         
@@ -305,7 +305,7 @@ class DocumentEditor
         return false;
     }
     
-    private function restoreFromMemento(Memento $memento): void
+    private function restoreFromMemento(Memento $memento)
     {
         $state = $memento->getState();
         
@@ -314,22 +314,22 @@ class DocumentEditor
         $this->metadata = $state['metadata'];
     }
     
-    public function getHistory(): array
+    public function getHistory()
     {
         return $this->caretaker->getHistory();
     }
     
-    public function canUndo(): bool
+    public function canUndo()
     {
         return $this->caretaker->canUndo();
     }
     
-    public function canRedo(): bool
+    public function canRedo()
     {
         return $this->caretaker->canRedo();
     }
     
-    public function insertText(string $text, int $position = null): void
+    public function insertText(string $text, int $position = null)
     {
         if ($position === null) {
             $this->content .= $text;
@@ -340,7 +340,7 @@ class DocumentEditor
         $this->saveState("Inserted text: " . substr($text, 0, 20) . "...");
     }
     
-    public function deleteText(int $start, int $length): void
+    public function deleteText(int $start, int $length)
     {
         $deletedText = substr($this->content, $start, $length);
         $this->content = substr_replace($this->content, '', $start, $length);
@@ -348,7 +348,7 @@ class DocumentEditor
         $this->saveState("Deleted text: " . substr($deletedText, 0, 20) . "...");
     }
     
-    public function replaceText(string $search, string $replace): void
+    public function replaceText(string $search, string $replace)
     {
         $this->content = str_replace($search, $replace, $this->content);
         $this->saveState("Replaced '{$search}' with '{$replace}'");
@@ -368,7 +368,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 trait HasHistory
 {
-    protected static function bootHasHistory(): void
+    protected static function bootHasHistory()
     {
         static::updating(function ($model) {
             $model->saveHistorySnapshot('Before update');
@@ -386,7 +386,7 @@ trait HasHistory
                     ->orderBy('created_at', 'desc');
     }
     
-    public function saveHistorySnapshot(string $description = ''): void
+    public function saveHistorySnapshot(string $description = '')
     {
         ModelHistory::create([
             'model_type' => static::class,
@@ -399,7 +399,7 @@ trait HasHistory
         ]);
     }
     
-    public function restoreFromHistory(int $historyId): bool
+    public function restoreFromHistory(int $historyId)
     {
         $history = $this->history()->find($historyId);
         
@@ -422,7 +422,7 @@ trait HasHistory
                     ->first();
     }
     
-    public function compareWithHistory(int $historyId): array
+    public function compareWithHistory(int $historyId)
     {
         $history = $this->history()->find($historyId);
         
@@ -488,7 +488,7 @@ class ModelHistory extends Model
         return $modelClass::find($this->model_id);
     }
     
-    public function getDifferencesFromCurrent(): array
+    public function getDifferencesFromCurrent()
     {
         $model = $this->getModelInstance();
         
@@ -552,7 +552,7 @@ class DocumentService
         return $editor;
     }
     
-    public function saveDocument(int $documentId): bool
+    public function saveDocument(int $documentId)
     {
         $editor = $this->getEditor($documentId);
         $document = Document::findOrFail($documentId);
@@ -566,37 +566,37 @@ class DocumentService
         return true;
     }
     
-    public function undoChanges(int $documentId): bool
+    public function undoChanges(int $documentId)
     {
         $editor = $this->getEditor($documentId);
         return $editor->undo();
     }
     
-    public function redoChanges(int $documentId): bool
+    public function redoChanges(int $documentId)
     {
         $editor = $this->getEditor($documentId);
         return $editor->redo();
     }
     
-    public function getDocumentHistory(int $documentId): array
+    public function getDocumentHistory(int $documentId)
     {
         $editor = $this->getEditor($documentId);
         return $editor->getHistory();
     }
     
-    public function insertText(int $documentId, string $text, int $position = null): void
+    public function insertText(int $documentId, string $text, int $position = null)
     {
         $editor = $this->getEditor($documentId);
         $editor->insertText($text, $position);
     }
     
-    public function deleteText(int $documentId, int $start, int $length): void
+    public function deleteText(int $documentId, int $start, int $length)
     {
         $editor = $this->getEditor($documentId);
         $editor->deleteText($start, $length);
     }
     
-    public function replaceText(int $documentId, string $search, string $replace): void
+    public function replaceText(int $documentId, string $search, string $replace)
     {
         $editor = $this->getEditor($documentId);
         $editor->replaceText($search, $replace);

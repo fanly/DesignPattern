@@ -11,21 +11,21 @@ The Template Method pattern defines the skeleton of an algorithm in an operation
 classDiagram
     class AbstractClass {
         <<abstract>>
-        +templateMethod(): void
-        #primitiveOperation1(): void
-        #primitiveOperation2(): void
-        #hook(): void
+        +templateMethod()
+        #primitiveOperation1()
+        #primitiveOperation2()
+        #hook()
     }
     
     class ConcreteClassA {
-        #primitiveOperation1(): void
-        #primitiveOperation2(): void
-        #hook(): void
+        #primitiveOperation1()
+        #primitiveOperation2()
+        #hook()
     }
     
     class ConcreteClassB {
-        #primitiveOperation1(): void
-        #primitiveOperation2(): void
+        #primitiveOperation1()
+        #primitiveOperation2()
     }
     
     AbstractClass <|-- ConcreteClassA
@@ -88,7 +88,7 @@ namespace App\Patterns\TemplateMethod;
 abstract class DataProcessor
 {
     // Template method - defines the algorithm structure
-    final public function processData(array $data): array
+    final public function processData(array $data)
     {
         $this->validate($data);
         $cleanedData = $this->cleanData($data);
@@ -101,7 +101,7 @@ abstract class DataProcessor
     }
     
     // Concrete method - common validation logic
-    protected function validate(array $data): void
+    protected function validate(array $data)
     {
         if (empty($data)) {
             throw new InvalidArgumentException('Data cannot be empty');
@@ -113,7 +113,7 @@ abstract class DataProcessor
     }
     
     // Concrete method - common data cleaning
-    protected function cleanData(array $data): array
+    protected function cleanData(array $data)
     {
         return array_map(function ($item) {
             if (is_string($item)) {
@@ -124,20 +124,20 @@ abstract class DataProcessor
     }
     
     // Abstract method - must be implemented by subclasses
-    abstract protected function transformData(array $data): array;
+    abstract protected function transformData(array $data);
     
     // Abstract method - specific processing logic
-    abstract protected function processSpecific(array $data): array;
+    abstract protected function processSpecific(array $data);
     
     // Hook method - can be overridden by subclasses
-    protected function saveResults(array $data): void
+    protected function saveResults(array $data)
     {
         // Default implementation - can be overridden
         logger()->info('Processing completed', ['count' => count($data)]);
     }
     
     // Hook method - optional notification
-    protected function sendNotification(array $data): void
+    protected function sendNotification(array $data)
     {
         // Default implementation - do nothing
         // Subclasses can override to send notifications
@@ -159,7 +159,7 @@ use Illuminate\Support\Facades\Notification;
 
 class UserDataProcessor extends DataProcessor
 {
-    protected function transformData(array $data): array
+    protected function transformData(array $data)
     {
         return array_map(function ($userData) {
             return [
@@ -173,7 +173,7 @@ class UserDataProcessor extends DataProcessor
         }, $data);
     }
     
-    protected function processSpecific(array $data): array
+    protected function processSpecific(array $data)
     {
         $processedUsers = [];
         
@@ -200,7 +200,7 @@ class UserDataProcessor extends DataProcessor
         return $processedUsers;
     }
     
-    protected function saveResults(array $data): void
+    protected function saveResults(array $data)
     {
         // Override parent method with specific logging
         logger()->info('User processing completed', [
@@ -209,7 +209,7 @@ class UserDataProcessor extends DataProcessor
         ]);
     }
     
-    protected function sendNotification(array $data): void
+    protected function sendNotification(array $data)
     {
         // Send notification to admin
         $adminUsers = User::where('role', 'admin')->get();
@@ -223,7 +223,7 @@ class UserDataProcessor extends DataProcessor
 
 class ProductDataProcessor extends DataProcessor
 {
-    protected function transformData(array $data): array
+    protected function transformData(array $data)
     {
         return array_map(function ($productData) {
             return [
@@ -239,7 +239,7 @@ class ProductDataProcessor extends DataProcessor
         }, $data);
     }
     
-    protected function processSpecific(array $data): array
+    protected function processSpecific(array $data)
     {
         $processedProducts = [];
         
@@ -271,7 +271,7 @@ class ProductDataProcessor extends DataProcessor
         return $processedProducts;
     }
     
-    protected function sendNotification(array $data): void
+    protected function sendNotification(array $data)
     {
         // Send notification to inventory managers
         $inventoryManagers = User::where('role', 'inventory_manager')->get();
@@ -287,7 +287,7 @@ class ProductDataProcessor extends DataProcessor
 
 class OrderDataProcessor extends DataProcessor
 {
-    protected function transformData(array $data): array
+    protected function transformData(array $data)
     {
         return array_map(function ($orderData) {
             return [
@@ -303,7 +303,7 @@ class OrderDataProcessor extends DataProcessor
         }, $data);
     }
     
-    protected function processSpecific(array $data): array
+    protected function processSpecific(array $data)
     {
         $processedOrders = [];
         
@@ -334,7 +334,7 @@ class OrderDataProcessor extends DataProcessor
         return $processedOrders;
     }
     
-    protected function sendNotification(array $data): void
+    protected function sendNotification(array $data)
     {
         // Send notification to sales team
         $salesTeam = User::where('role', 'sales')->get();
@@ -362,7 +362,7 @@ use Illuminate\Console\Command;
 abstract class BaseImportCommand extends Command
 {
     // Template method
-    final public function handle(): int
+    final public function handle()
     {
         $this->info('Starting import process...');
         
@@ -385,7 +385,7 @@ abstract class BaseImportCommand extends Command
     }
     
     // Concrete method - common input validation
-    protected function validateInput(): void
+    protected function validateInput()
     {
         if (!$this->argument('file')) {
             throw new \InvalidArgumentException('File argument is required');
@@ -398,18 +398,18 @@ abstract class BaseImportCommand extends Command
     }
     
     // Abstract methods - must be implemented by subclasses
-    abstract protected function loadData(): array;
-    abstract protected function validateData(array $data): array;
-    abstract protected function processData(array $data): array;
-    abstract protected function saveData(array $data): void;
+    abstract protected function loadData();
+    abstract protected function validateData(array $data);
+    abstract protected function processData(array $data);
+    abstract protected function saveData(array $data);
     
     // Hook methods - can be overridden
-    protected function generateReport(array $data): void
+    protected function generateReport(array $data)
     {
         $this->info('Processed ' . count($data) . ' records');
     }
     
-    protected function handleError(\Exception $e): void
+    protected function handleError(\Exception $e)
     {
         logger()->error('Import command failed', [
             'command' => static::class,
@@ -425,7 +425,7 @@ class ImportUsersCommand extends BaseImportCommand
     protected $signature = 'import:users {file : CSV file path}';
     protected $description = 'Import users from CSV file';
     
-    protected function loadData(): array
+    protected function loadData()
     {
         $file = $this->argument('file');
         $data = [];
@@ -443,7 +443,7 @@ class ImportUsersCommand extends BaseImportCommand
         return $data;
     }
     
-    protected function validateData(array $data): array
+    protected function validateData(array $data)
     {
         $validatedData = [];
         
@@ -464,19 +464,19 @@ class ImportUsersCommand extends BaseImportCommand
         return $validatedData;
     }
     
-    protected function processData(array $data): array
+    protected function processData(array $data)
     {
         $processor = new \App\Patterns\TemplateMethod\UserDataProcessor();
         return $processor->processData($data);
     }
     
-    protected function saveData(array $data): void
+    protected function saveData(array $data)
     {
         // Data is already saved in processData method
         $this->info('User data saved successfully');
     }
     
-    protected function generateReport(array $data): void
+    protected function generateReport(array $data)
     {
         parent::generateReport($data);
         
@@ -517,7 +517,7 @@ abstract class BaseProcessingJob implements ShouldQueue
     }
     
     // Template method
-    final public function handle(): void
+    final public function handle()
     {
         try {
             $this->beforeProcessing();
@@ -534,18 +534,18 @@ abstract class BaseProcessingJob implements ShouldQueue
     }
     
     // Hook methods
-    protected function beforeProcessing(): void
+    protected function beforeProcessing()
     {
         // Default implementation - can be overridden
     }
     
-    protected function afterProcessing(array $results): void
+    protected function afterProcessing(array $results)
     {
         // Default implementation - can be overridden
     }
     
     // Concrete method
-    protected function validateInput(): void
+    protected function validateInput()
     {
         if (empty($this->data)) {
             throw new \InvalidArgumentException('Data cannot be empty');
@@ -553,15 +553,15 @@ abstract class BaseProcessingJob implements ShouldQueue
     }
     
     // Abstract methods
-    abstract protected function processData(array $data): array;
-    abstract protected function saveResults(array $results): void;
-    abstract protected function sendNotifications(array $results): void;
+    abstract protected function processData(array $data);
+    abstract protected function saveResults(array $results);
+    abstract protected function sendNotifications(array $results);
 }
 
 // Concrete job implementations
 class ProcessEmailCampaignJob extends BaseProcessingJob
 {
-    protected function beforeProcessing(): void
+    protected function beforeProcessing()
     {
         logger()->info('Starting email campaign processing', [
             'recipients' => count($this->data),
@@ -569,7 +569,7 @@ class ProcessEmailCampaignJob extends BaseProcessingJob
         ]);
     }
     
-    protected function processData(array $data): array
+    protected function processData(array $data)
     {
         $results = [];
         
@@ -595,14 +595,14 @@ class ProcessEmailCampaignJob extends BaseProcessingJob
         return $results;
     }
     
-    protected function saveResults(array $results): void
+    protected function saveResults(array $results)
     {
         foreach ($results as $result) {
             \App\Models\EmailLog::create($result);
         }
     }
     
-    protected function sendNotifications(array $results): void
+    protected function sendNotifications(array $results)
     {
         $successCount = count(array_filter($results, fn($r) => $r['status'] === 'sent'));
         $failureCount = count(array_filter($results, fn($r) => $r['status'] === 'failed'));
@@ -621,7 +621,7 @@ class ProcessEmailCampaignJob extends BaseProcessingJob
         }
     }
     
-    private function sendEmail(array $recipient): array
+    private function sendEmail(array $recipient)
     {
         // Implementation for sending email
         return ['message_id' => uniqid()];
@@ -664,24 +664,24 @@ abstract class BaseAuthenticationMiddleware
     }
     
     // Hook methods
-    protected function beforeAuthentication(Request $request): void
+    protected function beforeAuthentication(Request $request)
     {
         // Default implementation - can be overridden
     }
     
-    protected function afterAuthentication(Request $request): void
+    protected function afterAuthentication(Request $request)
     {
         // Default implementation - can be overridden
     }
     
-    protected function afterResponse(Request $request, $response): void
+    protected function afterResponse(Request $request, $response)
     {
         // Default implementation - can be overridden
     }
     
     // Abstract methods
-    abstract protected function isAuthenticated(Request $request, array $guards): bool;
-    abstract protected function isAuthorized(Request $request): bool;
+    abstract protected function isAuthenticated(Request $request, array $guards);
+    abstract protected function isAuthorized(Request $request);
     abstract protected function handleUnauthenticated(Request $request);
     abstract protected function handleUnauthorized(Request $request);
 }
@@ -689,7 +689,7 @@ abstract class BaseAuthenticationMiddleware
 // Concrete middleware implementations
 class ApiAuthenticationMiddleware extends BaseAuthenticationMiddleware
 {
-    protected function beforeAuthentication(Request $request): void
+    protected function beforeAuthentication(Request $request)
     {
         // Log API access attempt
         logger()->info('API authentication attempt', [
@@ -699,7 +699,7 @@ class ApiAuthenticationMiddleware extends BaseAuthenticationMiddleware
         ]);
     }
     
-    protected function isAuthenticated(Request $request, array $guards): bool
+    protected function isAuthenticated(Request $request, array $guards)
     {
         $token = $request->bearerToken();
         
@@ -719,7 +719,7 @@ class ApiAuthenticationMiddleware extends BaseAuthenticationMiddleware
         return true;
     }
     
-    protected function isAuthorized(Request $request): bool
+    protected function isAuthorized(Request $request)
     {
         $user = auth()->user();
         
@@ -747,7 +747,7 @@ class ApiAuthenticationMiddleware extends BaseAuthenticationMiddleware
         ], 403);
     }
     
-    protected function afterResponse(Request $request, $response): void
+    protected function afterResponse(Request $request, $response)
     {
         // Log API response
         logger()->info('API response sent', [
@@ -799,13 +799,13 @@ abstract class BaseApiController extends Controller
     }
     
     // Hook methods
-    protected function beforeValidation(Request $request): void {}
-    protected function afterValidation(array $data): void {}
+    protected function beforeValidation(Request $request) {}
+    protected function afterValidation(array $data) {}
     
     // Abstract methods
-    abstract protected function validateRequest(Request $request): array;
-    abstract protected function processData(array $data): array;
-    abstract protected function formatResponse(array $data): array;
+    abstract protected function validateRequest(Request $request);
+    abstract protected function processData(array $data);
+    abstract protected function formatResponse(array $data);
     
     // Concrete methods
     protected function handleError(\Exception $e): JsonResponse
@@ -816,7 +816,7 @@ abstract class BaseApiController extends Controller
         ], 500);
     }
     
-    protected function logSuccess(Request $request, array $result): void
+    protected function logSuccess(Request $request, array $result)
     {
         logger()->info('API request processed successfully', [
             'controller' => static::class,
@@ -827,7 +827,7 @@ abstract class BaseApiController extends Controller
         ]);
     }
     
-    protected function logError(Request $request, \Exception $e): void
+    protected function logError(Request $request, \Exception $e)
     {
         logger()->error('API request failed', [
             'controller' => static::class,

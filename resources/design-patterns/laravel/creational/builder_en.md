@@ -12,27 +12,27 @@ Separate the construction of a complex object from its representation so that th
 classDiagram
     class Director {
         -builder: Builder
-        +construct(): void
+        +construct()
     }
     
     class Builder {
         <<interface>>
-        +buildPartA(): void
-        +buildPartB(): void
+        +buildPartA()
+        +buildPartB()
         +getResult(): Product
     }
     
     class ConcreteBuilder {
         -product: Product
-        +buildPartA(): void
-        +buildPartB(): void
+        +buildPartA()
+        +buildPartB()
         +getResult(): Product
     }
     
     class Product {
         -parts: List
-        +addPart(part: String): void
-        +show(): void
+        +addPart(part: String)
+        +show()
     }
     
     Director --> Builder : uses

@@ -11,40 +11,40 @@
 classDiagram
     class Visitor {
         <<interface>>
-        +visitConcreteElementA(element): void
-        +visitConcreteElementB(element): void
+        +visitConcreteElementA(element)
+        +visitConcreteElementB(element)
     }
     
     class ConcreteVisitorA {
-        +visitConcreteElementA(element): void
-        +visitConcreteElementB(element): void
+        +visitConcreteElementA(element)
+        +visitConcreteElementB(element)
     }
     
     class ConcreteVisitorB {
-        +visitConcreteElementA(element): void
-        +visitConcreteElementB(element): void
+        +visitConcreteElementA(element)
+        +visitConcreteElementB(element)
     }
     
     class Element {
         <<interface>>
-        +accept(visitor): void
+        +accept(visitor)
     }
     
     class ConcreteElementA {
-        +accept(visitor): void
-        +operationA(): void
+        +accept(visitor)
+        +operationA()
     }
     
     class ConcreteElementB {
-        +accept(visitor): void
-        +operationB(): void
+        +accept(visitor)
+        +operationB()
     }
     
     class ObjectStructure {
-        -elements: array
-        +attach(element): void
-        +detach(element): void
-        +accept(visitor): void
+        -elements
+        +attach(element)
+        +detach(element)
+        +accept(visitor)
     }
     
     Visitor <|.. ConcreteVisitorA
@@ -62,21 +62,21 @@ classDiagram
 classDiagram
     class RouteVisitor {
         <<interface>>
-        +visitRoute(route): mixed
-        +visitRouteGroup(group): mixed
-        +visitResource(resource): mixed
+        +visitRoute(route)
+        +visitRouteGroup(group)
+        +visitResource(resource)
     }
     
     class RouteCompiler {
         +visitRoute(route): CompiledRoute
-        +visitRouteGroup(group): array
-        +visitResource(resource): array
+        +visitRouteGroup(group)
+        +visitResource(resource)
     }
     
     class RouteAnalyzer {
-        +visitRoute(route): array
-        +visitRouteGroup(group): array
-        +visitResource(resource): array
+        +visitRoute(route)
+        +visitRouteGroup(group)
+        +visitResource(resource)
     }
     
     class RouteOptimizer {
@@ -86,25 +86,25 @@ classDiagram
     }
     
     class Route {
-        -uri: string
-        -methods: array
-        -action: mixed
-        +accept(visitor): mixed
-        +getUri(): string
+        -uri
+        -methods
+        -action
+        +accept(visitor)
+        +getUri()
     }
     
     class RouteGroup {
-        -routes: array
-        -attributes: array
-        +accept(visitor): mixed
-        +getRoutes(): array
+        -routes
+        -attributes
+        +accept(visitor)
+        +getRoutes()
     }
     
     class ResourceRoute {
-        -resource: string
-        -controller: string
-        +accept(visitor): mixed
-        +getResource(): string
+        -resource
+        -controller
+        +accept(visitor)
+        +getResource()
     }
     
     RouteVisitor <|.. RouteCompiler
@@ -150,52 +150,52 @@ sequenceDiagram
 classDiagram
     class ValidationVisitor {
         <<interface>>
-        +visitTextField(field): array
-        +visitEmailField(field): array
-        +visitPasswordField(field): array
-        +visitFileField(field): array
+        +visitTextField(field)
+        +visitEmailField(field)
+        +visitPasswordField(field)
+        +visitFileField(field)
     }
     
     class RuleVisitor {
-        +visitTextField(field): array
-        +visitEmailField(field): array
-        +visitPasswordField(field): array
-        +visitFileField(field): array
+        +visitTextField(field)
+        +visitEmailField(field)
+        +visitPasswordField(field)
+        +visitFileField(field)
     }
     
     class MessageVisitor {
-        +visitTextField(field): array
-        +visitEmailField(field): array
-        +visitPasswordField(field): array
-        +visitFileField(field): array
+        +visitTextField(field)
+        +visitEmailField(field)
+        +visitPasswordField(field)
+        +visitFileField(field)
     }
     
     class FormField {
         <<abstract>>
-        -name: string
-        -value: mixed
-        +accept(visitor): mixed
-        +getName(): string
+        -name
+        -value
+        +accept(visitor)
+        +getName()
     }
     
     class TextField {
-        +accept(visitor): mixed
-        +getMaxLength(): int
+        +accept(visitor)
+        +getMaxLength()
     }
     
     class EmailField {
-        +accept(visitor): mixed
-        +getDomain(): string
+        +accept(visitor)
+        +getDomain()
     }
     
     class PasswordField {
-        +accept(visitor): mixed
-        +getMinLength(): int
+        +accept(visitor)
+        +getMinLength()
     }
     
     class FileField {
-        +accept(visitor): mixed
-        +getAllowedTypes(): array
+        +accept(visitor)
+        +getAllowedTypes()
     }
     
     ValidationVisitor <|.. RuleVisitor
@@ -214,56 +214,56 @@ classDiagram
 classDiagram
     class QueryVisitor {
         <<interface>>
-        +visitSelect(query): string
-        +visitInsert(query): string
-        +visitUpdate(query): string
-        +visitDelete(query): string
+        +visitSelect(query)
+        +visitInsert(query)
+        +visitUpdate(query)
+        +visitDelete(query)
     }
     
     class MySqlVisitor {
-        +visitSelect(query): string
-        +visitInsert(query): string
-        +visitUpdate(query): string
-        +visitDelete(query): string
+        +visitSelect(query)
+        +visitInsert(query)
+        +visitUpdate(query)
+        +visitDelete(query)
     }
     
     class PostgresVisitor {
-        +visitSelect(query): string
-        +visitInsert(query): string
-        +visitUpdate(query): string
-        +visitDelete(query): string
+        +visitSelect(query)
+        +visitInsert(query)
+        +visitUpdate(query)
+        +visitDelete(query)
     }
     
     class SqliteVisitor {
-        +visitSelect(query): string
-        +visitInsert(query): string
-        +visitUpdate(query): string
-        +visitDelete(query): string
+        +visitSelect(query)
+        +visitInsert(query)
+        +visitUpdate(query)
+        +visitDelete(query)
     }
     
     class Query {
         <<abstract>>
-        +accept(visitor): string
+        +accept(visitor)
     }
     
     class SelectQuery {
-        -columns: array
-        -tables: array
-        -conditions: array
-        +accept(visitor): string
+        -columns
+        -tables
+        -conditions
+        +accept(visitor)
     }
     
     class InsertQuery {
-        -table: string
-        -data: array
-        +accept(visitor): string
+        -table
+        -data
+        +accept(visitor)
     }
     
     class UpdateQuery {
-        -table: string
-        -data: array
-        -conditions: array
-        +accept(visitor): string
+        -table
+        -data
+        -conditions
+        +accept(visitor)
     }
     
     QueryVisitor <|.. MySqlVisitor

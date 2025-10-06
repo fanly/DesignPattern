@@ -12,24 +12,24 @@ Decouple an abstraction from its implementation so that the two can vary indepen
 classDiagram
     class Abstraction {
         -implementor: Implementor
-        +operation(): void
+        +operation()
     }
     
     class RefinedAbstraction {
-        +operation(): void
+        +operation()
     }
     
     class Implementor {
         <<interface>>
-        +operationImpl(): void
+        +operationImpl()
     }
     
     class ConcreteImplementorA {
-        +operationImpl(): void
+        +operationImpl()
     }
     
     class ConcreteImplementorB {
-        +operationImpl(): void
+        +operationImpl()
     }
     
     Abstraction <|-- RefinedAbstraction : extends

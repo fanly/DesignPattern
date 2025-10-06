@@ -10,24 +10,24 @@
 ```mermaid
 classDiagram
     class Originator {
-        -state: string
-        +setState(state): void
-        +getState(): string
+        -state
+        +setState(state)
+        +getState()
         +createMemento(): Memento
-        +restoreFromMemento(memento): void
+        +restoreFromMemento(memento)
     }
     
     class Memento {
-        -state: string
+        -state
         +Memento(state)
-        +getState(): string
+        +getState()
     }
     
     class Caretaker {
-        -mementos: array
-        +addMemento(memento): void
+        -mementos
+        +addMemento(memento)
         +getMemento(index): Memento
-        +removeMemento(index): void
+        +removeMemento(index)
     }
     
     Originator --> Memento : creates
@@ -43,31 +43,31 @@ classDiagram
 ```mermaid
 classDiagram
     class Connection {
-        -transactions: int
+        -transactions
         -pdo: PDO
-        +beginTransaction(): void
-        +commit(): void
-        +rollBack(toLevel): void
-        +savepoint(name): void
-        +rollBackToSavepoint(name): void
+        +beginTransaction()
+        +commit()
+        +rollBack(toLevel)
+        +savepoint(name)
+        +rollBackToSavepoint(name)
     }
     
     class TransactionManager {
         -connection: Connection
-        -savepoints: array
-        -level: int
-        +begin(): void
-        +commit(): void
-        +rollback(): void
-        +savepoint(name): string
+        -savepoints
+        -level
+        +begin()
+        +commit()
+        +rollback()
+        +savepoint(name)
     }
     
     class Savepoint {
-        -name: string
-        -level: int
+        -name
+        -level
         -timestamp: DateTime
-        +getName(): string
-        +getLevel(): int
+        +getName()
+        +getLevel()
     }
     
     Connection --> TransactionManager : uses

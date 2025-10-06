@@ -27,28 +27,28 @@ classDiagram
     
     class AbstractProductA {
         <<interface>>
-        +operationA(): void
+        +operationA()
     }
     
     class AbstractProductB {
         <<interface>>
-        +operationB(): void
+        +operationB()
     }
     
     class ProductA1 {
-        +operationA(): void
+        +operationA()
     }
     
     class ProductA2 {
-        +operationA(): void
+        +operationA()
     }
     
     class ProductB1 {
-        +operationB(): void
+        +operationB()
     }
     
     class ProductB2 {
-        +operationB(): void
+        +operationB()
     }
     
     AbstractFactory <|.. ConcreteFactory1
@@ -98,34 +98,34 @@ classDiagram
     
     class Grammar {
         <<abstract>>
-        +compileSelect(): string
-        +compileInsert(): string
+        +compileSelect()
+        +compileInsert()
     }
     
     class MySqlGrammar {
-        +compileSelect(): string
-        +compileInsert(): string
+        +compileSelect()
+        +compileInsert()
     }
     
     class PostgresGrammar {
-        +compileSelect(): string
-        +compileInsert(): string
+        +compileSelect()
+        +compileInsert()
     }
     
     class SchemaBuilder {
         <<abstract>>
-        +hasTable(): bool
-        +getColumns(): array
+        +hasTable()
+        +getColumns()
     }
     
     class MySqlBuilder {
-        +hasTable(): bool
-        +getColumns(): array
+        +hasTable()
+        +getColumns()
     }
     
     class PostgresBuilder {
-        +hasTable(): bool
-        +getColumns(): array
+        +hasTable()
+        +getColumns()
     }
     
     DatabaseManager --> Connection : creates
@@ -183,40 +183,40 @@ classDiagram
     
     class Store {
         <<interface>>
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +forget(key): bool
+        +get(key)
+        +put(key, value, ttl)
+        +forget(key)
     }
     
     class RedisStore {
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +forget(key): bool
+        +get(key)
+        +put(key, value, ttl)
+        +forget(key)
         +getConnection(): Redis
         +getSerializer(): TaggedCache
     }
     
     class DatabaseStore {
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +forget(key): bool
+        +get(key)
+        +put(key, value, ttl)
+        +forget(key)
         +getConnection(): Connection
         +getEncrypter(): Encrypter
     }
     
     class FileStore {
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +forget(key): bool
+        +get(key)
+        +put(key, value, ttl)
+        +forget(key)
         +getFilesystem(): Filesystem
         +getHasher(): Hasher
     }
     
     class Repository {
         -store: Store
-        +get(key): mixed
-        +put(key, value, ttl): bool
-        +remember(key, callback): mixed
+        +get(key)
+        +put(key, value, ttl)
+        +remember(key, callback)
     }
     
     CacheManager --> Store : creates
@@ -636,7 +636,7 @@ class CustomConnectionFactory
         return new CustomConnection($config);
     }
     
-    public function getSupportedDrivers(): array
+    public function getSupportedDrivers()
     {
         return ['custom'];
     }
@@ -651,7 +651,7 @@ class CustomConnectionFactory
 interface ConnectionFactory
 {
     public function make(array $config): Connection;
-    public function getSupportedDrivers(): array;
+    public function getSupportedDrivers();
 }
 ```
 

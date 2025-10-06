@@ -11,31 +11,31 @@
 classDiagram
     class Iterator {
         <<interface>>
-        +first(): void
-        +next(): void
-        +isDone(): bool
-        +currentItem(): mixed
+        +first()
+        +next()
+        +isDone()
+        +currentItem()
     }
     
     class ConcreteIterator {
         -aggregate: ConcreteAggregate
-        -current: int
-        +first(): void
-        +next(): void
-        +isDone(): bool
-        +currentItem(): mixed
+        -current
+        +first()
+        +next()
+        +isDone()
+        +currentItem()
     }
     
     class Aggregate {
         <<interface>>
-        +createIterator(): Iterator
+        +createIterator()
     }
     
     class ConcreteAggregate {
-        -items: array
-        +createIterator(): Iterator
-        +getItem(index): mixed
-        +count(): int
+        -items
+        +createIterator()
+        +getItem(index)
+        +count()
     }
     
     Iterator <|.. ConcreteIterator
@@ -51,38 +51,38 @@ classDiagram
 ```mermaid
 classDiagram
     class Collection {
-        -items: array
-        +getIterator(): ArrayIterator
-        +each(callback): Collection
-        +map(callback): Collection
-        +filter(callback): Collection
-        +reduce(callback, initial): mixed
+        -items
+        +getIterator()
+        +each(callback)
+        +map(callback)
+        +filter(callback)
+        +reduce(callback, initial)
     }
     
     class ArrayIterator {
-        -array: array
-        -position: int
-        +current(): mixed
-        +key(): mixed
-        +next(): void
-        +rewind(): void
-        +valid(): bool
+        -array
+        -position
+        +current()
+        +key()
+        +next()
+        +rewind()
+        +valid()
     }
     
     class LazyCollection {
-        -source: Generator
-        +getIterator(): Generator
-        +each(callback): LazyCollection
-        +map(callback): LazyCollection
-        +filter(callback): LazyCollection
+        -source
+        +getIterator()
+        +each(callback)
+        +map(callback)
+        +filter(callback)
     }
     
     class Paginator {
         -items: Collection
-        -perPage: int
-        -currentPage: int
-        +getIterator(): ArrayIterator
-        +items(): Collection
+        -perPage
+        -currentPage
+        +getIterator()
+        +items()
     }
     
     Collection --> ArrayIterator : creates
@@ -125,36 +125,36 @@ classDiagram
     class Builder {
         -connection: Connection
         -grammar: Grammar
-        +get(): Collection
-        +cursor(): LazyCollection
-        +chunk(count, callback): bool
-        +chunkById(count, callback): bool
+        +get()
+        +cursor()
+        +chunk(count, callback)
+        +chunkById(count, callback)
     }
     
     class LazyCollection {
         -source: Generator
-        +getIterator(): Generator
-        +map(callback): LazyCollection
-        +filter(callback): LazyCollection
-        +take(count): LazyCollection
+        +getIterator()
+        +map(callback)
+        +filter(callback)
+        +take(count)
     }
     
     class Cursor {
         -statement: PDOStatement
-        +current(): Model
-        +key(): mixed
-        +next(): void
-        +rewind(): void
-        +valid(): bool
+        +current()
+        +key()
+        +next()
+        +rewind()
+        +valid()
     }
     
     class ChunkIterator {
         -builder: Builder
-        -chunkSize: int
-        -currentChunk: int
-        +current(): Collection
-        +next(): void
-        +valid(): bool
+        -chunkSize
+        -currentChunk
+        +current()
+        +next()
+        +valid()
     }
     
     Builder --> LazyCollection : creates
@@ -169,35 +169,35 @@ classDiagram
 ```mermaid
 classDiagram
     class Filesystem {
-        +files(directory): array
-        +allFiles(directory): array
-        +directories(directory): array
-        +glob(pattern): array
+        +files(directory)
+        +allFiles(directory)
+        +directories(directory)
+        +glob(pattern)
     }
     
     class DirectoryIterator {
-        -path: string
+        -path
         +current(): SplFileInfo
-        +key(): string
-        +next(): void
-        +rewind(): void
-        +valid(): bool
+        +key()
+        +next()
+        +rewind()
+        +valid()
     }
     
     class RecursiveDirectoryIterator {
-        -path: string
-        -flags: int
+        -path
+        -flags
         +current(): SplFileInfo
-        +hasChildren(): bool
+        +hasChildren()
         +getChildren(): RecursiveDirectoryIterator
     }
     
     class GlobIterator {
-        -pattern: string
-        +current(): string
-        +key(): int
-        +next(): void
-        +count(): int
+        -pattern
+        +current()
+        +key()
+        +next()
+        +count()
     }
     
     Filesystem --> DirectoryIterator : uses
@@ -234,30 +234,30 @@ flowchart LR
 classDiagram
     class LengthAwarePaginator {
         -items: Collection
-        -total: int
-        -perPage: int
-        -currentPage: int
+        -total
+        -perPage
+        -currentPage
         +getIterator(): ArrayIterator
         +items(): Collection
-        +links(): string
+        +links()
     }
     
     class Paginator {
         -items: Collection
-        -perPage: int
-        -currentPage: int
-        +getIterator(): ArrayIterator
-        +hasPages(): bool
-        +nextPageUrl(): string
+        -perPage
+        -currentPage
+        +getIterator()
+        +hasPages()
+        +nextPageUrl()
     }
     
     class CursorPaginator {
         -items: Collection
-        -perPage: int
+        -perPage
         -cursor: Cursor
         +getIterator(): ArrayIterator
-        +hasPages(): bool
-        +nextCursor(): Cursor
+        +hasPages()
+        +nextCursor()
     }
     
     LengthAwarePaginator --> Collection : contains

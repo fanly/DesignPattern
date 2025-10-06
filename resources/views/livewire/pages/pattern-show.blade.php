@@ -26,7 +26,7 @@
     }, 200);
 ">
     <div class="mb-4 text-sm text-gray-500">
-        <a href="{{ route('home') }}" class="hover:text-gray-700">首页</a> /
+        <a href="{{ route('home') }}" class="hover:text-gray-700">{{ __('common.home') }}</a> /
         <a href="{{ route('categories.show', $pattern->category->slug) }}" class="hover:text-gray-700">{{ $pattern->category->getNameAttribute() }}</a> /
         <span class="text-gray-900 font-medium">{{ $pattern->getNameAttribute() }}</span>
     </div>

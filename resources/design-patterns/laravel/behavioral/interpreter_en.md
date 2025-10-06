@@ -11,29 +11,29 @@ The Interpreter pattern defines a representation for a language's grammar along 
 classDiagram
     class AbstractExpression {
         <<abstract>>
-        +interpret(context): mixed
+        +interpret(context)
     }
     
     class TerminalExpression {
-        -data: string
-        +interpret(context): mixed
+        -data
+        +interpret(context)
     }
     
     class NonTerminalExpression {
         -expression1: AbstractExpression
         -expression2: AbstractExpression
-        +interpret(context): mixed
+        +interpret(context)
     }
     
     class Context {
         -variables: Map
-        +getValue(variable): mixed
-        +setValue(variable, value): void
+        +getValue(variable)
+        +setValue(variable, value)
     }
     
     class Client {
         +buildSyntaxTree(): AbstractExpression
-        +interpret(expression, context): mixed
+        +interpret(expression, context)
     }
     
     AbstractExpression <|-- TerminalExpression
@@ -55,15 +55,15 @@ sequenceDiagram
     
     Client->>Context: setValue("x", 10)
     Client->>Context: setValue("y", 5)
-    Client->>Expression: interpret(context)
+    Client->>Expressionerpret(context)
     
-    Expression->>NonTerminalExpr: interpret(context)
-    NonTerminalExpr->>TerminalExpr: interpret(context)
+    Expression->>NonTerminalExprerpret(context)
+    NonTerminalExpr->>TerminalExprerpret(context)
     TerminalExpr->>Context: getValue("x")
     Context-->>TerminalExpr: 10
     TerminalExpr-->>NonTerminalExpr: 10
     
-    NonTerminalExpr->>TerminalExpr: interpret(context)
+    NonTerminalExpr->>TerminalExprerpret(context)
     TerminalExpr->>Context: getValue("y")
     Context-->>TerminalExpr: 5
     TerminalExpr-->>NonTerminalExpr: 5
@@ -91,7 +91,7 @@ class Context
 {
     private array $variables = [];
     
-    public function setValue(string $variable, $value): void
+    public function setValue(string $variable, $value)
     {
         $this->variables[$variable] = $value;
     }
@@ -101,12 +101,12 @@ class Context
         return $this->variables[$variable] ?? null;
     }
     
-    public function hasVariable(string $variable): bool
+    public function hasVariable(string $variable)
     {
         return array_key_exists($variable, $this->variables);
     }
     
-    public function getAllVariables(): array
+    public function getAllVariables()
     {
         return $this->variables;
     }
@@ -261,12 +261,12 @@ class RuleEngine
 {
     private array $compiledRules = [];
     
-    public function addRule(string $name, AbstractExpression $expression): void
+    public function addRule(string $name, AbstractExpression $expression)
     {
         $this->compiledRules[$name] = $expression;
     }
     
-    public function evaluateRule(string $name, array $variables): bool
+    public function evaluateRule(string $name, array $variables)
     {
         if (!isset($this->compiledRules[$name])) {
             throw new \InvalidArgumentException("Rule '{$name}' not found");
@@ -290,12 +290,12 @@ class RuleEngine
         return $expression->interpret($context);
     }
     
-    public function getRules(): array
+    public function getRules()
     {
         return array_keys($this->compiledRules);
     }
     
-    public function removeRule(string $name): bool
+    public function removeRule(string $name)
     {
         if (isset($this->compiledRules[$name])) {
             unset($this->compiledRules[$name]);
@@ -387,7 +387,7 @@ class BusinessRuleService
         $this->builder = $builder;
     }
     
-    public function setupDefaultRules(): void
+    public function setupDefaultRules()
     {
         // Rule: Adult user (age >= 18)
         $adultRule = $this->builder->equals(
@@ -411,7 +411,7 @@ class BusinessRuleService
         $this->ruleEngine->addRule('discount_amount', $discountRule);
     }
     
-    public function evaluateUserEligibility(array $userData): array
+    public function evaluateUserEligibility(array $userData)
     {
         $results = [];
         

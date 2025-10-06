@@ -12,29 +12,29 @@ Define a one-to-many dependency between objects so that when one object changes 
 classDiagram
     class Subject {
         <<interface>>
-        +attach(observer: Observer): void
-        +detach(observer: Observer): void
-        +notify(): void
+        +attach(observer)
+        +detach(observer)
+        +notify()
     }
     
     class ConcreteSubject {
         -observers: List~Observer~
-        -state: State
-        +attach(observer: Observer): void
-        +detach(observer: Observer): void
-        +notify(): void
-        +getState(): State
-        +setState(state: State): void
+        -state
+        +attach(observer)
+        +detach(observer)
+        +notify()
+        +getState()
+        +setState(state)
     }
     
     class Observer {
         <<interface>>
-        +update(subject: Subject): void
+        +update(subject)
     }
     
     class ConcreteObserver {
-        -observerState: State
-        +update(subject: Subject): void
+        -observerState
+        +update(subject)
     }
     
     Subject <|.. ConcreteSubject : implements

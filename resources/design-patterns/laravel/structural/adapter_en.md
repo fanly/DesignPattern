@@ -12,20 +12,20 @@ Convert the interface of a class into another interface clients expect. The Adap
 classDiagram
     class Target {
         <<interface>>
-        +request(): void
+        +request()
     }
     
     class Client {
-        +main(): void
+        +main()
     }
     
     class Adapter {
         -adaptee: Adaptee
-        +request(): void
+        +request()
     }
     
     class Adaptee {
-        +specificRequest(): void
+        +specificRequest()
     }
     
     Client --> Target : uses

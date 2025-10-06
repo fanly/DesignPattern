@@ -12,26 +12,26 @@ Attach additional responsibilities to an object dynamically. The Decorator patte
 classDiagram
     class Component {
         <<interface>>
-        +operation(): void
+        +operation()
     }
     
     class ConcreteComponent {
-        +operation(): void
+        +operation()
     }
     
     class Decorator {
         <<abstract>>
-        -component: Component
-        +operation(): void
+        -component
+        +operation()
     }
     
     class ConcreteDecoratorA {
-        +operation(): void
-        +addedBehavior(): void
+        +operation()
+        +addedBehavior()
     }
     
     class ConcreteDecoratorB {
-        +operation(): void
+        +operation()
         +addedState: String
     }
     

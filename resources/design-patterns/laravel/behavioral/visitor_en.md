@@ -11,40 +11,40 @@ The Visitor pattern is a design pattern that separates algorithms from object st
 classDiagram
     class Visitor {
         <<interface>>
-        +visitConcreteElementA(element): void
-        +visitConcreteElementB(element): void
+        +visitConcreteElementA(element)
+        +visitConcreteElementB(element)
     }
     
     class ConcreteVisitorA {
-        +visitConcreteElementA(element): void
-        +visitConcreteElementB(element): void
+        +visitConcreteElementA(element)
+        +visitConcreteElementB(element)
     }
     
     class ConcreteVisitorB {
-        +visitConcreteElementA(element): void
-        +visitConcreteElementB(element): void
+        +visitConcreteElementA(element)
+        +visitConcreteElementB(element)
     }
     
     class Element {
         <<interface>>
-        +accept(visitor): void
+        +accept(visitor)
     }
     
     class ConcreteElementA {
-        +accept(visitor): void
-        +operationA(): void
+        +accept(visitor)
+        +operationA()
     }
     
     class ConcreteElementB {
-        +accept(visitor): void
-        +operationB(): void
+        +accept(visitor)
+        +operationB()
     }
     
     class ObjectStructure {
-        -elements: array
-        +attach(element): void
-        +detach(element): void
-        +accept(visitor): void
+        -elements
+        +attach(element)
+        +detach(element)
+        +accept(visitor)
     }
     
     Visitor <|.. ConcreteVisitorA
@@ -110,9 +110,9 @@ namespace App\Patterns\Visitor;
 
 interface VisitorInterface
 {
-    public function visitUser(UserElement $user): void;
-    public function visitOrder(OrderElement $order): void;
-    public function visitProduct(ProductElement $product): void;
+    public function visitUser(UserElement $user);
+    public function visitOrder(OrderElement $order);
+    public function visitProduct(ProductElement $product);
 }
 ```
 
@@ -125,7 +125,7 @@ namespace App\Patterns\Visitor;
 
 interface ElementInterface
 {
-    public function accept(VisitorInterface $visitor): void;
+    public function accept(VisitorInterface $visitor);
 }
 ```
 
@@ -147,7 +147,7 @@ class UserElement implements ElementInterface
         $this->user = $user;
     }
     
-    public function accept(VisitorInterface $visitor): void
+    public function accept(VisitorInterface $visitor)
     {
         $visitor->visitUser($this);
     }
@@ -157,7 +157,7 @@ class UserElement implements ElementInterface
         return $this->user;
     }
     
-    public function getUserData(): array
+    public function getUserData()
     {
         return [
             'id' => $this->user->id,
@@ -177,7 +177,7 @@ class OrderElement implements ElementInterface
         $this->order = $order;
     }
     
-    public function accept(VisitorInterface $visitor): void
+    public function accept(VisitorInterface $visitor)
     {
         $visitor->visitOrder($this);
     }
@@ -187,7 +187,7 @@ class OrderElement implements ElementInterface
         return $this->order;
     }
     
-    public function getOrderData(): array
+    public function getOrderData()
     {
         return [
             'id' => $this->order->id,
@@ -207,7 +207,7 @@ class ProductElement implements ElementInterface
         $this->product = $product;
     }
     
-    public function accept(VisitorInterface $visitor): void
+    public function accept(VisitorInterface $visitor)
     {
         $visitor->visitProduct($this);
     }
@@ -217,7 +217,7 @@ class ProductElement implements ElementInterface
         return $this->product;
     }
     
-    public function getProductData(): array
+    public function getProductData()
     {
         return [
             'id' => $this->product->id,
@@ -240,7 +240,7 @@ class ReportVisitor implements VisitorInterface
 {
     private array $report = [];
     
-    public function visitUser(UserElement $user): void
+    public function visitUser(UserElement $user)
     {
         $userData = $user->getUserData();
         $this->report['users'][] = [
@@ -252,7 +252,7 @@ class ReportVisitor implements VisitorInterface
         ];
     }
     
-    public function visitOrder(OrderElement $order): void
+    public function visitOrder(OrderElement $order)
     {
         $orderData = $order->getOrderData();
         $this->report['orders'][] = [
@@ -264,7 +264,7 @@ class ReportVisitor implements VisitorInterface
         ];
     }
     
-    public function visitProduct(ProductElement $product): void
+    public function visitProduct(ProductElement $product)
     {
         $productData = $product->getProductData();
         $this->report['products'][] = [
@@ -276,7 +276,7 @@ class ReportVisitor implements VisitorInterface
         ];
     }
     
-    public function getReport(): array
+    public function getReport()
     {
         return $this->report;
     }
@@ -286,7 +286,7 @@ class ExportVisitor implements VisitorInterface
 {
     private array $exportData = [];
     
-    public function visitUser(UserElement $user): void
+    public function visitUser(UserElement $user)
     {
         $userData = $user->getUserData();
         $this->exportData[] = [
@@ -300,7 +300,7 @@ class ExportVisitor implements VisitorInterface
         ];
     }
     
-    public function visitOrder(OrderElement $order): void
+    public function visitOrder(OrderElement $order)
     {
         $orderData = $order->getOrderData();
         $this->exportData[] = [
@@ -314,7 +314,7 @@ class ExportVisitor implements VisitorInterface
         ];
     }
     
-    public function visitProduct(ProductElement $product): void
+    public function visitProduct(ProductElement $product)
     {
         $productData = $product->getProductData();
         $this->exportData[] = [
@@ -328,7 +328,7 @@ class ExportVisitor implements VisitorInterface
         ];
     }
     
-    public function getExportData(): array
+    public function getExportData()
     {
         return $this->exportData;
     }
@@ -338,7 +338,7 @@ class ValidationVisitor implements VisitorInterface
 {
     private array $errors = [];
     
-    public function visitUser(UserElement $user): void
+    public function visitUser(UserElement $user)
     {
         $userData = $user->getUserData();
         
@@ -351,7 +351,7 @@ class ValidationVisitor implements VisitorInterface
         }
     }
     
-    public function visitOrder(OrderElement $order): void
+    public function visitOrder(OrderElement $order)
     {
         $orderData = $order->getOrderData();
         
@@ -364,7 +364,7 @@ class ValidationVisitor implements VisitorInterface
         }
     }
     
-    public function visitProduct(ProductElement $product): void
+    public function visitProduct(ProductElement $product)
     {
         $productData = $product->getProductData();
         
@@ -381,12 +381,12 @@ class ValidationVisitor implements VisitorInterface
         }
     }
     
-    public function getErrors(): array
+    public function getErrors()
     {
         return $this->errors;
     }
     
-    public function hasErrors(): bool
+    public function hasErrors()
     {
         return !empty($this->errors);
     }
@@ -404,12 +404,12 @@ class DataStructure
 {
     private array $elements = [];
     
-    public function addElement(ElementInterface $element): void
+    public function addElement(ElementInterface $element)
     {
         $this->elements[] = $element;
     }
     
-    public function removeElement(ElementInterface $element): void
+    public function removeElement(ElementInterface $element)
     {
         $key = array_search($element, $this->elements, true);
         if ($key !== false) {
@@ -418,14 +418,14 @@ class DataStructure
         }
     }
     
-    public function accept(VisitorInterface $visitor): void
+    public function accept(VisitorInterface $visitor)
     {
         foreach ($this->elements as $element) {
             $element->accept($visitor);
         }
     }
     
-    public function getElements(): array
+    public function getElements()
     {
         return $this->elements;
     }
@@ -459,7 +459,7 @@ class DataProcessingService
         $this->dataStructure = new DataStructure();
     }
     
-    public function loadData(): void
+    public function loadData()
     {
         // Load users
         $users = User::all();
@@ -480,21 +480,21 @@ class DataProcessingService
         }
     }
     
-    public function generateReport(): array
+    public function generateReport()
     {
         $visitor = new ReportVisitor();
         $this->dataStructure->accept($visitor);
         return $visitor->getReport();
     }
     
-    public function exportData(): array
+    public function exportData()
     {
         $visitor = new ExportVisitor();
         $this->dataStructure->accept($visitor);
         return $visitor->getExportData();
     }
     
-    public function validateData(): array
+    public function validateData()
     {
         $visitor = new ValidationVisitor();
         $this->dataStructure->accept($visitor);
@@ -577,7 +577,7 @@ class ProcessDataCommand extends Command
     protected $signature = 'data:process {operation : report|export|validate}';
     protected $description = 'Process data using visitor pattern';
     
-    public function handle(DataProcessingService $service): int
+    public function handle(DataProcessingService $service)
     {
         $operation = $this->argument('operation');
         
@@ -643,7 +643,7 @@ class ValidateDataListener implements ShouldQueue
         $this->dataService = $dataService;
     }
     
-    public function handle(DataUpdated $event): void
+    public function handle(DataUpdated $event)
     {
         $this->dataService->loadData();
         $validation = $this->dataService->validateData();

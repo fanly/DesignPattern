@@ -11,37 +11,37 @@ The Mediator pattern defines how a set of objects interact with each other. Inst
 classDiagram
     class Mediator {
         <<interface>>
-        +mediate(request): void
+        +mediate(request)
     }
     
     class ConcreteMediator {
-        -componentA: ComponentA
-        -componentB: ComponentB
-        -componentC: ComponentC
-        +mediate(request): void
-        +setComponents(): void
+        -componentAA
+        -componentBB
+        -componentCC
+        +mediate(request)
+        +setComponents()
     }
     
     class BaseComponent {
         <<abstract>>
         #mediator: Mediator
-        +setMediator(mediator): void
-        +notify(event): void
+        +setMediator(mediator)
+        +notify(event)
     }
     
     class ComponentA {
-        +doA(): void
-        +reactOnB(): void
+        +doA()
+        +reactOnB()
     }
     
     class ComponentB {
-        +doB(): void
-        +reactOnA(): void
+        +doB()
+        +reactOnA()
     }
     
     class ComponentC {
-        +doC(): void
-        +reactOnAB(): void
+        +doC()
+        +reactOnAB()
     }
     
     Mediator <|.. ConcreteMediator
@@ -77,15 +77,15 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class EventDispatcher {
-        -listeners: array
-        +dispatch(event): void
-        +listen(event, listener): void
-        +subscribe(subscriber): void
+        -listeners
+        +dispatch(event)
+        +listen(event, listener)
+        +subscribe(subscriber)
     }
     
     class Event {
         <<abstract>>
-        +getData(): array
+        +getData()
     }
     
     class UserRegistered {
@@ -100,19 +100,19 @@ classDiagram
     
     class Listener {
         <<interface>>
-        +handle(event): void
+        +handle(event)
     }
     
     class EmailListener {
-        +handle(event): void
+        +handle(event)
     }
     
     class NotificationListener {
-        +handle(event): void
+        +handle(event)
     }
     
     class LogListener {
-        +handle(event): void
+        +handle(event)
     }
     
     Event <|-- UserRegistered
@@ -135,8 +135,8 @@ namespace App\Patterns\Mediator;
 
 interface MediatorInterface
 {
-    public function mediate(string $event, $data = null): void;
-    public function registerComponent(string $name, ComponentInterface $component): void;
+    public function mediate(string $event, $data = null);
+    public function registerComponent(string $name, ComponentInterface $component);
     public function getComponent(string $name): ?ComponentInterface;
 }
 ```
@@ -152,12 +152,12 @@ abstract class BaseComponent implements ComponentInterface
 {
     protected MediatorInterface $mediator;
     
-    public function setMediator(MediatorInterface $mediator): void
+    public function setMediator(MediatorInterface $mediator)
     {
         $this->mediator = $mediator;
     }
     
-    protected function notify(string $event, $data = null): void
+    protected function notify(string $event, $data = null)
     {
         $this->mediator->mediate($event, $data);
     }
@@ -165,7 +165,7 @@ abstract class BaseComponent implements ComponentInterface
 
 interface ComponentInterface
 {
-    public function setMediator(MediatorInterface $mediator): void;
+    public function setMediator(MediatorInterface $mediator);
 }
 ```
 
@@ -180,7 +180,7 @@ class OrderProcessingMediator implements MediatorInterface
 {
     private array $components = [];
     
-    public function registerComponent(string $name, ComponentInterface $component): void
+    public function registerComponent(string $name, ComponentInterface $component)
     {
         $this->components[$name] = $component;
         $component->setMediator($this);
@@ -191,7 +191,7 @@ class OrderProcessingMediator implements MediatorInterface
         return $this->components[$name] ?? null;
     }
     
-    public function mediate(string $event, $data = null): void
+    public function mediate(string $event, $data = null)
     {
         switch ($event) {
             case 'order.created':
@@ -215,7 +215,7 @@ class OrderProcessingMediator implements MediatorInterface
         }
     }
     
-    private function handleOrderCreated($order): void
+    private function handleOrderCreated($order)
     {
         // Notify inventory to reserve items
         if (isset($this->components['inventory'])) {
@@ -238,7 +238,7 @@ class OrderProcessingMediator implements MediatorInterface
         }
     }
     
-    private function handlePaymentProcessed($payment): void
+    private function handlePaymentProcessed($payment)
     {
         // Notify order service
         if (isset($this->components['order'])) {
@@ -256,7 +256,7 @@ class OrderProcessingMediator implements MediatorInterface
         }
     }
     
-    private function handleInventoryUpdated($inventory): void
+    private function handleInventoryUpdated($inventory)
     {
         // Notify product service
         if (isset($this->components['product'])) {
@@ -269,7 +269,7 @@ class OrderProcessingMediator implements MediatorInterface
         }
     }
     
-    private function handleUserRegistered($user): void
+    private function handleUserRegistered($user)
     {
         // Send welcome email
         if (isset($this->components['email'])) {
@@ -300,7 +300,7 @@ use App\Patterns\Mediator\BaseComponent;
 
 class OrderComponent extends BaseComponent
 {
-    public function createOrder($orderData): void
+    public function createOrder($orderData)
     {
         // Create order logic
         $order = $this->processOrderData($orderData);
@@ -309,7 +309,7 @@ class OrderComponent extends BaseComponent
         $this->notify('order.created', $order);
     }
     
-    public function updatePaymentStatus($payment): void
+    public function updatePaymentStatus($payment)
     {
         // Update order payment status
         $order = $this->findOrder($payment->order_id);
@@ -341,7 +341,7 @@ class OrderComponent extends BaseComponent
 
 class PaymentComponent extends BaseComponent
 {
-    public function processPayment($order): void
+    public function processPayment($order)
     {
         // Payment processing logic
         $payment = $this->chargePayment($order);
@@ -365,7 +365,7 @@ class PaymentComponent extends BaseComponent
 
 class InventoryComponent extends BaseComponent
 {
-    public function reserveItems($order): void
+    public function reserveItems($order)
     {
         foreach ($order->items as $item) {
             $this->reserveItem($item);
@@ -377,7 +377,7 @@ class InventoryComponent extends BaseComponent
         ]);
     }
     
-    public function updateAvailability($inventory): void
+    public function updateAvailability($inventory)
     {
         // Update product availability based on inventory changes
         foreach ($inventory['items'] as $item) {
@@ -385,13 +385,13 @@ class InventoryComponent extends BaseComponent
         }
     }
     
-    private function reserveItem($item): void
+    private function reserveItem($item)
     {
         // Mock item reservation
         logger()->info("Reserved item: {$item['product_id']}, quantity: {$item['quantity']}");
     }
     
-    private function updateItemAvailability($item): void
+    private function updateItemAvailability($item)
     {
         // Mock availability update
         logger()->info("Updated availability for item: {$item['product_id']}");
@@ -400,28 +400,28 @@ class InventoryComponent extends BaseComponent
 
 class EmailComponent extends BaseComponent
 {
-    public function sendOrderConfirmation($order): void
+    public function sendOrderConfirmation($order)
     {
         $this->sendEmail($order->user_id, 'order_confirmation', [
             'order' => $order
         ]);
     }
     
-    public function sendPaymentConfirmation($payment): void
+    public function sendPaymentConfirmation($payment)
     {
         $this->sendEmail($payment->order->user_id, 'payment_confirmation', [
             'payment' => $payment
         ]);
     }
     
-    public function sendWelcomeEmail($user): void
+    public function sendWelcomeEmail($user)
     {
         $this->sendEmail($user->id, 'welcome', [
             'user' => $user
         ]);
     }
     
-    private function sendEmail($userId, $template, $data): void
+    private function sendEmail($userId, $template, $data)
     {
         // Mock email sending
         logger()->info("Sending {$template} email to user {$userId}");
@@ -454,7 +454,7 @@ class OrderMediatorService
         $this->setupComponents();
     }
     
-    private function setupComponents(): void
+    private function setupComponents()
     {
         // Register all components
         $this->mediator->registerComponent('order', new OrderComponent());
@@ -463,7 +463,7 @@ class OrderMediatorService
         $this->mediator->registerComponent('email', new EmailComponent());
     }
     
-    public function processOrder(array $orderData): void
+    public function processOrder(array $orderData)
     {
         $orderComponent = $this->mediator->getComponent('order');
         $orderComponent->createOrder($orderData);
@@ -545,13 +545,13 @@ class LaravelEventMediator implements MediatorInterface
         $this->eventDispatcher = $eventDispatcher;
     }
     
-    public function mediate(string $event, $data = null): void
+    public function mediate(string $event, $data = null)
     {
         // Use Laravel's event system as the mediation mechanism
         $this->eventDispatcher->dispatch($event, $data);
     }
     
-    public function registerComponent(string $name, ComponentInterface $component): void
+    public function registerComponent(string $name, ComponentInterface $component)
     {
         $this->components[$name] = $component;
         $component->setMediator($this);
@@ -579,7 +579,7 @@ class JobQueueMediator implements MediatorInterface
     
     private array $components = [];
     
-    public function mediate(string $event, $data = null): void
+    public function mediate(string $event, $data = null)
     {
         // Dispatch jobs based on events
         switch ($event) {
@@ -595,7 +595,7 @@ class JobQueueMediator implements MediatorInterface
         }
     }
     
-    public function registerComponent(string $name, ComponentInterface $component): void
+    public function registerComponent(string $name, ComponentInterface $component)
     {
         $this->components[$name] = $component;
         $component->setMediator($this);
@@ -610,9 +610,9 @@ class JobQueueMediator implements MediatorInterface
 
 ## Advantages
 
-1. **Loose Coupling**: Components don't need to know about each other directly
+1. **Loose Coupling**s don't need to know about each other directly
 2. **Centralized Control**: All interactions are managed in one place  
-3. **Reusability**: Components can be reused in different contexts
+3. **Reusability**s can be reused in different contexts
 4. **Maintainability**: Easy to modify interaction logic
 
 ## Disadvantages
@@ -620,7 +620,7 @@ class JobQueueMediator implements MediatorInterface
 1. **Complexity**: The mediator can become a complex "god object"
 2. **Single Point of Failure**: If the mediator fails, the entire system may fail
 3. **Performance**: Additional layer of indirection may impact performance
-4. **Tight Coupling to Mediator**: Components become tightly coupled to the mediator
+4. **Tight Coupling to Mediator**s become tightly coupled to the mediator
 
 ## When to Use
 

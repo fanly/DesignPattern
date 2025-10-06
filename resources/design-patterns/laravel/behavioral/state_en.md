@@ -11,30 +11,30 @@ Allow an object to alter its behavior when its internal state changes. The objec
 classDiagram
     class Context {
         -state: State
-        +setState(state): void
-        +request(): void
+        +setState(state)
+        +request()
         +getState(): State
     }
     
     class State {
         <<abstract>>
-        +handle(context): void
-        +canTransitionTo(state): boolean
+        +handle(context)
+        +canTransitionTo(state)ean
     }
     
     class ConcreteStateA {
-        +handle(context): void
-        +canTransitionTo(state): boolean
+        +handle(context)
+        +canTransitionTo(state)ean
     }
     
     class ConcreteStateB {
-        +handle(context): void
-        +canTransitionTo(state): boolean
+        +handle(context)
+        +canTransitionTo(state)ean
     }
     
     class ConcreteStateC {
-        +handle(context): void
-        +canTransitionTo(state): boolean
+        +handle(context)
+        +canTransitionTo(state)ean
     }
     
     Context --> State
@@ -83,42 +83,42 @@ stateDiagram-v2
 classDiagram
     class Order {
         -state: OrderState
-        -status: string
-        +process(): void
-        +cancel(): void
-        +complete(): void
-        +setState(state): void
+        -status
+        +process()
+        +cancel()
+        +complete()
+        +setState(state)
     }
     
     class OrderState {
         <<interface>>
-        +process(order): void
-        +cancel(order): void
-        +complete(order): void
+        +process(order)
+        +cancel(order)
+        +complete(order)
     }
     
     class PendingState {
-        +process(order): void
-        +cancel(order): void
-        +complete(order): void
+        +process(order)
+        +cancel(order)
+        +complete(order)
     }
     
     class ProcessingState {
-        +process(order): void
-        +cancel(order): void
-        +complete(order): void
+        +process(order)
+        +cancel(order)
+        +complete(order)
     }
     
     class CompletedState {
-        +process(order): void
-        +cancel(order): void
-        +complete(order): void
+        +process(order)
+        +cancel(order)
+        +complete(order)
     }
     
     class CancelledState {
-        +process(order): void
-        +cancel(order): void
-        +complete(order): void
+        +process(order)
+        +cancel(order)
+        +complete(order)
     }
     
     Order --> OrderState
@@ -724,17 +724,17 @@ class Document extends Model
     public function publish() { $this->state->publish($this); }
     
     // State-based access control
-    public function canEdit(): bool
+    public function canEdit()
     {
         return in_array($this->status, ['draft', 'rejected']);
     }
     
-    public function canApprove(): bool
+    public function canApprove()
     {
         return $this->status === 'under_review' && auth()->user()->can('approve', $this);
     }
     
-    public function canPublish(): bool
+    public function canPublish()
     {
         return $this->status === 'approved' && auth()->user()->can('publish', $this);
     }
@@ -880,13 +880,13 @@ class Payment extends Model
     public function refund() { $this->state->refund($this); }
     
     // State-based validation
-    public function canBeRefunded(): bool
+    public function canBeRefunded()
     {
         return $this->status === 'completed' && 
                $this->completed_at->gt(now()->subDays(30));
     }
     
-    public function isFinal(): bool
+    public function isFinal()
     {
         return in_array($this->status, ['completed', 'failed', 'refunded']);
     }

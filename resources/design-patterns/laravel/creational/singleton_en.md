@@ -14,11 +14,11 @@ classDiagram
         -instance: Singleton
         -Singleton()
         +getInstance(): Singleton
-        +operation(): void
+        +operation()
     }
     
     class Client {
-        +main(): void
+        +main()
     }
     
     Client --> Singleton : uses

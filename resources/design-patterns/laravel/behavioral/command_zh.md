@@ -11,32 +11,32 @@
 classDiagram
     class Command {
         <<interface>>
-        +execute(): void
-        +undo(): void
+        +execute()
+        +undo()
     }
     
     class ConcreteCommand {
         -receiver: Receiver
-        -state: any
-        +execute(): void
-        +undo(): void
+        -state
+        +execute()
+        +undo()
     }
     
     class Receiver {
-        +action(): void
-        +undoAction(): void
+        +action()
+        +undoAction()
     }
     
     class Invoker {
-        -command: Command
-        -history: array
-        +setCommand(cmd): void
-        +executeCommand(): void
-        +undo(): void
+        -command
+        -history
+        +setCommand(cmd)
+        +executeCommand()
+        +undo()
     }
     
     class Client {
-        +createCommand(): Command
+        +createCommand()
     }
     
     ConcreteCommand ..|> Command
@@ -53,46 +53,46 @@ classDiagram
 ```mermaid
 classDiagram
     class Kernel {
-        -commands: array
+        -commands
         -artisan: Application
-        +handle(input, output): int
-        +call(command, parameters): int
-        +queue(command, parameters): void
+        +handle(input, output)
+        +call(command, parameters)
+        +queue(command, parameters)
     }
     
     class Command {
         <<abstract>>
-        -name: string
-        -description: string
-        +handle(): int
-        +fire(): void
-        +argument(key): mixed
-        +option(key): mixed
+        -name
+        -description
+        +handle()
+        +fire()
+        +argument(key)
+        +option(key)
     }
     
     class MakeCommand {
-        +handle(): int
-        +buildClass(name): string
-        +getStub(): string
+        +handle()
+        +buildClass(name)
+        +getStub()
     }
     
     class MigrateCommand {
         -migrator: Migrator
-        +handle(): int
-        +runMigrations(): void
+        +handle()
+        +runMigrations()
     }
     
     class QueueCommand {
         -worker: Worker
-        +handle(): int
-        +runWorker(): void
+        +handle()
+        +runWorker()
     }
     
     class Application {
-        -commands: array
-        +add(command): void
-        +find(name): Command
-        +run(input, output): int
+        -commands
+        +add(command)
+        +find(name)
+        +run(input, output)
     }
     
     Kernel --> Application : uses
@@ -131,8 +131,8 @@ sequenceDiagram
 classDiagram
     class Job {
         <<interface>>
-        +handle(): void
-        +failed(exception): void
+        +handle()
+        +failed(exception)
     }
     
     class Queueable {
@@ -145,27 +145,27 @@ classDiagram
     class SendEmailJob {
         -user: User
         -email: Email
-        +handle(): void
-        +failed(exception): void
+        +handle()
+        +failed(exception)
     }
     
     class ProcessPaymentJob {
         -payment: Payment
-        +handle(): void
-        +failed(exception): void
+        +handle()
+        +failed(exception)
     }
     
     class Queue {
-        +push(job): mixed
-        +later(delay, job): mixed
+        +push(job)
+        +later(delay, job)
         +pop(queue): Job
     }
     
     class Worker {
         -queue: Queue
-        +daemon(): void
-        +runNextJob(): void
-        +process(job): void
+        +daemon()
+        +runNextJob()
+        +process(job)
     }
     
     SendEmailJob ..|> Job
@@ -186,38 +186,38 @@ classDiagram
 classDiagram
     class Event {
         <<abstract>>
-        +broadcastOn(): array
-        +broadcastWith(): array
+        +broadcastOn()
+        +broadcastWith()
     }
     
     class UserRegistered {
         +user: User
-        +broadcastOn(): array
+        +broadcastOn()
     }
     
     class OrderPlaced {
         +order: Order
-        +broadcastOn(): array
+        +broadcastOn()
     }
     
     class Listener {
         <<interface>>
-        +handle(event): void
+        +handle(event)
     }
     
     class SendWelcomeEmail {
-        +handle(UserRegistered): void
+        +handle(UserRegistered)
     }
     
     class UpdateInventory {
-        +handle(OrderPlaced): void
+        +handle(OrderPlaced)
     }
     
     class EventDispatcher {
-        -listeners: array
-        +listen(event, listener): void
-        +dispatch(event): void
-        +fire(event): void
+        -listeners
+        +listen(event, listener)
+        +dispatch(event)
+        +fire(event)
     }
     
     UserRegistered --|> Event
