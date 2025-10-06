@@ -5,6 +5,6 @@ return [
     'patterns' => 'Patterns',
     'categories' => 'Categories',
     'language' => 'Language',
-    'chinese' => '中文',
+    'chinese' => 'Chinese',
     'english' => 'English',
 ];

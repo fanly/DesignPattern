@@ -51,6 +51,58 @@ classDiagram
     ConcreteBuilder --> Product
 ```
 
+### Laravel Query Builder Architecture
+
+```mermaid
+graph TB
+    A[Query Builder] --> B[Select Builder]
+    A --> C[Where Builder]
+    A --> D[Join Builder]
+    A --> E[Order Builder]
+    A --> F[Group Builder]
+    
+    B --> G[SQL Query]
+    C --> G
+    D --> G
+    E --> G
+    F --> G
+    
+    G --> H[Execute Query]
+    H --> I[Result Set]
+    
+    style A fill:#e1f5fe
+    style G fill:#f3e5f5
+    style I fill:#fff3e0
+```
+
+### Builder Construction Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant QueryBuilder
+    participant WhereBuilder
+    participant JoinBuilder
+    participant SQL
+    
+    Client->>QueryBuilder: select('*')
+    QueryBuilder->>QueryBuilder: addSelect('*')
+    
+    Client->>QueryBuilder: where('status', 'active')
+    QueryBuilder->>WhereBuilder: addWhere('status', 'active')
+    
+    Client->>QueryBuilder: join('users', 'posts.user_id', 'users.id')
+    QueryBuilder->>JoinBuilder: addJoin('users', ...)
+    
+    Client->>QueryBuilder: get()
+    QueryBuilder->>SQL: toSql()
+    SQL-->>QueryBuilder: compiled SQL
+    QueryBuilder->>QueryBuilder: execute()
+    QueryBuilder-->>Client: Collection
+    
+    note over QueryBuilder: Builds query step by step
+```
+
 ## Laravel实现
 
 ### 1. 查询构建器示例

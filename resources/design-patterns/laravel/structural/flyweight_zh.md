@@ -6,35 +6,6 @@
 
 ## 架构图
 
-### 享元模式类图
-```mermaid
-classDiagram
-    class FlyweightFactory {
-        -flyweights
-        +getFlyweight(key)
-    }
-    
-    class Flyweight {
-        <<interface>>
-        +operation(extrinsicState)
-    }
-    
-    class ConcreteFlyweight {
-        -intrinsicState
-        +operation(extrinsicState)
-    }
-    
-    class Context {
-        -flyweight
-        -extrinsicState
-        +operation()
-    }
-    
-    FlyweightFactory --> Flyweight
-    ConcreteFlyweight ..|> Flyweight
-    Context --> Flyweight
-```
-
 ### Laravel 配置享元架构
 ```mermaid
 classDiagram
@@ -102,48 +73,7 @@ sequenceDiagram
     Note over Context: 上下文存储外部状态
 ```
 
-### Laravel 视图享元模式
-```mermaid
-classDiagram
-    class ViewFactory {
-        -engines
-        -finderFinder
-        -shared
-        +make(view, data)
-        +exists(view)
-        +share(key, value)
-    }
-    
-    class View {
-        -factoryFactory
-        -engine
-        -view
-        -data
-        +render()
-        +with(key, value)
-    }
-    
-    class BladeEngine {
-        -compiler
-        -files
-        +get(path, data)
-    }
-    
-    class ViewFinder {
-        -files
-        -paths
-        -views
-        +find(name)
-    }
-    
-    ViewFactory --> ViewFinder : finds views
-    ViewFactory --> BladeEngine : uses engine
-    ViewFactory --> View : creates
-    View --> BladeEngine : renders with
-    
-    note for ViewFactory "视图工厂\n管理视图享元对象"
-    note for ViewFinder "视图查找器\n缓存视图路径"
-```
+
 
 ## 设计意图
 
