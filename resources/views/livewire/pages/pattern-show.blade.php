@@ -44,35 +44,21 @@
                 <nav class="mt-3 space-y-1 max-h-60 overflow-y-auto">
                     @if(count($tableOfContents) > 0)
                         @foreach($tableOfContents as $item)
-                            <button type="button"
+                            <a href="#{{ $item['slug'] }}"
                                class="block w-full text-left py-2 px-3 text-sm rounded transition-colors border-l-2 border-transparent"
                                :class="activeSection === '#{{ $item['slug'] }}' ?
                                        'text-blue-600 bg-blue-50 font-medium border-blue-600' :
                                        'text-gray-600 hover:text-blue-600 hover:bg-blue-50'"
-                               x-on:click="
-                                   // 关闭移动端目录
-                                   $el.closest('details')?.removeAttribute('open');
-                                   // 更新激活状态
+                               @click.prevent="
                                    activeSection = '#{{ $item['slug'] }}';
-                                   // 滚动到目标位置
+                                   $el.closest('details')?.removeAttribute('open');
                                    const element = document.getElementById('{{ $item['slug'] }}');
                                    if (element) {
                                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                       window.location.hash = '#{{ $item['slug'] }}';
-                                   } else {
-                                       // 备用方案：查找包含标题文本的元素
-                                       const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
-                                       for (let heading of headings) {
-                                           if (heading.textContent.trim() === '{{ $item['title'] }}') {
-                                               heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                               window.location.hash = '#' + (heading.id || '{{ $item['slug'] }}');
-                                               break;
-                                           }
-                                       }
                                    }
                                ">
                                 {{ $item['title'] }}
-                            </button>
+                            </a>
                         @endforeach
                     @else
                         <p class="text-sm text-gray-500 px-3">{{ __('patterns.no_table_of_contents') }}</p>
@@ -88,31 +74,20 @@
                 <nav class="space-y-1">
                     @if(count($tableOfContents) > 0)
                         @foreach($tableOfContents as $item)
-                            <button type="button"
+                            <a href="#{{ $item['slug'] }}"
                                class="block w-full text-left py-1 px-2 text-sm rounded transition-colors"
                                :class="activeSection === '#{{ $item['slug'] }}' ?
                                        'text-blue-600 bg-blue-50 font-medium border-l-2 border-blue-600' :
                                        'text-gray-600 hover:text-blue-600 hover:bg-blue-50'"
-                               x-on:click="
+                               @click.prevent="
                                    activeSection = '#{{ $item['slug'] }}';
                                    const element = document.getElementById('{{ $item['slug'] }}');
                                    if (element) {
                                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                       window.location.hash = '#{{ $item['slug'] }}';
-                                   } else {
-                                       // 备用方案：查找包含标题文本的元素
-                                       const headings = document.querySelectorAll('.markdown-content h1, .markdown-content h2, .markdown-content h3');
-                                       for (let heading of headings) {
-                                           if (heading.textContent.trim() === '{{ $item['title'] }}') {
-                                               heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                               window.location.hash = '#' + (heading.id || '{{ $item['slug'] }}');
-                                               break;
-                                           }
-                                       }
                                    }
                                ">
                                 {{ $item['title'] }}
-                            </button>
+                            </a>
                         @endforeach
                     @else
                         <p class="text-sm text-gray-500">{{ __('patterns.no_table_of_contents') }}</p>

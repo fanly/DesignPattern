@@ -129,7 +129,7 @@ class DesignPattern extends Model
                 continue; // 跳过空标题
             }
             
-            $slug = strtolower(preg_replace('/[^a-zA-Z0-9\x{4e00}-\x{9fa5}]/u', '-', $cleanTitle));
+            $slug = strtolower(preg_replace('/[^a-z0-9\x{4e00}-\x{9fa5}]/u', '-', $cleanTitle));
             $slug = preg_replace('/-+/', '-', $slug); // 移除连续的破折号
             $slug = trim($slug, '-'); // 移除首尾的破折号
             
