@@ -10,9 +10,8 @@
 ```mermaid
 classDiagram
     class FlyweightFactory {
-        -flyweights: Map
-        +getFlyweight(key): Flyweight
-        +getCreatedFlyweights()
+        -flyweights
+        +getFlyweight(key)
     }
     
     class Flyweight {
@@ -21,28 +20,19 @@ classDiagram
     }
     
     class ConcreteFlyweight {
-        -intrinsicState: any
-        +operation(extrinsicState)
-    }
-    
-    class UnsharedConcreteFlyweight {
-        -allState: any
+        -intrinsicState
         +operation(extrinsicState)
     }
     
     class Context {
-        -flyweight: Flyweight
-        -extrinsicState: any
+        -flyweight
+        -extrinsicState
         +operation()
     }
     
-    FlyweightFactory --> Flyweight : creates and manages
+    FlyweightFactory --> Flyweight
     ConcreteFlyweight ..|> Flyweight
-    UnsharedConcreteFlyweight ..|> Flyweight
-    Context --> Flyweight : uses
-    
-    note for ConcreteFlyweight "共享的享元对象\n存储内部状态"
-    note for Context "上下文对象\n存储外部状态"
+    Context --> Flyweight
 ```
 
 ### Laravel 配置享元架构
@@ -57,7 +47,7 @@ classDiagram
     }
     
     class ConfigLoader {
-        -files: Filesystem
+        -files
         -defaultPath
         +load(name)
         +exists(name)
@@ -71,7 +61,7 @@ classDiagram
     }
     
     class Application {
-        -config: ConfigRepository
+        -config
         +config(key)
         +make(abstract)
     }
@@ -134,13 +124,13 @@ classDiagram
     }
     
     class BladeEngine {
-        -compiler: BladeCompiler
-        -files: Filesystem
+        -compiler
+        -files
         +get(path, data)
     }
     
     class ViewFinder {
-        -files: Filesystem
+        -files
         -paths
         -views
         +find(name)

@@ -16,14 +16,14 @@ classDiagram
     }
     
     class ConcretePrototype {
-        -state: String
-        +clone(): Prototype
-        +setState(state: String)
-        +getState(): String
+        -state
+        +clone()
+        +setState(state)
+        +getState()
     }
     
     class Client {
-        -prototype: Prototype
+        -prototype
         +operation()
     }
     

@@ -10,10 +10,10 @@ Allow an object to alter its behavior when its internal state changes. The objec
 ```mermaid
 classDiagram
     class Context {
-        -state: State
+        -state
         +setState(state)
         +request()
-        +getState(): State
+        +getState()
     }
     
     class State {
@@ -82,7 +82,7 @@ stateDiagram-v2
 ```mermaid
 classDiagram
     class Order {
-        -state: OrderState
+        -state
         -status
         +process()
         +cancel()

@@ -31,7 +31,7 @@ classDiagram
     }
     
     class Client {
-        +buildSyntaxTree(): AbstractExpression
+        +buildSyntaxTree()
         +interpret(expression, context)
     }
     
@@ -75,15 +75,15 @@ classDiagram
     
     class ConditionalExpression {
         -condition
-        -trueExpression: Expression
-        -falseExpression: Expression
+        -trueExpression
+        -falseExpression
         +compile(compiler)
     }
     
     class LoopExpression {
         -iterable
         -variable
-        -body: Expression
+        -body
         +compile(compiler)
     }
     

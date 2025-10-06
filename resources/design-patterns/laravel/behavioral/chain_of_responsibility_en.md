@@ -11,10 +11,10 @@ The Chain of Responsibility pattern avoids coupling the sender of a request to i
 classDiagram
     class Handler {
         <<abstract>>
-        -successor: Handler
+        -successor
         +setSuccessor(handler)
         +handleRequest(request)
-        #processRequest(request)ean
+        #processRequest(request)
     }
     
     class ConcreteHandlerA {

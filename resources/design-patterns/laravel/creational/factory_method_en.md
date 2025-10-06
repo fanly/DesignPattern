@@ -12,12 +12,12 @@ Define an interface for creating an object, but let subclasses decide which clas
 classDiagram
     class Creator {
         <<abstract>>
-        +factoryMethod(): Product
+        +factoryMethod()
         +operation()
     }
     
     class ConcreteCreator {
-        +factoryMethod(): Product
+        +factoryMethod()
     }
     
     class Product {

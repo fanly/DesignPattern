@@ -11,12 +11,12 @@
 classDiagram
     class Creator {
         <<abstract>>
-        +factoryMethod(): Product
+        +factoryMethod()
         +operation()
     }
     
     class ConcreteCreator {
-        +factoryMethod(): Product
+        +factoryMethod()
     }
     
     class Product {
@@ -41,13 +41,13 @@ classDiagram
 classDiagram
     class DatabaseManager {
         -connections
-        -factory: ConnectionFactory
-        +connection(name): Connection
-        +makeConnection(name): Connection
+        -factory
+        +connection(name)
+        +makeConnection(name)
     }
     
     class ConnectionFactory {
-        +make(config, name): Connection
+        +make(config, name)
         +createMysqlConnection(config): Connection
         +createPostgresConnection(config): Connection
         +createSqliteConnection(config): Connection
@@ -62,19 +62,19 @@ classDiagram
     }
     
     class MySqlConnection {
-        -pdo: PDO
+        -pdo
         +select(query)
         +insert(query)
     }
     
     class PostgresConnection {
-        -pdo: PDO
+        -pdo
         +select(query)
         +insert(query)
     }
     
     class SqliteConnection {
-        -pdo: PDO
+        -pdo
         +select(query)
         +insert(query)
     }

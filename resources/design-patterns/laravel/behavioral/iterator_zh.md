@@ -18,7 +18,7 @@ classDiagram
     }
     
     class ConcreteIterator {
-        -aggregate: ConcreteAggregate
+        -aggregate
         -current
         +first()
         +next()
@@ -78,7 +78,7 @@ classDiagram
     }
     
     class Paginator {
-        -items: Collection
+        -items
         -perPage
         -currentPage
         +getIterator()
@@ -123,8 +123,8 @@ sequenceDiagram
 ```mermaid
 classDiagram
     class Builder {
-        -connection: Connection
-        -grammar: Grammar
+        -connection
+        -grammar
         +get()
         +cursor()
         +chunk(count, callback)
@@ -132,7 +132,7 @@ classDiagram
     }
     
     class LazyCollection {
-        -source: Generator
+        -source
         +getIterator()
         +map(callback)
         +filter(callback)
@@ -233,17 +233,17 @@ flowchart LR
 ```mermaid
 classDiagram
     class LengthAwarePaginator {
-        -items: Collection
+        -items
         -total
         -perPage
         -currentPage
-        +getIterator(): ArrayIterator
-        +items(): Collection
+        +getIterator()
+        +items()
         +links()
     }
     
     class Paginator {
-        -items: Collection
+        -items
         -perPage
         -currentPage
         +getIterator()
@@ -252,10 +252,10 @@ classDiagram
     }
     
     class CursorPaginator {
-        -items: Collection
+        -items
         -perPage
-        -cursor: Cursor
-        +getIterator(): ArrayIterator
+        -cursor
+        +getIterator()
         +hasPages()
         +nextCursor()
     }

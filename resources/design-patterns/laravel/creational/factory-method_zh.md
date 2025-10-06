@@ -110,25 +110,6 @@ class SmsNotification implements NotificationInterface
     }
 }
 
-// 推送通知产品
-class PushNotification implements NotificationInterface
-{
-    public function send(string $message, string $recipient): bool
-    {
-        echo "Sending push notification to {$recipient}: {$message}\n";
-        
-        // 调用推送服务
-        // PushService::send($recipient, $message);
-        
-        return true;
-    }
-    
-    public function getType(): string
-    {
-        return 'push';
-    }
-}
-
 // 抽象通知工厂
 abstract class NotificationFactory
 {
@@ -163,15 +144,6 @@ class SmsNotificationFactory extends NotificationFactory
         return new SmsNotification();
     }
 }
-
-// 推送通知工厂
-class PushNotificationFactory extends NotificationFactory
-{
-    public function createNotification(): NotificationInterface
-    {
-        return new PushNotification();
-    }
-}
 ```
 
 ### 2. 支付处理器工厂示例
@@ -185,43 +157,21 @@ namespace App\Patterns\FactoryMethod;
 interface PaymentProcessorInterface
 {
     public function processPayment(float $amount, array $paymentData): array;
-    public function refund(string $transactionId, float $amount): array;
     public function getProviderName(): string;
 }
 
 // 支付宝处理器
 class AlipayProcessor implements PaymentProcessorInterface
 {
-    private string $appId;
-    private string $privateKey;
-    
-    public function __construct(string $appId, string $privateKey)
-    {
-        $this->appId = $appId;
-        $this->privateKey = $privateKey;
-    }
-    
     public function processPayment(float $amount, array $paymentData): array
     {
         echo "Processing Alipay payment: ¥{$amount}\n";
         
-        // 支付宝支付逻辑
         return [
             'status' => 'success',
             'transaction_id' => 'alipay_' . uniqid(),
             'amount' => $amount,
             'provider' => 'alipay'
-        ];
-    }
-    
-    public function refund(string $transactionId, float $amount): array
-    {
-        echo "Processing Alipay refund: {$transactionId}, ¥{$amount}\n";
-        
-        return [
-            'status' => 'success',
-            'refund_id' => 'refund_' . uniqid(),
-            'amount' => $amount
         ];
     }
     
@@ -234,20 +184,10 @@ class AlipayProcessor implements PaymentProcessorInterface
 // 微信支付处理器
 class WechatPayProcessor implements PaymentProcessorInterface
 {
-    private string $merchantId;
-    private string $apiKey;
-    
-    public function __construct(string $merchantId, string $apiKey)
-    {
-        $this->merchantId = $merchantId;
-        $this->apiKey = $apiKey;
-    }
-    
     public function processPayment(float $amount, array $paymentData): array
     {
         echo "Processing WeChat Pay payment: ¥{$amount}\n";
         
-        // 微信支付逻辑
         return [
             'status' => 'success',
             'transaction_id' => 'wechat_' . uniqid(),
@@ -256,62 +196,9 @@ class WechatPayProcessor implements PaymentProcessorInterface
         ];
     }
     
-    public function refund(string $transactionId, float $amount): array
-    {
-        echo "Processing WeChat Pay refund: {$transactionId}, ¥{$amount}\n";
-        
-        return [
-            'status' => 'success',
-            'refund_id' => 'refund_' . uniqid(),
-            'amount' => $amount
-        ];
-    }
-    
     public function getProviderName(): string
     {
         return 'WeChat Pay';
-    }
-}
-
-// PayPal处理器
-class PaypalProcessor implements PaymentProcessorInterface
-{
-    private string $clientId;
-    private string $clientSecret;
-    
-    public function __construct(string $clientId, string $clientSecret)
-    {
-        $this->clientId = $clientId;
-        $this->clientSecret = $clientSecret;
-    }
-    
-    public function processPayment(float $amount, array $paymentData): array
-    {
-        echo "Processing PayPal payment: \${$amount}\n";
-        
-        // PayPal支付逻辑
-        return [
-            'status' => 'success',
-            'transaction_id' => 'paypal_' . uniqid(),
-            'amount' => $amount,
-            'provider' => 'paypal'
-        ];
-    }
-    
-    public function refund(string $transactionId, float $amount): array
-    {
-        echo "Processing PayPal refund: {$transactionId}, \${$amount}\n";
-        
-        return [
-            'status' => 'success',
-            'refund_id' => 'refund_' . uniqid(),
-            'amount' => $amount
-        ];
-    }
-    
-    public function getProviderName(): string
-    {
-        return 'PayPal';
     }
 }
 
@@ -328,28 +215,7 @@ abstract class PaymentProcessorFactory
         
         echo "Using {$processor->getProviderName()} payment processor\n";
         
-        // 可以在这里添加通用的支付前后处理逻辑
-        $this->logPaymentAttempt($amount, $processor->getProviderName());
-        
-        $result = $processor->processPayment($amount, $paymentData);
-        
-        $this->logPaymentResult($result);
-        
-        return $result;
-    }
-    
-    protected function logPaymentAttempt(float $amount, string $provider): void
-    {
-        \Log::info("Payment attempt", [
-            'amount' => $amount,
-            'provider' => $provider,
-            'timestamp' => now()
-        ]);
-    }
-    
-    protected function logPaymentResult(array $result): void
-    {
-        \Log::info("Payment result", $result);
+        return $processor->processPayment($amount, $paymentData);
     }
 }
 
@@ -358,10 +224,7 @@ class AlipayProcessorFactory extends PaymentProcessorFactory
 {
     public function createProcessor(): PaymentProcessorInterface
     {
-        return new AlipayProcessor(
-            config('payment.alipay.app_id'),
-            config('payment.alipay.private_key')
-        );
+        return new AlipayProcessor();
     }
 }
 
@@ -370,240 +233,7 @@ class WechatPayProcessorFactory extends PaymentProcessorFactory
 {
     public function createProcessor(): PaymentProcessorInterface
     {
-        return new WechatPayProcessor(
-            config('payment.wechat.merchant_id'),
-            config('payment.wechat.api_key')
-        );
-    }
-}
-
-// PayPal工厂
-class PaypalProcessorFactory extends PaymentProcessorFactory
-{
-    public function createProcessor(): PaymentProcessorInterface
-    {
-        return new PaypalProcessor(
-            config('payment.paypal.client_id'),
-            config('payment.paypal.client_secret')
-        );
-    }
-}
-```
-
-### 3. 数据库连接工厂示例
-
-```php
-<?php
-
-namespace App\Patterns\FactoryMethod;
-
-// 数据库连接接口
-interface DatabaseConnectionInterface
-{
-    public function connect(): void;
-    public function query(string $sql): array;
-    public function close(): void;
-    public function getConnectionInfo(): array;
-}
-
-// MySQL连接
-class MysqlConnection implements DatabaseConnectionInterface
-{
-    private array $config;
-    private $connection = null;
-    
-    public function __construct(array $config)
-    {
-        $this->config = $config;
-    }
-    
-    public function connect(): void
-    {
-        echo "Connecting to MySQL database...\n";
-        
-        $dsn = "mysql:host={$this->config['host']};dbname={$this->config['database']};charset=utf8mb4";
-        $this->connection = new \PDO($dsn, $this->config['username'], $this->config['password']);
-        
-        echo "MySQL connection established\n";
-    }
-    
-    public function query(string $sql): array
-    {
-        echo "Executing MySQL query: {$sql}\n";
-        
-        if (!$this->connection) {
-            $this->connect();
-        }
-        
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-    
-    public function close(): void
-    {
-        $this->connection = null;
-        echo "MySQL connection closed\n";
-    }
-    
-    public function getConnectionInfo(): array
-    {
-        return [
-            'type' => 'mysql',
-            'host' => $this->config['host'],
-            'database' => $this->config['database']
-        ];
-    }
-}
-
-// PostgreSQL连接
-class PostgresqlConnection implements DatabaseConnectionInterface
-{
-    private array $config;
-    private $connection = null;
-    
-    public function __construct(array $config)
-    {
-        $this->config = $config;
-    }
-    
-    public function connect(): void
-    {
-        echo "Connecting to PostgreSQL database...\n";
-        
-        $dsn = "pgsql:host={$this->config['host']};dbname={$this->config['database']}";
-        $this->connection = new \PDO($dsn, $this->config['username'], $this->config['password']);
-        
-        echo "PostgreSQL connection established\n";
-    }
-    
-    public function query(string $sql): array
-    {
-        echo "Executing PostgreSQL query: {$sql}\n";
-        
-        if (!$this->connection) {
-            $this->connect();
-        }
-        
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-    
-    public function close(): void
-    {
-        $this->connection = null;
-        echo "PostgreSQL connection closed\n";
-    }
-    
-    public function getConnectionInfo(): array
-    {
-        return [
-            'type' => 'postgresql',
-            'host' => $this->config['host'],
-            'database' => $this->config['database']
-        ];
-    }
-}
-
-// SQLite连接
-class SqliteConnection implements DatabaseConnectionInterface
-{
-    private array $config;
-    private $connection = null;
-    
-    public function __construct(array $config)
-    {
-        $this->config = $config;
-    }
-    
-    public function connect(): void
-    {
-        echo "Connecting to SQLite database...\n";
-        
-        $this->connection = new \PDO("sqlite:{$this->config['database']}");
-        
-        echo "SQLite connection established\n";
-    }
-    
-    public function query(string $sql): array
-    {
-        echo "Executing SQLite query: {$sql}\n";
-        
-        if (!$this->connection) {
-            $this->connect();
-        }
-        
-        $stmt = $this->connection->prepare($sql);
-        $stmt->execute();
-        
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
-    }
-    
-    public function close(): void
-    {
-        $this->connection = null;
-        echo "SQLite connection closed\n";
-    }
-    
-    public function getConnectionInfo(): array
-    {
-        return [
-            'type' => 'sqlite',
-            'database' => $this->config['database']
-        ];
-    }
-}
-
-// 抽象数据库工厂
-abstract class DatabaseConnectionFactory
-{
-    // 工厂方法
-    abstract public function createConnection(): DatabaseConnectionInterface;
-    
-    // 执行查询的模板方法
-    public function executeQuery(string $sql): array
-    {
-        $connection = $this->createConnection();
-        $info = $connection->getConnectionInfo();
-        
-        echo "Using {$info['type']} database connection\n";
-        
-        try {
-            $result = $connection->query($sql);
-            return $result;
-        } finally {
-            $connection->close();
-        }
-    }
-}
-
-// MySQL工厂
-class MysqlConnectionFactory extends DatabaseConnectionFactory
-{
-    public function createConnection(): DatabaseConnectionInterface
-    {
-        return new MysqlConnection(config('database.connections.mysql'));
-    }
-}
-
-// PostgreSQL工厂
-class PostgresqlConnectionFactory extends DatabaseConnectionFactory
-{
-    public function createConnection(): DatabaseConnectionInterface
-    {
-        return new PostgresqlConnection(config('database.connections.pgsql'));
-    }
-}
-
-// SQLite工厂
-class SqliteConnectionFactory extends DatabaseConnectionFactory
-{
-    public function createConnection(): DatabaseConnectionInterface
-    {
-        return new SqliteConnection(config('database.connections.sqlite'));
+        return new WechatPayProcessor();
     }
 }
 ```
@@ -621,7 +251,6 @@ function sendNotification(string $type, string $message, string $recipient)
     $factory = match ($type) {
         'email' => new EmailNotificationFactory(),
         'sms' => new SmsNotificationFactory(),
-        'push' => new PushNotificationFactory(),
         default => throw new \InvalidArgumentException("Unknown notification type: {$type}")
     };
     
@@ -631,7 +260,6 @@ function sendNotification(string $type, string $message, string $recipient)
 // 使用示例
 sendNotification('email', 'Hello World!', 'user@example.com');
 sendNotification('sms', 'Urgent notification', '+1234567890');
-sendNotification('push', 'New message', 'user123');
 ```
 
 ### 支付处理器使用
@@ -653,7 +281,6 @@ class PaymentService
         return match ($provider) {
             'alipay' => new AlipayProcessorFactory(),
             'wechat' => new WechatPayProcessorFactory(),
-            'paypal' => new PaypalProcessorFactory(),
             default => throw new \InvalidArgumentException("Unsupported payment provider: {$provider}")
         };
     }
@@ -664,40 +291,6 @@ $paymentService = new PaymentService();
 
 $result1 = $paymentService->processPayment('alipay', 100.00, ['order_id' => '12345']);
 $result2 = $paymentService->processPayment('wechat', 50.00, ['order_id' => '12346']);
-$result3 = $paymentService->processPayment('paypal', 75.00, ['order_id' => '12347']);
-```
-
-### 数据库连接使用
-
-```php
-<?php
-
-class DatabaseService
-{
-    public function queryData(string $dbType, string $sql): array
-    {
-        $factory = $this->getDatabaseFactory($dbType);
-        
-        return $factory->executeQuery($sql);
-    }
-    
-    private function getDatabaseFactory(string $dbType): DatabaseConnectionFactory
-    {
-        return match ($dbType) {
-            'mysql' => new MysqlConnectionFactory(),
-            'postgresql' => new PostgresqlConnectionFactory(),
-            'sqlite' => new SqliteConnectionFactory(),
-            default => throw new \InvalidArgumentException("Unsupported database type: {$dbType}")
-        };
-    }
-}
-
-// 使用示例
-$dbService = new DatabaseService();
-
-$users = $dbService->queryData('mysql', 'SELECT * FROM users LIMIT 10');
-$posts = $dbService->queryData('postgresql', 'SELECT * FROM posts WHERE published = true');
-$logs = $dbService->queryData('sqlite', 'SELECT * FROM logs ORDER BY created_at DESC LIMIT 100');
 ```
 
 ## Laravel中的实际应用
@@ -712,9 +305,8 @@ app()->bind('payment.processor', function ($app) {
     $provider = config('payment.default');
     
     return match ($provider) {
-        'alipay' => new AlipayProcessor(/* config */),
-        'wechat' => new WechatPayProcessor(/* config */),
-        'paypal' => new PaypalProcessor(/* config */),
+        'alipay' => new AlipayProcessor(),
+        'wechat' => new WechatPayProcessor(),
     };
 });
 

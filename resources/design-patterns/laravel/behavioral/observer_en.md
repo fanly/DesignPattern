@@ -18,7 +18,7 @@ classDiagram
     }
     
     class ConcreteSubject {
-        -observers: List~Observer~
+        -observers
         -state
         +attach(observer)
         +detach(observer)

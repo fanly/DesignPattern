@@ -22,9 +22,9 @@
 ```mermaid
 classDiagram
     class Singleton {
-        -instance: Singleton
+        -instance
         -Singleton()
-        +getInstance(): Singleton
+        +getInstance()
         +operation()
     }
     

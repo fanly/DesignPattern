@@ -20,19 +20,19 @@ classDiagram
     }
     
     class NonTerminalExpression {
-        -expression1: AbstractExpression
-        -expression2: AbstractExpression
+        -expression1
+        -expression2
         +interpret(context)
     }
     
     class Context {
-        -variables: Map
+        -variables
         +getValue(variable)
         +setValue(variable, value)
     }
     
     class Client {
-        +buildSyntaxTree(): AbstractExpression
+        +buildSyntaxTree()
         +interpret(expression, context)
     }
     

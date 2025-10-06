@@ -11,8 +11,8 @@ Use sharing to support large numbers of fine-grained objects efficiently. The Fl
 ```mermaid
 classDiagram
     class FlyweightFactory {
-        -flyweights: Map
-        +getFlyweight(key): Flyweight
+        -flyweights
+        +getFlyweight(key)
     }
     
     class Flyweight {
@@ -21,13 +21,13 @@ classDiagram
     }
     
     class ConcreteFlyweight {
-        -intrinsicState: State
+        -intrinsicState
         +operation(extrinsicState)
     }
     
     class Context {
-        -extrinsicState: State
-        -flyweight: Flyweight
+        -extrinsicState
+        -flyweight
         +operation()
     }
     

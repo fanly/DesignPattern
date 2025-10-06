@@ -17,7 +17,7 @@ classDiagram
     }
     
     class ConcreteCommand {
-        -receiver: Receiver
+        -receiver
         -state
         +execute()
         +undo()

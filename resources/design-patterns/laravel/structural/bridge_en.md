@@ -11,7 +11,7 @@ Decouple an abstraction from its implementation so that the two can vary indepen
 ```mermaid
 classDiagram
     class Abstraction {
-        -implementor: Implementor
+        -implementor
         +operation()
     }
     

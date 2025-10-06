@@ -20,7 +20,7 @@ classDiagram
     }
     
     class Adapter {
-        -adaptee: Adaptee
+        -adaptee
         +request()
     }
     

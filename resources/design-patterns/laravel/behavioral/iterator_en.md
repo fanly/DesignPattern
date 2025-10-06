@@ -18,9 +18,9 @@ classDiagram
     }
     
     class ConcreteIterator {
-        -collection: Collection
+        -collection
         -position
-        +hasNext()ean
+        +hasNext()
         +next()
         +current()
         +rewind()
@@ -33,7 +33,7 @@ classDiagram
     
     class ConcreteAggregate {
         -items
-        +createIterator(): Iterator
+        +createIterator()
         +add(item)
         +remove(item)
         +getItems()
