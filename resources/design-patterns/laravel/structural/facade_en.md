@@ -6,8 +6,7 @@ Provide a unified interface to a set of interfaces in a subsystem. Facade define
 
 ## Architecture Diagram
 
-### Facade Pattern Structure
-
+### Facade Pattern Class Diagram
 ```mermaid
 classDiagram
     class Facade {
@@ -16,85 +15,82 @@ classDiagram
     }
     
     class SubsystemA {
-        +operationA1()
-        +operationA2()
+        +operationA()
     }
     
     class SubsystemB {
-        +operationB1()
-        +operationB2()
-    }
-    
-    class SubsystemC {
-        +operationC1()
-        +operationC2()
+        +operationB()
     }
     
     class Client {
         +main()
     }
     
-    Client --> Facade : uses
-    Facade --> SubsystemA : delegates
-    Facade --> SubsystemB : delegates
-    Facade --> SubsystemC : delegates
-    
-    note for Facade "Simplifies subsystem access"
-    note for Client "Only knows about Facade"
+    Client --> Facade
+    Facade --> SubsystemA
+    Facade --> SubsystemB
 ```
 
 ### Laravel Facade System Architecture
-
 ```mermaid
-graph TB
-    A[Client Code] --> B[Laravel Facade]
-    B --> C[Facade Base Class]
-    C --> D[Service Container]
-    D --> E{Service Resolution}
-    E --> F[Cache Service]
-    E --> G[Database Service]
-    E --> H[Mail Service]
-    E --> I[Queue Service]
+classDiagram
+    class Facade {
+        +getFacadeRoot()
+        +getFacadeAccessor()
+    }
     
-    F --> J[Complex Cache Implementation]
-    G --> K[Complex Database Implementation]
-    H --> L[Complex Mail Implementation]
-    I --> M[Complex Queue Implementation]
+    class DB {
+        +getFacadeAccessor()
+    }
     
-    style B fill:#e1f5fe
-    style D fill:#f3e5f5
-    style J fill:#fff3e0
-    style K fill:#fff3e0
-    style L fill:#fff3e0
-    style M fill:#fff3e0
+    class Cache {
+        +getFacadeAccessor()
+    }
+    
+    class DatabaseManager {
+        +connection()
+        +table()
+    }
+    
+    class CacheManager {
+        +store()
+        +get()
+    }
+    
+    class Application {
+        +make()
+    }
+    
+    DB --|> Facade
+    Cache --|> Facade
+    Facade --> Application
+    DB --> DatabaseManager
+    Cache --> CacheManager
 ```
 
-### Facade Resolution Flow
-
+### Facade Call Sequence Diagram
 ```mermaid
 sequenceDiagram
     participant Client
-    participant CacheFacade
-    participant FacadeBase
-    participant Container
-    participant CacheManager
-    participant CacheStore
+    participant Facade
+    participant Application
+    participant Service
     
-    Client->>CacheFacade: Cache::get('key')
-    CacheFacade->>FacadeBase: __callStatic('get', ['key'])
-    FacadeBase->>FacadeBase: getFacadeRoot()
-    FacadeBase->>Container: make('cache')
-    Container->>CacheManager: resolve cache service
-    CacheManager-->>Container: cache manager instance
-    Container-->>FacadeBase: cache manager
-    FacadeBase->>CacheManager: get('key')
-    CacheManager->>CacheStore: get('key')
-    CacheStore-->>CacheManager: value
-    CacheManager-->>FacadeBase: value
-    FacadeBase-->>CacheFacade: value
-    CacheFacade-->>Client: value
-    
-    note over FacadeBase: Resolves service from container
+    Client->>Facade: call method
+    Facade->>Application: resolve service
+    Application-->>Facade: service instance
+    Facade->>Service: call method
+    Service-->>Client: result
+```
+
+### Laravel Facade Workflow
+```mermaid
+flowchart TD
+    A[Static Method Call] --> B[__callStatic]
+    B --> C[getFacadeRoot]
+    C --> D[Resolve Service]
+    D --> E[Call Method]
+    E --> F[Return Result]
 ```
 
 ## Design Intent
