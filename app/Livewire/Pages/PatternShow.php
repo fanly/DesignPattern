@@ -13,7 +13,9 @@ class PatternShow extends Component
 
     public function mount($slug)
     {
-        $this->pattern = DesignPattern::where('slug', $slug)->firstOrFail();
+        $this->pattern = DesignPattern::with('category')
+            ->where('slug', $slug)
+            ->firstOrFail();
     }
 
     public function render()

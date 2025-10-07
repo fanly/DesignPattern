@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Usamamuneerchaudhary\Commentify\Traits\Commentable;
 
@@ -70,7 +71,7 @@ class DesignPattern extends Model
     }
     
     /**
-     * 获取设计模式的Markdown内容
+     * 获取设计模式的Markdown内容（带缓存）
      */
     public function getContent(?string $locale = null): string
     {
@@ -78,26 +79,32 @@ class DesignPattern extends Model
             $locale = app()->getLocale();
         }
         
-        $filePathField = $locale === 'en' ? 'file_path_en' : 'file_path_zh';
-        $filePath = $this->attributes[$filePathField] ?? null;
+        $cacheKey = "pattern_content_{$this->id}_{$locale}";
+        $this->addCacheKey($cacheKey);
         
-        if (!$filePath) {
-            // 如果当前语言的文件不存在，回退到中文文件
-            $filePath = $this->attributes['file_path_zh'] ?? null;
+        // 使用较短的缓存时间，避免文件缓存占用过多空间
+        return cache()->remember($cacheKey, 1800, function () use ($locale) { // 30分钟
+            $filePathField = $locale === 'en' ? 'file_path_en' : 'file_path_zh';
+            $filePath = $this->attributes[$filePathField] ?? null;
             
             if (!$filePath) {
+                // 如果当前语言的文件不存在，回退到中文文件
+                $filePath = $this->attributes['file_path_zh'] ?? null;
+                
+                if (!$filePath) {
+                    return "# {$this->name}\n\n" . __('Content is being written...');
+                }
+            }
+            
+            // 直接使用数据库中的文件路径
+            $fullPath = base_path($filePath);
+            
+            if (!file_exists($fullPath)) {
                 return "# {$this->name}\n\n" . __('Content is being written...');
             }
-        }
-        
-        // 直接使用数据库中的文件路径
-        $fullPath = base_path($filePath);
-        
-        if (!file_exists($fullPath)) {
-            return "# {$this->name}\n\n" . __('Content is being written...');
-        }
-        
-        return file_get_contents($fullPath);
+            
+            return file_get_contents($fullPath);
+        });
     }
     
     /**
@@ -109,39 +116,44 @@ class DesignPattern extends Model
     }
     
     /**
-     * 从Markdown内容中提取标题生成目录
+     * 从Markdown内容中提取标题生成目录（带缓存）
      */
     public function getHeadings(): array
     {
-        $content = $this->getContent();
-        $headings = [];
+        $cacheKey = "pattern_headings_{$this->id}_" . app()->getLocale();
+        $this->addCacheKey($cacheKey);
         
-        preg_match_all('/^(#{1,6})\\s+(.+)$/m', $content, $matches);
-        
-        foreach ($matches[2] as $i => $title) {
-            $level = strlen($matches[1][$i]);
-            // 清理标题，移除Markdown分隔线等特殊字符
-            $cleanTitle = trim($title);
-            $cleanTitle = preg_replace('/^-+$/', '', $cleanTitle); // 移除纯分隔线
-            $cleanTitle = preg_replace('/^=+$/', '', $cleanTitle); // 移除纯等号线
+        return cache()->remember($cacheKey, 1800, function () { // 30分钟
+            $content = $this->getContent();
+            $headings = [];
             
-            if (empty($cleanTitle)) {
-                continue; // 跳过空标题
+            preg_match_all('/^(#{1,6})\\s+(.+)$/m', $content, $matches);
+            
+            foreach ($matches[2] as $i => $title) {
+                $level = strlen($matches[1][$i]);
+                // 清理标题，移除Markdown分隔线等特殊字符
+                $cleanTitle = trim($title);
+                $cleanTitle = preg_replace('/^-+$/', '', $cleanTitle); // 移除纯分隔线
+                $cleanTitle = preg_replace('/^=+$/', '', $cleanTitle); // 移除纯等号线
+                
+                if (empty($cleanTitle)) {
+                    continue; // 跳过空标题
+                }
+                
+                $slug = strtolower(preg_replace('/[^a-z0-9\x{4e00}-\x{9fa5}]/u', '-', $cleanTitle));
+                $slug = preg_replace('/-+/', '-', $slug); // 移除连续的破折号
+                $slug = trim($slug, '-'); // 移除首尾的破折号
+                
+                $headings[] = [
+                    'level' => $level,
+                    'title' => $cleanTitle,
+                    'slug' => $slug,
+                    'indent' => $level - 1
+                ];
             }
             
-            $slug = strtolower(preg_replace('/[^a-z0-9\x{4e00}-\x{9fa5}]/u', '-', $cleanTitle));
-            $slug = preg_replace('/-+/', '-', $slug); // 移除连续的破折号
-            $slug = trim($slug, '-'); // 移除首尾的破折号
-            
-            $headings[] = [
-                'level' => $level,
-                'title' => $cleanTitle,
-                'slug' => $slug,
-                'indent' => $level - 1
-            ];
-        }
-        
-        return $headings;
+            return $headings;
+        });
     }
     
     /**
@@ -183,5 +195,30 @@ class DesignPattern extends Model
         }
         
         return $locales;
+    }
+    
+    /**
+     * 添加缓存键到管理列表
+     */
+    protected function addCacheKey(string $cacheKey): void
+    {
+        $patternKeys = Cache::get('pattern_keys', []);
+        if (!in_array($cacheKey, $patternKeys)) {
+            $patternKeys[] = $cacheKey;
+            Cache::put('pattern_keys', $patternKeys, 86400); // 24小时
+        }
+    }
+    
+    /**
+     * 清除此设计模式的所有缓存
+     */
+    public function clearCache(): void
+    {
+        $locales = $this->getSupportedLocales();
+        
+        foreach ($locales as $locale) {
+            Cache::forget("pattern_content_{$this->id}_{$locale}");
+            Cache::forget("pattern_headings_{$this->id}_{$locale}");
+        }
     }
 }

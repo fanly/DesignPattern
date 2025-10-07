@@ -143,6 +143,7 @@ return [
         Usamamuneerchaudhary\Commentify\Providers\CommentifyServiceProvider::class,
         App\Providers\CommentifyLangServiceProvider::class,
         App\Providers\MarkdownServiceProvider::class,
+        App\Providers\PerformanceServiceProvider::class,
     ],
 
 ];

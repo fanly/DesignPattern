@@ -11,10 +11,18 @@ class Home extends Component
 {   
     public function render()
     {
-        return view('livewire.pages.home', [
-            'categories' => PatternCategory::with('designPatterns')
+        $cacheKey = 'home_categories_' . app()->getLocale();
+        
+        $categories = cache()->remember($cacheKey, 900, function () { // 15分钟
+            return PatternCategory::with(['designPatterns' => function($query) {
+                $query->where('is_published', true);
+            }])
                 ->orderBy(app()->getLocale() === 'zh' ? 'name_zh' : 'name_en')
-                ->get()
+                ->get();
+        });
+        
+        return view('livewire.pages.home', [
+            'categories' => $categories
         ]);
     }
     
