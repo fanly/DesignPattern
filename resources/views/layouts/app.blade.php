@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ __('home.title') }}</title>
     
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="{{ $seoDescription ?? __('seo.description') }}">
+    <meta name="keywords" content="{{ $seoKeywords ?? __('seo.keywords') }}">
+    <meta name="author" content="{{ __('seo.author') }}">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="{{ $ogTitle ?? __('seo.og_title') }}">
+    <meta property="og:description" content="{{ $ogDescription ?? __('seo.og_description') }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:site_name" content="{{ __('nav.site_name') }}">
+    
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ $ogTitle ?? __('seo.og_title') }}">
+    <meta name="twitter:description" content="{{ $ogDescription ?? __('seo.og_description') }}">
+    
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
@@ -101,6 +118,9 @@
             {{ $slot }}
         </main>
     </div>
+
+    <!-- Footer -->
+    @include('components.footer')
 
     @stack('scripts')
     @livewireScripts

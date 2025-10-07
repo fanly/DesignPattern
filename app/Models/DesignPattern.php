@@ -127,33 +127,64 @@ class DesignPattern extends Model
             $content = $this->getContent();
             $headings = [];
             
-            preg_match_all('/^(#{1,6})\\s+(.+)$/m', $content, $matches);
+            // 改进的正则表达式，支持更多Markdown标题格式
+            preg_match_all('/^(#{1,6})\\s+(.+)$/m', $content, $matches, PREG_SET_ORDER);
             
-            foreach ($matches[2] as $i => $title) {
-                $level = strlen($matches[1][$i]);
-                // 清理标题，移除Markdown分隔线等特殊字符
-                $cleanTitle = trim($title);
-                $cleanTitle = preg_replace('/^-+$/', '', $cleanTitle); // 移除纯分隔线
-                $cleanTitle = preg_replace('/^=+$/', '', $cleanTitle); // 移除纯等号线
+            foreach ($matches as $match) {
+                $level = strlen($match[1]);
+                $title = trim($match[2]);
                 
-                if (empty($cleanTitle)) {
-                    continue; // 跳过空标题
+                // 跳过空标题和分隔线
+                if (empty($title) || preg_match('/^[-=*_]{3,}$/', $title)) {
+                    continue;
                 }
                 
-                $slug = strtolower(preg_replace('/[^a-z0-9\x{4e00}-\x{9fa5}]/u', '-', $cleanTitle));
-                $slug = preg_replace('/-+/', '-', $slug); // 移除连续的破折号
-                $slug = trim($slug, '-'); // 移除首尾的破折号
+                // 移除Markdown格式标记（**、_等）
+                $cleanTitle = preg_replace('/[*_`]/', '', $title);
+                $cleanTitle = trim($cleanTitle);
+                
+                if (empty($cleanTitle)) {
+                    continue;
+                }
+                
+                // 生成一致的slug（与前端AlpineJS保持一致）
+                $slug = $this->generateSlug($cleanTitle);
                 
                 $headings[] = [
                     'level' => $level,
                     'title' => $cleanTitle,
                     'slug' => $slug,
-                    'indent' => $level - 1
+                    'indent' => max(0, $level - 2) // h1不缩进，h2缩进1级，以此类推
                 ];
             }
             
             return $headings;
         });
+    }
+    
+    /**
+     * 生成与前端一致的slug
+     */
+    protected function generateSlug(string $text): string
+    {
+        // 转换为小写
+        $slug = mb_strtolower($text, 'UTF-8');
+        
+        // 替换非字母数字字符为破折号
+        $slug = preg_replace('/[^a-z0-9\x{4e00}-\x{9fa5}]/u', '-', $slug);
+        
+        // 移除连续的破折号
+        $slug = preg_replace('/-+/', '-', $slug);
+        
+        // 移除首尾的破折号
+        $slug = trim($slug, '-');
+        
+        // 如果slug为空，生成一个基于内容的哈希
+        if (empty($slug)) {
+            $slug = 'section-' . substr(md5($text), 0, 8);
+        }
+        
+        return $slug;
     }
     
     /**

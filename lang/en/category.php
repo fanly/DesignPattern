@@ -6,4 +6,5 @@ return [
     'view_details' => 'View Details',
     'no_patterns' => 'No Patterns Available',
     'no_patterns_in_category' => 'There are currently no design patterns in this category.',
+    'recommendations' => 'Recommended Categories',
 ];

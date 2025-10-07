@@ -6,4 +6,6 @@ return [
     'patterns_count' => '个模式',
     'no_categories' => '暂无分类',
     'no_categories_description' => '目前还没有设计模式分类，请稍后再来查看。',
+    'recommendations' => '推荐内容',
+    'sections' => '章节',
 ];

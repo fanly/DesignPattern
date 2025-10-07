@@ -1,3 +1,11 @@
+@push('meta')
+    <meta name="description" content="{{ __('seo.category_description', ['category' => $category->getNameAttribute(), 'count' => $patterns->count()]) }}">
+    <meta name="keywords" content="{{ __('seo.category_keywords', ['category' => $category->getNameAttribute()]) }}">
+    <meta property="og:title" content="{{ $category->getNameAttribute() }} - {{ __('seo.site_name') }}">
+    <meta property="og:description" content="{{ __('seo.category_description', ['category' => $category->getNameAttribute(), 'count' => $patterns->count()]) }}">
+    <meta property="og:type" content="website">
+@endpush
+
 <div>
     <!-- Hero Section -->
     <div class="bg-white border-b border-gray-200">
@@ -118,5 +126,9 @@
                 </div>
             @endif
         </div>
+        
+        <!-- 分类推荐 -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16">
+            @include('components.category-recommendations', ['category' => $category])
+        </div>
     </div>
-</div>

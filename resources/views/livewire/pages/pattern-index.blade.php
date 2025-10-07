@@ -1,3 +1,11 @@
+@push('meta')
+    <meta name="description" content="{{ __('seo.patterns_description') }}">
+    <meta name="keywords" content="{{ __('seo.patterns_keywords') }}">
+    <meta property="og:title" content="{{ __('seo.patterns_title') }}">
+    <meta property="og:description" content="{{ __('seo.patterns_description') }}">
+    <meta property="og:type" content="website">
+@endpush
+
 <div>
     <!-- Hero Section -->
     <div class="bg-white border-b border-gray-200">

@@ -6,4 +6,5 @@ return [
     'view_details' => '查看详情',
     'no_patterns' => '暂无设计模式',
     'no_patterns_in_category' => '此分类下暂时没有设计模式。',
+    'recommendations' => '推荐分类',
 ];
