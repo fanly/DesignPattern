@@ -38,7 +38,8 @@ class DatabaseSeeder extends Seeder
 
         // 运行设计模式种子
         $this->call([
-            DesignPatternSeeder::class,
+//            PatternCategorySeeder::class,
+            DesignPatternsSeeder::class,
         ]);
     }
 }

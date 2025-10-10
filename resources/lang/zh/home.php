@@ -25,4 +25,10 @@ return [
     'laravel_knowledge' => 'Laravel 知识库',
     'laravel_knowledge_description' => '深入学习 Laravel 框架的核心概念、最佳实践和高级特性',
     'visit_now' => '立即访问',
+    'latest_patterns' => '最新设计模式',
+    'latest_patterns_description' => '查看最近更新的设计模式内容，持续学习最新的编程知识',
+    'view_pattern' => '查看模式',
+    'new' => '最新',
+    'no_patterns' => '暂无设计模式',
+    'no_patterns_description' => '目前还没有设计模式内容，请稍后查看。',
 ];

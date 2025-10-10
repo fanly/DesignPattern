@@ -12,7 +12,7 @@
                 <div class="flex justify-center">
                     <a href="https://t.zsxq.com/0duAujaAI" 
                        target="_blank"
-                       class="block w-64 h-64 rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300">
+                       class="block w-96 h-96 rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300">
                         <img src="https://image.coding01.cn/blog/48885581888558T2.JPG" 
                              alt="设计模式知识星球" 
                              class="w-full h-full object-cover">
@@ -80,11 +80,6 @@
                     <li>
                         <a href="{{ route('patterns.index') }}" class="text-gray-400 hover:text-white transition-colors text-sm">
                             {{ __('nav.patterns') }}
-                        </a>
-                    </li>
-                    <li>
-                        <a href="{{ route('categories.index') }}" class="text-gray-400 hover:text-white transition-colors text-sm">
-                            {{ __('nav.categories') }}
                         </a>
                     </li>
                     <li>

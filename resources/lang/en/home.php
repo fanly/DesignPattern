@@ -46,4 +46,10 @@ return [
     'laravel_knowledge' => 'Laravel Knowledge Base',
     'laravel_knowledge_description' => 'Learn Laravel framework core concepts, best practices and advanced features in depth',
     'visit_now' => 'Visit Now',
+    'latest_patterns' => 'Latest Design Patterns',
+    'latest_patterns_description' => 'Check out recently updated design pattern content and continue learning the latest programming knowledge',
+    'view_pattern' => 'View Pattern',
+    'new' => 'New',
+    'no_patterns' => 'No Design Patterns',
+    'no_patterns_description' => 'There are no design pattern content available at the moment. Please check back later.',
 ];

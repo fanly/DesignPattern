@@ -48,9 +48,6 @@
                         <a href="{{ route('patterns.index') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                             {{ __('nav.patterns') }}
                         </a>
-                        <a href="{{ route('categories.index') }}" class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors">
-                            {{ __('nav.categories') }}
-                        </a>
                         
                         <!-- Language Switcher -->
                         <div class="flex items-center space-x-2 border-l pl-6">
@@ -89,9 +86,6 @@
                     <div class="px-2 pt-2 pb-3 space-y-1">
                         <a href="{{ route('patterns.index') }}" class="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md text-base font-medium transition-colors">
                             {{ __('nav.patterns') }}
-                        </a>
-                        <a href="{{ route('categories.index') }}" class="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md text-base font-medium transition-colors">
-                            {{ __('nav.categories') }}
                         </a>
                         
                         <!-- Mobile Language Switcher -->

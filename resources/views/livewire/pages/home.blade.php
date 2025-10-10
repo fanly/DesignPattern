@@ -6,6 +6,10 @@
     <meta property="og:type" content="website">
 @endpush
 
+@php
+    use Illuminate\Support\Str;
+@endphp
+
 <div>
     <!-- Hero Section -->
     <div class="bg-white">
@@ -22,93 +26,60 @@
                        class="bg-blue-600 text-white px-6 sm:px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg text-center">
                         {{ __('home.browse_patterns') }}
                     </a>
-                    <a href="{{ route('categories.index') }}" 
-                       class="inline-block border-2 border-blue-600 text-blue-600 bg-white px-6 sm:px-8 py-3 rounded-lg font-semibold text-center shadow-sm transition-all duration-300 hover:bg-blue-600 hover:text-white hover:shadow-md"
-                       style="background-color: white !important;"
-                       onmouseover="this.style.backgroundColor='#2563eb'; this.style.color='white';"
-                       onmouseout="this.style.backgroundColor='white'; this.style.color='#2563eb';">
-                        {{ __('home.browse_categories') }}
-                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Categories Section -->
+
+
+    <!-- Latest Patterns Section -->
     <div class="py-16 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-bold text-gray-900 mb-4">
-                    {{ __('home.pattern_categories') }}
+                    {{ __('home.latest_patterns') }}
                 </h2>
                 <p class="text-lg text-gray-600">
-                    {{ __('home.categories_description') }}
+                    {{ __('home.latest_patterns_description') }}
                 </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                @forelse($categories as $category)
-                    <a href="{{ route('categories.show', $category->slug) }}" 
+                @forelse($latestPatterns as $pattern)
+                    <a href="{{ route('patterns.show', $pattern->slug) }}" 
                        class="group bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 block">
                         <div class="p-6">
-                            <div class="flex items-center mb-4">
-                                <div class="flex-shrink-0 mr-4">
-                                    @if($category->name_zh === '创建型模式' || $category->name_en === 'Creational Patterns')
-                                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                                            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-                                            </svg>
-                                        </div>
-                                    @elseif($category->name_zh === '结构型模式' || $category->name_en === 'Structural Patterns')
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 mr-4">
                                         <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
                                             <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                                            </svg>
-                                        </div>
-                                    @elseif($category->name_zh === '行为型模式' || $category->name_en === 'Behavioral Patterns')
-                                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                                            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
-                                            </svg>
-                                        </div>
-                                    @else
-                                        <div class="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                             </svg>
                                         </div>
-                                    @endif
+                                    </div>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-500">
+                                            {{ $pattern->category->getNameAttribute() }}
+                                        </span>
+                                    </div>
                                 </div>
-                                <div class="flex-1">
-                                    <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                                        {{ $category->name }}
-                                    </h3>
-                                    <span class="bg-gray-100 text-gray-600 text-sm font-medium px-2 py-1 rounded-full">
-                                        {{ $category->designPatterns->count() }} {{ __('home.patterns') }}
-                                    </span>
-                                </div>
+                                <span class="bg-green-100 text-green-600 text-xs font-medium px-2 py-1 rounded-full">
+                                    {{ __('home.new') }}
+                                </span>
                             </div>
                             
-                            <p class="text-gray-600 mb-6 leading-relaxed">
-                                {{ $category->description }}
+                            <h3 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                                {{ $pattern->getNameAttribute() }}
+                            </h3>
+                            
+                            <p class="text-gray-600 mb-6 leading-relaxed line-clamp-3">
+                                {{ Str::limit($pattern->description, 120) }}
                             </p>
                             
-                            <div class="space-y-2 mb-6">
-                                @foreach($category->designPatterns->take(3) as $pattern)
-                                    <div class="flex items-center text-sm text-gray-500">
-                                        <div class="w-2 h-2 bg-blue-400 rounded-full mr-3 flex-shrink-0"></div>
-                                        <span class="truncate">{{ $pattern->name }}</span>
-                                    </div>
-                                @endforeach
-                                @if($category->designPatterns->count() > 3)
-                                    <div class="text-sm text-gray-400 pl-5">
-                                        {{ __('home.and_more', ['count' => $category->designPatterns->count() - 3]) }}
-                                    </div>
-                                @endif
-                            </div>
-                            
                             <div class="flex items-center text-blue-600 group-hover:text-blue-700 font-medium">
-                                {{ __('home.view_category') }}
+                                {{ __('home.view_pattern') }}
                                 <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                                 </svg>
@@ -119,13 +90,13 @@
                     <div class="col-span-full text-center py-12">
                         <div class="max-w-md mx-auto">
                             <svg class="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                             </svg>
                             <h3 class="text-lg font-medium text-gray-900 mb-2">
-                                {{ __('home.no_categories') }}
+                                {{ __('home.no_patterns') }}
                             </h3>
                             <p class="text-gray-500">
-                                {{ __('home.no_categories_description') }}
+                                {{ __('home.no_patterns_description') }}
                             </p>
                         </div>
                     </div>

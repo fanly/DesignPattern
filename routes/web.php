@@ -11,9 +11,9 @@ Volt::route('/', \App\Livewire\Pages\Home::class)->name('home');
 Volt::route('/patterns', \App\Livewire\Pages\PatternIndex::class)->name('patterns.index');
 Volt::route('/patterns/{slug}', \App\Livewire\Pages\PatternShow::class)->name('patterns.show');
 
-// 分类路由 - 使用Volt组件
-Volt::route('/categories', \App\Livewire\Pages\CategoryIndex::class)->name('categories.index');
-Volt::route('/categories/{slug}', \App\Livewire\Pages\CategoryShow::class)->name('categories.show');
+// 分类路由 - 重定向到模式页面
+Route::redirect('/categories', '/patterns')->name('categories.index');
+Route::redirect('/categories/{slug}', '/patterns')->name('categories.show');
 
 // 后台管理路由 (需要认证)
 Route::middleware(['auth'])->group(function () {

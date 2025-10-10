@@ -4,6 +4,7 @@ namespace App\Livewire\Pages;
 
 use Livewire\Component;
 use App\Models\PatternCategory;
+use App\Models\DesignPattern;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.app')]
@@ -11,18 +12,18 @@ class Home extends Component
 {   
     public function render()
     {
-        $cacheKey = 'home_categories_' . app()->getLocale();
+        $cacheKey = 'home_latest_patterns_' . app()->getLocale();
         
-        $categories = cache()->remember($cacheKey, 900, function () { // 15分钟
-            return PatternCategory::with(['designPatterns' => function($query) {
-                $query->where('is_published', true);
-            }])
-                ->orderBy(app()->getLocale() === 'zh' ? 'name_zh' : 'name_en')
+        $latestPatterns = cache()->remember($cacheKey, 900, function () { // 15分钟
+            return DesignPattern::where('is_published', true)
+                ->with('category')
+                ->orderBy('created_at', 'desc')
+                ->take(6)
                 ->get();
         });
         
         return view('livewire.pages.home', [
-            'categories' => $categories
+            'latestPatterns' => $latestPatterns
         ]);
     }
     
