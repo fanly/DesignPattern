@@ -28,6 +28,16 @@ class Book extends Model
         'commission_amount',
         'category',
         'last_api_call',
+        'coupon_price',
+        'final_price',
+        'seller_name',
+        'good_comment_rate',
+        'comments_count',
+        'item_id',
+        'coupon_url',
+        'coupon_quota',
+        'coupon_start_time',
+        'coupon_end_time',
     ];
     
     protected $casts = [
@@ -37,6 +47,13 @@ class Book extends Model
         'commission_rate' => 'decimal:2',
         'commission_amount' => 'decimal:2',
         'last_api_call' => 'datetime',
+        'coupon_price' => 'decimal:2',
+        'final_price' => 'decimal:2',
+        'good_comment_rate' => 'decimal:2',
+        'comments_count' => 'integer',
+        'coupon_quota' => 'decimal:2',
+        'coupon_start_time' => 'datetime:Y-m-d H:i:s',
+        'coupon_end_time' => 'datetime:Y-m-d H:i:s',
     ];
     
     /**
@@ -91,6 +108,15 @@ class Book extends Model
      */
     public static function searchDesignPatternBooks()
     {
+        $cacheKey = 'books_design_pattern';
+        $cacheTime = 60; // 1小时缓存
+
+        // 检查缓存
+        if (Cache::has($cacheKey)) {
+            Log::info('从缓存获取设计模式书籍数据');
+            return collect(Cache::get($cacheKey));
+        }
+
         try {
             $duomaiService = app(DuomaiService::class);
             $booksData = $duomaiService->searchDesignPatternBooks();
@@ -99,6 +125,17 @@ class Book extends Model
                 // 如果API调用失败，返回空集合
                 return collect([]);
             }
+            
+            // 对书籍按价格和佣金排序，优先显示高价值书籍
+            usort($booksData, function($a, $b) {
+                $aScore = ($a['price'] ?? 0) * ($a['commission_rate'] ?? 0);
+                $bScore = ($b['price'] ?? 0) * ($b['commission_rate'] ?? 0);
+                return $bScore <=> $aScore;
+            });
+
+            // 缓存成功的数据
+            Cache::put($cacheKey, $booksData, $cacheTime);
+            Log::info('设计模式书籍数据已缓存，共' . count($booksData) . '本书');
             
             return collect($booksData);
             

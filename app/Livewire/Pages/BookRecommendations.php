@@ -3,64 +3,51 @@
 namespace App\Livewire\Pages;
 
 use Livewire\Component;
+use Livewire\WithPagination;
 use App\Models\Book;
-use App\Services\DuomaiService;
 use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\Layout;
 
+#[Layout('layouts.app')]
 class BookRecommendations extends Component
 {
-    public $books = [];
-    public $loading = false;
+    use WithPagination;
+    
     public $lastUpdated;
+    protected $paginationTheme = 'bootstrap';
     
     public function mount()
     {
-        $this->loadBooks();
+        $this->lastUpdated = now();
     }
     
-    public function loadBooks()
+    public function getBooks()
     {
         $cacheKey = 'books_design_patterns';
         
         // 从缓存获取数据
-        $this->books = Cache::remember($cacheKey, 3600, function () { // 缓存1小时
-            return Book::where('title', 'like', '%设计模式%')
-                      ->orWhere('title', 'like', '%design pattern%')
-                      ->latest('publish_date')
-                      ->limit(20)
-                      ->get()
-                      ->toArray();
+        return Cache::remember($cacheKey, 3600, function () { // 缓存1小时
+            return Book::searchDesignPatternBooks();
         });
-        
-        $this->lastUpdated = Book::max('updated_at');
-    }
-    
-    public function refreshBooks()
-    {
-        $this->loading = true;
-        
-        try {
-            $service = new \App\Services\DuomaiService();
-            $updatedCount = $service->updateBooksToDatabase();
-            
-            $this->loadBooks();
-            
-            if ($updatedCount > 0) {
-                session()->flash('success', "成功更新 {$updatedCount} 本图书数据");
-            } else {
-                session()->flash('info', '图书数据已是最新，无需更新');
-            }
-            
-        } catch (\Exception $e) {
-            session()->flash('error', '更新图书数据失败：' . $e->getMessage());
-        }
-        
-        $this->loading = false;
     }
     
     public function render()
     {
-        return view('livewire.book-recommendations')
-            ->layout('layouts.app');
+        $books = $this->getBooks();
+        
+        // 手动实现分页
+        $perPage = 12;
+        $currentPage = request()->get('page', 1);
+        $offset = ($currentPage - 1) * $perPage;
+        $paginatedBooks = array_slice($books->toArray(), $offset, $perPage);
+        $total = count($books);
+        
+        return view('livewire.book-recommendations', [
+            'books' => collect($paginatedBooks),
+            'total' => $total,
+            'perPage' => $perPage,
+            'currentPage' => $currentPage,
+            'lastPage' => ceil($total / $perPage),
+        ]);
     }
 }

@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'title' => 'Design Pattern Book Recommendations',
+    'subtitle' => 'Carefully selected high-quality design pattern related books, intelligently sorted by latest publication',
+    'data_update' => 'Data updates hourly',
+    'author' => 'Author',
+    'publisher' => 'Publisher',
+    'store' => 'Store',
+    'publish_date' => 'Publish Date',
+    'sales' => 'Sales',
+    'comments' => 'Comments',
+    'good_comment_rate' => 'Good Comment Rate',
+    'buy_now' => 'Buy Now',
+    'previous_page' => 'Previous',
+    'next_page' => 'Next',
+    'showing' => 'Showing',
+    'to' => 'to',
+    'of' => 'of',
+    'records' => 'records',
+    'total_books' => 'Found',
+    'design_pattern_books' => 'design pattern related books',
+    'no_data' => 'No book data available',
+    'data_will_update' => 'Data will be updated within an hour',
+    '100_percent_good_comment' => '100% Good Comment',
+    'good_comment' => 'Good Comment',
+];

@@ -19,23 +19,23 @@ Route::redirect('/categories/{slug}', '/patterns')->name('categories.show');
 Route::middleware(['auth'])->group(function () {
     // 管理员仪表板
     Volt::route('/admin', 'admin.dashboard')->name('admin.dashboard');
-    
+
     Volt::route('/admin/patterns/create', 'admin.patterns.create')->name('admin.patterns.create');
     Volt::route('/admin/patterns/{pattern}/edit', 'admin.patterns.edit')->name('admin.patterns.edit');
-    
+
     Volt::route('/admin/categories/create', 'admin.categories.create')->name('admin.categories.create');
     Volt::route('/admin/categories/{category}/edit', 'admin.categories.edit')->name('admin.categories.edit');
-    
+
+    // 管理员图书更新路由
+    Route::post('/admin/books/update', [\App\Http\Controllers\Admin\BookController::class, 'update'])->name('admin.books.update');
+
     // 管理员密码修改
     Volt::route('/admin/password', 'admin.password')->name('admin.password');
 });
 
 
-// 图书推荐路由
-Route::get('/books', [\App\Http\Controllers\BookController::class, 'index'])->name('books');
-
-// 管理员图书更新路由
-Route::post('/admin/books/update', [\App\Http\Controllers\Admin\BookController::class, 'update'])->name('admin.books.update');
+// 图书推荐路由 - 使用Volt组件
+Volt::route('/books', \App\Livewire\Pages\BookRecommendations::class)->name('books');
 
 // 语言切换路由
 Route::get('/change-locale/{locale}', function ($locale) {

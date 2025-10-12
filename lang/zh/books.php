@@ -1,0 +1,27 @@
+<?php
+
+return [
+    'title' => '设计模式图书推荐',
+    'subtitle' => '精选高质量设计模式相关书籍，按最新出版智能排序',
+    'data_update' => '数据每小时自动更新',
+    'author' => '作者',
+    'publisher' => '出版社',
+    'store' => '店铺',
+    'publish_date' => '出版时间',
+    'sales' => '销量',
+    'comments' => '评价',
+    'good_comment_rate' => '好评率',
+    'buy_now' => '立即购买',
+    'previous_page' => '上一页',
+    'next_page' => '下一页',
+    'showing' => '显示',
+    'to' => '至',
+    'of' => '共',
+    'records' => '条记录',
+    'total_books' => '共找到',
+    'design_pattern_books' => '本设计模式相关书籍',
+    'no_data' => '暂无图书数据',
+    'data_will_update' => '数据将在一小时内自动更新',
+    '100_percent_good_comment' => '100% 好评',
+    'good_comment' => '好评',
+];

@@ -6,14 +6,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 use App\Models\Book;
-use OpenSDK\DuoMai\Client;
 
 class DuomaiService
 {
     private $appKey;
     private $appSecret;
     private $baseUrl;
-    private $client;
     private $endPoint = 'cps-mesh.cpslink.jd.products.get';
 
     public function __construct()
@@ -21,7 +19,6 @@ class DuomaiService
         $this->appKey = config('duomai.app_key');
         $this->appSecret = config('duomai.app_secret');
         $this->baseUrl = config('duomai.api_url', 'https://open.duomai.com');
-        $this->client = new Client($this->appKey);
     }
 
     /**
@@ -66,13 +63,11 @@ class DuomaiService
 
             Log::info('Duomai API请求参数', $params);
 
-            $response = Http::timeout(30)->withHeaders($header)->post(
-                $this->baseUrl . '/apis', [
-                    "verify" => false,
-                    "headers" => $header,
-                    "query" => $params,
-                    "body" => $body
-                ]
+            $response = Http::timeout(30)
+                ->withHeaders($header)
+                ->withQueryParameters($params)
+                ->post(
+                $this->baseUrl . '/apis', $body
             );
 
             Log::info('Duomai API响应', [
@@ -82,21 +77,25 @@ class DuomaiService
 
             if ($response->successful()) {
                 $data = $response->json();
+                Log::info('API响应数据', ['data' => $data]);
 
-                // 检查API响应格式
-                if (isset($data['code']) && $data['code'] == 200) {
+                // 检查多麦API响应格式（status: 0表示成功）
+                if (isset($data['status']) && $data['status'] == 0) {
                     $booksData = $this->extractBooksData($data);
                     if (!empty($booksData)) {
                         // 缓存成功的数据
-                        $this->setCachedData($cacheKey, $booksData, 30); // 缓存30分钟
+                        $this->setCachedData($cacheKey, $booksData, 60); // 缓存60分钟
+                        Log::info('API调用成功，获取到' . count($booksData) . '本书籍数据');
                         return $booksData;
                     }
                 }
 
-                if (isset($data['status']) && $data['status'] == 200) {
+                // 检查其他可能的成功状态码
+                if (isset($data['code']) && $data['code'] == 200) {
                     $booksData = $this->extractBooksData($data);
                     if (!empty($booksData)) {
-                        $this->setCachedData($cacheKey, $booksData, 30);
+                        $this->setCachedData($cacheKey, $booksData, 60);
+                        Log::info('API调用成功，获取到' . count($booksData) . '本书籍数据');
                         return $booksData;
                     }
                 }
@@ -132,18 +131,33 @@ class DuomaiService
      */
     private function extractBooksData(array $apiResponse): array
     {
-        if (isset($apiResponse['data']['list'])) {
-            return $this->processBooksData($apiResponse['data']['list']);
+        Log::info('API响应数据结构', ['response' => $apiResponse]);
+
+        // 处理多麦API返回的真实数据结构
+        if (isset($apiResponse['body'])) {
+            $bodyData = json_decode($apiResponse['body'], true);
+            if (isset($bodyData['status']) && $bodyData['status'] === 0) {
+                // 处理data字段中的书籍列表
+                if (isset($bodyData['data']) && is_array($bodyData['data'])) {
+                    return $this->processBooksData($bodyData['data']);
+                }
+                // 处理直接返回的书籍列表
+                if (isset($bodyData['list']) && is_array($bodyData['list'])) {
+                    return $this->processBooksData($bodyData['list']);
+                }
+            }
         }
 
-        if (isset($apiResponse['list'])) {
-            return $this->processBooksData($apiResponse['list']);
-        }
-
-        if (isset($apiResponse['data'])) {
+        // 处理直接返回的书籍数据
+        if (isset($apiResponse['data']) && is_array($apiResponse['data'])) {
             return $this->processBooksData($apiResponse['data']);
         }
 
+        if (isset($apiResponse['list']) && is_array($apiResponse['list'])) {
+            return $this->processBooksData($apiResponse['list']);
+        }
+
+        Log::warning('无法解析API响应数据格式');
         return [];
     }
 
@@ -316,27 +330,63 @@ class DuomaiService
         $processedBooks = [];
 
         foreach ($booksData as $bookData) {
+            // 处理多麦API返回的真实书籍数据格式
             $book = [
-                'title' => $bookData['title'] ?? '',
-                'author' => $bookData['author'] ?? '',
-                'publisher' => $bookData['publisher'] ?? '',
-                'isbn' => $bookData['isbn'] ?? '',
-                'price' => $bookData['price'] ?? 0,
-                'original_price' => $bookData['original_price'] ?? $bookData['price'] ?? 0,
-                'image_url' => $bookData['image_url'] ?? '',
-                'product_url' => $bookData['product_url'] ?? '',
-                'description' => $bookData['description'] ?? '',
+                'title' => $bookData['item_title'] ?? '',
+                'author' => $this->extractAuthorFromTitle($bookData['item_title'] ?? ''),
+                'publisher' => $bookData['brand'] ?? $bookData['seller_name'] ?? '',
+                'isbn' => $bookData['item_pid'] ?? '',
+                'price' => floatval($bookData['item_price'] ?? 0),
+                'original_price' => floatval($bookData['item_final_price'] ?? $bookData['item_price'] ?? 0),
+                'image_url' => $bookData['item_picture'] ?? '',
+                'product_url' => $bookData['item_url'] ?? '',
+                'description' => $bookData['item_title'] ?? '',
                 'publish_date' => $this->parsePublishDate($bookData['publish_date'] ?? ''),
-                'sales_volume' => $bookData['sales_volume'] ?? 0,
-                'commission_rate' => $bookData['commission_rate'] ?? 0,
-                'commission_amount' => $bookData['commission_amount'] ?? 0,
-                'category' => $bookData['category'] ?? '',
+                'sales_volume' => intval($bookData['item_volume'] ?? 0),
+                'commission_rate' => floatval($bookData['commission_rate'] ?? 0) * 100, // 转换为百分比
+                'commission_amount' => floatval($bookData['commission_amount'] ?? 0),
+                'category' => $bookData['category'] ?? '图书',
+                'coupon_price' => floatval($bookData['coupon_price'] ?? 0),
+                'final_price' => floatval($bookData['item_final_price'] ?? $bookData['item_price'] ?? 0),
+                'seller_name' => $bookData['seller_name'] ?? '',
+                'good_comment_rate' => floatval($bookData['good_comment_rate'] ?? 0),
+                'comments_count' => intval($bookData['comments'] ?? 0),
+                'item_id' => $bookData['item_id'] ?? '',
+                'coupon_url' => $bookData['coupon'] ?? '',
+                'coupon_quota' => floatval($bookData['coupon_quota'] ?? 0),
+                'coupon_start_time' => (!empty($bookData['coupon_start_time']) && is_numeric($bookData['coupon_start_time'])) ? date('Y-m-d H:i:s', $bookData['coupon_start_time']) : null,
+                'coupon_end_time' => (!empty($bookData['coupon_end_time']) && is_numeric($bookData['coupon_end_time'])) ? date('Y-m-d H:i:s', $bookData['coupon_end_time']) : null,
             ];
 
-            $processedBooks[] = $book;
+            // 过滤掉无效数据（价格或佣金为0的书籍）
+            if ($book['price'] > 0 && $book['commission_amount'] > 0) {
+                $processedBooks[] = $book;
+            }
         }
 
+        // 按佣金金额降序排列
+        usort($processedBooks, function($a, $b) {
+            return $b['commission_amount'] <=> $a['commission_amount'];
+        });
+
         return $processedBooks;
+    }
+
+    /**
+     * 从标题中提取作者信息
+     */
+    private function extractAuthorFromTitle(string $title): string
+    {
+        // 尝试从标题中提取作者信息
+        if (preg_match('/\[([^\]]+)\]/', $title, $matches)) {
+            return $matches[1];
+        }
+        
+        if (preg_match('/（([^）]+)）/u', $title, $matches)) {
+            return $matches[1];
+        }
+        
+        return '未知作者';
     }
 
     /**
