@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e10915bddf329d490bac56af12f6c10d",
+    "content-hash": "7ececeb6d3e70bd8856950376c30a909",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -4089,6 +4089,55 @@
                 }
             ],
             "time": "2025-05-08T08:14:37+00:00"
+        },
+        {
+            "name": "opensdk/duomai",
+            "version": "v0.0.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/beJuvenile/opensdk-duomai.git",
+                "reference": "ed42a8dbee0603230ef36a5346bc428155d40348"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/beJuvenile/opensdk-duomai/zipball/ed42a8dbee0603230ef36a5346bc428155d40348",
+                "reference": "ed42a8dbee0603230ef36a5346bc428155d40348",
+                "shasum": "",
+                "mirrors": [
+                    {
+                        "url": "https://mirrors.aliyun.com/composer/dists/%package%/%reference%.%type%",
+                        "preferred": true
+                    }
+                ]
+            },
+            "require": {
+                "php": ">=7.0.0"
+            },
+            "require-dev": {
+                "php": ">=7.0.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "OpenSDK\\DuoMai\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ken.Zhang",
+                    "email": "kenphp@yeah.net"
+                }
+            ],
+            "description": "多麦平台开放接口SDK",
+            "support": {
+                "issues": "https://github.com/beJuvenile/opensdk-duomai/issues",
+                "source": "https://github.com/beJuvenile/opensdk-duomai/tree/v0.0.2"
+            },
+            "time": "2020-02-26T10:41:47+00:00"
         },
         {
             "name": "openspout/openspout",

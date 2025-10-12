@@ -31,6 +31,12 @@ Route::middleware(['auth'])->group(function () {
 });
 
 
+// 图书推荐路由
+Route::get('/books', [\App\Http\Controllers\BookController::class, 'index'])->name('books');
+
+// 管理员图书更新路由
+Route::post('/admin/books/update', [\App\Http\Controllers\Admin\BookController::class, 'update'])->name('admin.books.update');
+
 // 语言切换路由
 Route::get('/change-locale/{locale}', function ($locale) {
     if (in_array($locale, ['zh', 'en'])) {

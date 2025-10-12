@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
 //            PatternCategorySeeder::class,
             DesignPatternsSeeder::class,
+            BookSeeder::class,
         ]);
     }
 }
