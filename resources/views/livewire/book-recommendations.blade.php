@@ -4,10 +4,10 @@
         <div class="text-center mb-12">
             <div class="bg-white rounded-2xl shadow-xl p-8 mb-6 transform hover:scale-105 transition-transform duration-300">
                 <h1 class="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
-                    📚 设计模式图书推荐
+                    📚 {{ __('books.title') }}
                 </h1>
-                <p class="text-xl text-gray-600 mb-3">精选高质量设计模式相关书籍，按最新出版智能排序</p>
-                <p class="text-sm text-gray-500">数据每小时自动更新</p>
+                <p class="text-xl text-gray-600 mb-3">{{ __('books.subtitle') }}</p>
+                <p class="text-sm text-gray-500">{{ __('books.data_update') }}</p>
             </div>
         </div>
 
@@ -33,23 +33,19 @@
                                 <div class="space-y-1 mb-3">
                                     @if(!empty($book['author']) && !in_array(strtolower($book['author']), ['未知', '未知作者', '无', '']))
                                     <p class="text-gray-600 text-sm">
-                                        <i class="fas fa-user-edit mr-2"></i>作者: {{ $book['author'] }}
-                                    </p>
+                                        <i class="fas fa-user-edit mr-2"></i>{{ __('books.author') }}: {{ $book['author'] }}
                                     @endif
                                     @if(!empty($book['publisher']) && !in_array(strtolower($book['publisher']), ['未知', '未知出版社', '无', '']))
                                     <p class="text-gray-600 text-sm">
-                                        <i class="fas fa-building mr-2"></i>出版社: {{ $book['publisher'] }}
-                                    </p>
+                                        <i class="fas fa-building mr-2"></i>{{ __('books.publisher') }}: {{ $book['publisher'] }}
                                     @endif
                                     @if(!empty($book['seller_name']) && !in_array(strtolower($book['seller_name']), ['未知', '无', '']))
                                     <p class="text-gray-600 text-sm">
-                                        <i class="fas fa-store mr-2"></i>店铺: {{ $book['seller_name'] }}
-                                    </p>
+                                        <i class="fas fa-store mr-2"></i>{{ __('books.store') }}: {{ $book['seller_name'] }}
                                     @endif
                                     @if(!empty($book['publish_date']) && !in_array(strtolower($book['publish_date']), ['未知', '无', '']))
                                     <p class="text-gray-600 text-sm">
-                                        <i class="fas fa-calendar mr-2"></i>出版时间: {{ $book['publish_date'] }}
-                                    </p>
+                                        <i class="fas fa-calendar mr-2"></i>{{ __('books.publish_date') }}: {{ $book['publish_date'] }}
                                     @endif
                                 </div>
                                 
@@ -68,22 +64,22 @@
                                     @if(!empty($book['good_comment_rate']) && $book['good_comment_rate'] == 100)
                                         <div class="flex items-center bg-green-100 px-3 py-1 rounded-full">
                                             <i class="fas fa-star text-yellow-400 mr-1"></i>
-                                            <span class="text-sm font-semibold text-green-800">100% 好评</span>
+                                            <span class="text-sm font-semibold text-green-800">{{ __('books.100_percent_good_comment') }}</span>
                                         </div>
                                     @elseif(!empty($book['good_comment_rate']) && $book['good_comment_rate'] >= 95)
                                         <div class="flex items-center bg-blue-100 px-3 py-1 rounded-full">
                                             <i class="fas fa-star text-yellow-400 mr-1"></i>
-                                            <span class="text-sm font-semibold text-blue-800">{{ $book['good_comment_rate'] }}% 好评</span>
+                                            <span class="text-sm font-semibold text-blue-800">{{ $book['good_comment_rate'] }}% {{ __('books.good_comment') }}</span>
                                         </div>
                                     @elseif(!empty($book['sales']) && $book['sales'] > 0)
                                         <div class="flex items-center">
                                             <i class="fas fa-chart-line text-green-500 mr-1"></i>
-                                            <span class="text-sm text-gray-600">销量: {{ $book['sales'] }}</span>
+                                            <span class="text-sm text-gray-600">{{ __('books.sales') }}: {{ $book['sales'] }}</span>
                                         </div>
                                     @elseif(!empty($book['comment_count']) && $book['comment_count'] > 0)
                                         <div class="flex items-center">
                                             <i class="fas fa-comments text-blue-500 mr-1"></i>
-                                            <span class="text-sm text-gray-600">评价: {{ $book['comment_count'] }}</span>
+                                            <span class="text-sm text-gray-600">{{ __('books.comments') }}: {{ $book['comment_count'] }}</span>
                                         </div>
                                     @endif
                                 </div>
@@ -95,7 +91,7 @@
                                 @if(!empty($buyUrl))
                                     <a href="{{ $buyUrl }}" target="_blank" rel="noopener noreferrer"
                                        class="block w-full bg-gradient-to-r from-orange-500 to-red-500 text-white text-center py-3 px-4 rounded-md hover:from-orange-600 hover:to-red-600 transition-all duration-300 font-medium">
-                                        <i class="fas fa-shopping-cart mr-2"></i>立即购买
+                                        <i class="fas fa-shopping-cart mr-2"></i>{{ __('books.buy_now') }}
                                     </a>
                                 @endif
                             </div>
@@ -109,8 +105,8 @@
                     <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
                         <!-- 分页信息 -->
                         <div class="text-gray-600 text-sm">
-                            显示 <span class="font-bold text-blue-600">{{ min(($currentPage - 1) * $perPage + 1, $total) }}</span>至<span class="font-bold text-blue-600">{{ min($currentPage * $perPage, $total) }}</span> 条记录，
-                            共 <span class="font-bold text-purple-600">{{ $total }}</span> 条记录
+                            {{ __('books.showing') }} <span class="font-bold text-blue-600">{{ min(($currentPage - 1) * $perPage + 1, $total) }}</span>{{ __('books.to') }}<span class="font-bold text-blue-600">{{ min($currentPage * $perPage, $total) }}</span> {{ __('books.records') }}，
+                            {{ __('books.of') }} <span class="font-bold text-purple-600">{{ $total }}</span> {{ __('books.records') }}
                         </div>
                         
                         <!-- 分页导航 -->
@@ -118,7 +114,7 @@
                             <!-- 上一页 -->
                             @if($currentPage > 1)
                             <a href="?page={{ $currentPage - 1 }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                                <i class="fas fa-chevron-left mr-1"></i>上一页
+                                <i class="fas fa-chevron-left mr-1"></i>{{ __('books.previous_page') }}
                             </a>
                             @else
                             <span class="px-4 py-2 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed font-medium">
@@ -144,7 +140,7 @@
                             <!-- 下一页 -->
                             @if($currentPage < $lastPage)
                             <a href="?page={{ $currentPage + 1 }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                                下一页<i class="fas fa-chevron-right ml-1"></i>
+                                {{ __('books.next_page') }}<i class="fas fa-chevron-right ml-1"></i>
                             </a>
                             @else
                             <span class="px-4 py-2 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed font-medium">
@@ -156,15 +152,15 @@
                 </div>
                 @else
                 <div class="mt-8 text-center text-gray-500 text-sm">
-                    共找到 {{ $total }} 本设计模式相关书籍
+                    {{ __('books.total_books') }} {{ $total }} {{ __('books.design_pattern_books') }}
                 </div>
                 @endif
             @else
                 <!-- 无数据状态 -->
                 <div class="text-center py-12">
                     <i class="fas fa-book-open text-6xl text-gray-300 mb-4"></i>
-                    <p class="text-gray-500 text-lg mb-2">暂无图书数据</p>
-                    <p class="text-gray-400 text-sm">数据将在一小时内自动更新</p>
+                    <p class="text-gray-500 text-lg mb-2">{{ __('books.no_data') }}</p>
+                    <p class="text-gray-400 text-sm">{{ __('books.data_will_update') }}</p>
                 </div>
             @endif
     </div>
